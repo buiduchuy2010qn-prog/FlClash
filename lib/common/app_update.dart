@@ -104,10 +104,9 @@ Future<({int freedBytes, bool keptNewer})> cleanObsoleteUpdateFilesIn(
       continue;
     }
     final match = _updateAssetVersion.firstMatch(basename(entity.path));
-    final fileVersion = match?.group(1);
+    final version = match?.group(1);
     final isNewer =
-        fileVersion != null &&
-        compareVersions(fileVersion, currentVersion) > 0;
+        version != null && compareVersions(version, currentVersion) > 0;
     if (isNewer) {
       keptNewer = true;
       continue;

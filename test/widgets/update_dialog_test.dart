@@ -342,31 +342,25 @@ void main() {
       expect(shows('Update failed'), isFalse);
     });
 
-    testWidgets(
-      'does not re-download when the same release is already downloaded',
-      (tester) async {
-        final apkFile = File('${home.path}/update/$asset');
-        await apkFile.parent.create(recursive: true);
-        await apkFile.writeAsBytes(package);
+    testWidgets('reuses downloaded APK without dialog', (tester) async {
+      final apkFile = File('${home.path}/update/$asset');
+      await apkFile.parent.create(recursive: true);
+      await apkFile.writeAsBytes(package);
 
-        final container = await pumpApp(tester);
-        container.read(updateDownloadStateProvider.notifier).value =
-            UpdateReady('v0.8.96', apkFile.path);
+      final container = await pumpApp(tester);
+      final ready = UpdateReady('v0.8.96', apkFile.path);
+      container.read(updateDownloadStateProvider.notifier).value = ready;
 
-        final action = container.read(commonActionProvider.notifier);
-        await action.checkUpdateResultHandle(
-          data: release(_bulletsOnly),
-          isUser: true,
-        );
-        await tester.pump();
+      final action = container.read(commonActionProvider.notifier);
+      await action.checkUpdateResultHandle(
+        data: release(_bulletsOnly),
+        isUser: true,
+      );
+      await tester.pump();
 
-        expect(find.byType(ModalRoute), findsNothing);
-        expect(
-          container.read(updateDownloadStateProvider),
-          isA<UpdateReady>(),
-        );
-      },
-    );
+      expect(find.byType(ModalRoute), findsNothing);
+      expect(container.read(updateDownloadStateProvider), isA<UpdateReady>());
+    });
   });
 
   testWidgets('a manual check keeps the setting and reports a failure', (
