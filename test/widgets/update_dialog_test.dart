@@ -369,7 +369,7 @@ void main() {
     container.listen(appSettingProvider, (_, _) {}, fireImmediately: true);
     container
         .read(viewSizeProvider.notifier)
-        .update((_) => const Size(600, 900));
+        .update((_) => const Size(1200, 800));
 
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -379,31 +379,28 @@ void main() {
     );
     await tester.pump();
 
-    container.read(updateDownloadStateProvider.notifier).value =
-        const UpdateDownloading(
-          'v0.9.8',
-          received: 20 * 1024 * 1024,
-          total: 40 * 1024 * 1024,
-          speedBytesPerSec: 4 * 1024 * 1024,
-        );
+    final state = container.read(updateDownloadStateProvider.notifier);
+    state.value = const UpdateDownloading(
+      'v0.9.8',
+      received: 20 * 1024 * 1024,
+      total: 40 * 1024 * 1024,
+      speedBytesPerSec: 4 * 1024 * 1024,
+    );
     await tester.pump(const Duration(milliseconds: 250));
     expect(find.text('Downloading update'), findsOneWidget);
     expect(find.text('50%'), findsOneWidget);
     expect(find.textContaining('0.8.95 → 0.9.8'), findsOneWidget);
     expect(find.textContaining('/s'), findsOneWidget);
 
-    container.read(updateDownloadStateProvider.notifier).value =
-        const UpdateVerifying('v0.9.8', total: 40 * 1024 * 1024);
+    state.value = const UpdateVerifying('v0.9.8', total: 40 * 1024 * 1024);
     await tester.pump(const Duration(milliseconds: 250));
     expect(find.text('Verifying update'), findsOneWidget);
 
-    container.read(updateDownloadStateProvider.notifier).value =
-        const UpdateInstalling('v0.9.8', '/tmp/a.apk');
+    state.value = const UpdateInstalling('v0.9.8', '/tmp/a.apk');
     await tester.pump(const Duration(milliseconds: 250));
     expect(find.text('Installing update'), findsOneWidget);
 
-    container.read(updateDownloadStateProvider.notifier).value =
-        const UpdateReady('v0.9.8', '/tmp/a.apk');
+    state.value = const UpdateReady('v0.9.8', '/tmp/a.apk');
     await tester.pump(const Duration(milliseconds: 250));
     expect(find.text('Update ready'), findsOneWidget);
     expect(find.text('Install now'), findsOneWidget);

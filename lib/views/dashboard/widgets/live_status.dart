@@ -207,16 +207,17 @@ class _LiveStatusPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
     final colorScheme = context.colorScheme;
+    final successTone = (
+      colorScheme.successContainer,
+      colorScheme.onSuccessContainer,
+    );
     final (fill, content) = switch (status) {
       CoreLiveStatus(phase: CoreStatus.disconnected) => (
         colorScheme.errorContainer,
         colorScheme.onErrorContainer,
       ),
-      UpdateStatus(download: UpdateReady()) ||
-      UpdateStatus(download: UpdateInstalling()) => (
-        colorScheme.successContainer,
-        colorScheme.onSuccessContainer,
-      ),
+      UpdateStatus(download: UpdateReady()) => successTone,
+      UpdateStatus(download: UpdateInstalling()) => successTone,
       MitmConsentStatus() => (
         colorScheme.warningContainer,
         colorScheme.onWarningContainer,
@@ -236,6 +237,10 @@ class _LiveStatusPill extends StatelessWidget {
       MitmConsentStatus() => appLocalizations.mitmModulesTurnedOff,
     };
     final iconSize = globalState.measure.textHeight(AppTextStyle.subheadline);
+    final spinner = Builder(
+      builder: (context) =>
+          ActivityIndicator(color: IconTheme.of(context).color),
+    );
     final icon = SizedBox.square(
       dimension: iconSize,
       child: switch (status) {
@@ -243,19 +248,13 @@ class _LiveStatusPill extends StatelessWidget {
           AppGlyphs.error,
           fill: 1,
         ),
-        CoreLiveStatus() => Builder(
-          builder: (context) =>
-              ActivityIndicator(color: IconTheme.of(context).color),
-        ),
+        CoreLiveStatus() => spinner,
         UpdateStatus(download: UpdateReady()) => const GlyphIcon(
           AppGlyphs.checkCircle,
           fill: 1,
         ),
-        UpdateStatus(download: UpdateVerifying()) ||
-        UpdateStatus(download: UpdateInstalling()) => Builder(
-          builder: (context) =>
-              ActivityIndicator(color: IconTheme.of(context).color),
-        ),
+        UpdateStatus(download: UpdateVerifying()) => spinner,
+        UpdateStatus(download: UpdateInstalling()) => spinner,
         UpdateStatus(
           download: UpdateDownloading(:final received, :final total),
         ) =>

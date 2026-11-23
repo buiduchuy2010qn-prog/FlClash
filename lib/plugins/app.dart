@@ -284,10 +284,8 @@ class App {
   }
 
   Future<int> consumeCleanedUpdateBytes() async {
-    return await methodChannel.invokeMethod<int>(
-          'consumeCleanedUpdateBytes',
-        ) ??
-        0;
+    const method = 'consumeCleanedUpdateBytes';
+    return await methodChannel.invokeMethod<int>(method) ?? 0;
   }
 
   /// An accepted update ends this process before its status can arrive.
