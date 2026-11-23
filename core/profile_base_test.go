@@ -412,3 +412,176 @@ func TestEncodeConfigMappingKeepsEveryKeyAfterAnOpenEndedScalar(t *testing.T) {
 		t.Errorf("decoded %d rules, want all %d in order", len(decoded.Rules), len(rules))
 	}
 }
+
+func TestOptimizeConfigDocumentPersistsToConfigYaml(t *testing.T) {
+	previousAndroid := isAndroidRuntime
+	isAndroidRuntime = true
+	t.Cleanup(func() { isAndroidRuntime = previousAndroid })
+
+	previousHome := constant.Path.HomeDir()
+	home := t.TempDir()
+	constant.SetHomeDir(home)
+	t.Cleanup(func() {
+		constant.SetHomeDir(previousHome)
+		setDeferredGeoResources(nil)
+	})
+
+	path := writeBaseProfile(t, baseProfile)
+	base, err := handleGetProfileBase(PathParams{Path: path})
+	if err != nil {
+		t.Fatalf("handleGetProfileBase = %v", err)
+	}
+	overlay := overlayOf(t, base, []string{"MATCH,g"}, map[string]any{
+		"find-process-mode": "strict",
+		"dns": map[string]any{
+			"enable":             true,
+			"nameserver":         []string{"https://cloudflare-dns.com/dns-query"},
+			"default-nameserver": []string{"1.1.1.1"},
+		},
+	})
+	configPath := filepath.Join(home, "config.yaml")
+
+	cfg, err := loadConfigWithBase(&SetupBase{Path: path, Overlay: overlay}, configPath)
+	if err != nil {
+		t.Fatalf("loadConfigWithBase = %v", err)
+	}
+	if !cfg.General.UnifiedDelay || !cfg.General.TCPConcurrent {
+		t.Errorf("UnifiedDelay=%t TCPConcurrent=%t, want both true", cfg.General.UnifiedDelay, cfg.General.TCPConcurrent)
+	}
+	if !strings.EqualFold(cfg.General.FindProcessMode.String(), "off") {
+		t.Errorf("FindProcessMode = %s, want off when no process rules exist", cfg.General.FindProcessMode)
+	}
+
+	raw, err := readRawConfig(configPath)
+	if err != nil {
+		t.Fatalf("readRawConfig = %v", err)
+	}
+	if !raw.UnifiedDelay || !raw.TCPConcurrent {
+		t.Errorf("disk config UnifiedDelay=%t TCPConcurrent=%t, want both persisted", raw.UnifiedDelay, raw.TCPConcurrent)
+	}
+	if !strings.EqualFold(raw.FindProcessMode.String(), "off") {
+		t.Errorf("disk FindProcessMode = %s, want off", raw.FindProcessMode)
+	}
+	if len(raw.DNS.DefaultNameserver) == 0 || raw.DNS.DefaultNameserver[0] != "system" {
+		t.Errorf("DefaultNameserver = %v, want system prepended", raw.DNS.DefaultNameserver)
+	}
+	if len(raw.DNS.ProxyServerNameserver) == 0 || raw.DNS.ProxyServerNameserver[0] != "system" {
+		t.Errorf("ProxyServerNameserver = %v, want system prepended", raw.DNS.ProxyServerNameserver)
+	}
+	var vlessProxy map[string]any
+	for _, item := range raw.Proxy {
+		if item["name"] == "b" {
+			vlessProxy = item
+			break
+		}
+	}
+	if vlessProxy == nil {
+		t.Fatal("proxy b missing from persisted config.yaml")
+	}
+	if vlessProxy["udp"] != true {
+		t.Errorf("proxy b udp = %#v, want true", vlessProxy["udp"])
+	}
+	if vlessProxy["client-fingerprint"] != "chrome" {
+		t.Errorf("proxy b client-fingerprint = %#v, want chrome", vlessProxy["client-fingerprint"])
+	}
+
+	reloaded, err := loadConfig(configPath)
+	if err != nil {
+		t.Fatalf("loadConfig = %v", err)
+	}
+	if !reloaded.General.UnifiedDelay || !reloaded.General.TCPConcurrent || !strings.EqualFold(reloaded.General.FindProcessMode.String(), "off") {
+		t.Errorf("reloaded flags not preserved: unified=%t concurrent=%t proc=%s", reloaded.General.UnifiedDelay, reloaded.General.TCPConcurrent, reloaded.General.FindProcessMode)
+	}
+
+	processOverlay := overlayOf(t, base, []string{"PROCESS-NAME,curl,DIRECT", "MATCH,g"}, map[string]any{
+		"find-process-mode": "strict",
+	})
+	procConfigPath := filepath.Join(home, "config-proc.yaml")
+	procCfg, err := loadConfigWithBase(&SetupBase{Path: path, Overlay: processOverlay}, procConfigPath)
+	if err != nil {
+		t.Fatalf("loadConfigWithBase(process rule) = %v", err)
+	}
+	if !strings.EqualFold(procCfg.General.FindProcessMode.String(), "strict") {
+		t.Errorf("FindProcessMode = %s, want strict preserved when PROCESS-NAME rule is present", procCfg.General.FindProcessMode)
+	}
+}
+
+func TestFilterUnavailableGeoRulesPreventsOfflineDeadlock(t *testing.T) {
+	previousHome := constant.Path.HomeDir()
+	home := t.TempDir()
+	constant.SetHomeDir(home)
+	t.Cleanup(func() {
+		constant.SetHomeDir(previousHome)
+		setDeferredGeoResources(nil)
+	})
+
+	profile := `proxies:
+  - {name: a, type: socks5, server: 127.0.0.1, port: 1080}
+proxy-groups:
+  - {name: g, type: select, proxies: [a]}
+rules:
+  - GEOIP,LAN,DIRECT
+  - GEOIP,CN,DIRECT
+  - GEOSITE,category-ads,REJECT
+  - IP-ASN,13335,DIRECT
+  - MATCH,g
+`
+	path := writeBaseProfile(t, profile)
+	base, err := handleGetProfileBase(PathParams{Path: path})
+	if err != nil {
+		t.Fatalf("handleGetProfileBase = %v", err)
+	}
+	overlay := overlayOf(t, base, nil, nil)
+	configPath := filepath.Join(home, "config.yaml")
+
+	cfg, err := loadConfigWithBase(&SetupBase{Path: path, Overlay: overlay}, configPath)
+	if err != nil {
+		t.Fatalf("loadConfigWithBase without geo databases failed: %v", err)
+	}
+	if got, want := ruleStrings(cfg), []string{"GeoIP,lan,DIRECT", "Match,,g"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("active rules = %v, want %v", got, want)
+	}
+	if got, want := deferredGeoSnapshot(), []string{"MMDB", "GEOSITE", "ASN"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("deferredGeoTypes = %v, want %v", got, want)
+	}
+
+	rawDisk, err := readRawConfig(configPath)
+	if err != nil {
+		t.Fatalf("readRawConfig = %v", err)
+	}
+	if len(rawDisk.Rule) != 5 {
+		t.Errorf("persisted disk rules = %d, want all 5 original rules preserved", len(rawDisk.Rule))
+	}
+}
+
+func TestPruneUnusedGeoFilesReclaimsDiskSpace(t *testing.T) {
+	previousAndroid := isAndroidRuntime
+	isAndroidRuntime = true
+	t.Cleanup(func() { isAndroidRuntime = previousAndroid })
+
+	previousHome := constant.Path.HomeDir()
+	home := t.TempDir()
+	constant.SetHomeDir(home)
+	t.Cleanup(func() { constant.SetHomeDir(previousHome) })
+
+	for _, name := range []string{"GEOIP.dat", "ASN.mmdb", "GEOSITE.dat", "GEOIP.metadb"} {
+		if err := os.WriteFile(filepath.Join(home, name), []byte("dummy-geo"), 0o644); err != nil {
+			t.Fatalf("write %s: %v", name, err)
+		}
+	}
+
+	raw := &config.RawConfig{
+		Proxy: []map[string]any{{"name": "node", "type": "socks5"}},
+		Rule:  []string{"GEOIP,CN,DIRECT", "MATCH,node"},
+	}
+	pruneUnusedGeoFiles(raw)
+
+	for _, removed := range []string{"GEOIP.dat", "ASN.mmdb", "GEOSITE.dat"} {
+		if _, err := os.Stat(filepath.Join(home, removed)); !os.IsNotExist(err) {
+			t.Errorf("%s still exists after pruning unused geo files", removed)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(home, "GEOIP.metadb")); err != nil {
+		t.Errorf("GEOIP.metadb stat error = %v, want used MMDB file preserved", err)
+	}
+}

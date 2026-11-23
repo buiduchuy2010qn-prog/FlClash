@@ -53,6 +53,7 @@ func handleStartListener() {
 	// A probe already out left before the TUN routes and over the DNS
 	// connections just dropped, so its answer must not stand for this route.
 	bumpRouteEpoch()
+	scheduleDeferredGeoDownloads()
 }
 
 func handleStopListener() {

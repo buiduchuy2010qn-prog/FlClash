@@ -407,7 +407,7 @@ abstract class NetworkProps with _$NetworkProps {
     @Default(false) bool pacMode,
     @Default(defaultPacScript) String pacScript,
     @Default(true) bool bypassPrivateRoute,
-    @Default(false) bool appendSystemDns,
+    @Default(true) bool appendSystemDns,
     @Default(defaultAuthenticationProps) AuthenticationProps authentication,
   }) = _NetworkProps;
 

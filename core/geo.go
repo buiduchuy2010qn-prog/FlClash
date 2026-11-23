@@ -2,10 +2,16 @@ package core
 
 import (
 	"fmt"
+	"os"
 	"strings"
+	"sync"
+	"time"
 
+	"github.com/metacubex/mihomo/common/orderedmap"
 	"github.com/metacubex/mihomo/component/geodata"
 	"github.com/metacubex/mihomo/component/updater"
+	"github.com/metacubex/mihomo/config"
+	"github.com/metacubex/mihomo/constant"
 	"github.com/metacubex/mihomo/log"
 )
 
@@ -104,4 +110,296 @@ func reconcileGeoUpdater() {
 		return
 	}
 	stopGeoUpdater()
+}
+
+const deferredGeoDownloadDelay = 3 * time.Second
+
+var (
+	deferredGeoMu    sync.Mutex
+	deferredGeoTypes []string
+	deferredGeoTimer *time.Timer
+)
+
+type geoUsage struct {
+	mmdb    bool
+	geoip   bool
+	geosite bool
+	asn     bool
+}
+
+type geoAvailability struct {
+	mmdb    bool
+	geoip   bool
+	geosite bool
+	asn     bool
+}
+
+func geoFileExists(path string) bool {
+	if path == "" {
+		return false
+	}
+	info, err := os.Stat(path)
+	return err == nil && !info.IsDir() && info.Size() > 0
+}
+
+func currentGeoAvailability() geoAvailability {
+	return geoAvailability{
+		mmdb:    geoFileExists(constant.Path.MMDB()),
+		geoip:   geoFileExists(constant.Path.GeoIP()),
+		geosite: geoFileExists(constant.Path.GeoSite()),
+		asn:     geoFileExists(constant.Path.ASN()),
+	}
+}
+
+func isGeoSitePattern(value string) bool {
+	for _, part := range strings.Split(strings.ToLower(value), ",") {
+		if strings.HasPrefix(strings.TrimSpace(part), "geosite:") {
+			return true
+		}
+	}
+	return false
+}
+
+func policyHasGeoSite(policy *orderedmap.OrderedMap[string, any]) bool {
+	if policy == nil || policy.Len() == 0 {
+		return false
+	}
+	for pair := policy.Oldest(); pair != nil; pair = pair.Next() {
+		if isGeoSitePattern(pair.Key) {
+			return true
+		}
+	}
+	return false
+}
+
+func prunePolicyGeoSite(policy *orderedmap.OrderedMap[string, any]) bool {
+	if policy == nil || policy.Len() == 0 {
+		return false
+	}
+	removed := false
+	for pair := policy.Oldest(); pair != nil; {
+		next := pair.Next()
+		if isGeoSitePattern(pair.Key) {
+			policy.Delete(pair.Key)
+			removed = true
+		}
+		pair = next
+	}
+	return removed
+}
+
+func ruleGeoNeeds(rule string, geodataMode bool) geoUsage {
+	var needs geoUsage
+	visitRuleParts(rule, func(kind, payload string) bool {
+		switch kind {
+		case "GEOIP", "SRC-GEOIP":
+			if !strings.EqualFold(payload, "LAN") {
+				if geodataMode {
+					needs.geoip = true
+				} else {
+					needs.mmdb = true
+				}
+			}
+		case "GEOSITE":
+			needs.geosite = true
+		case "IP-ASN", "SRC-IP-ASN":
+			needs.asn = true
+		}
+		return false
+	})
+	return needs
+}
+
+func mergeGeoUsage(dst *geoUsage, src geoUsage) {
+	dst.mmdb = dst.mmdb || src.mmdb
+	dst.geoip = dst.geoip || src.geoip
+	dst.geosite = dst.geosite || src.geosite
+	dst.asn = dst.asn || src.asn
+}
+
+func analyzeGeoUsage(raw *config.RawConfig) geoUsage {
+	var usage geoUsage
+	if raw == nil {
+		return usage
+	}
+	for _, rule := range raw.Rule {
+		mergeGeoUsage(&usage, ruleGeoNeeds(rule, raw.GeodataMode))
+	}
+	for _, rules := range raw.SubRules {
+		for _, rule := range rules {
+			mergeGeoUsage(&usage, ruleGeoNeeds(rule, raw.GeodataMode))
+		}
+	}
+	if raw.DNS.Enable {
+		if len(raw.DNS.Fallback) > 0 && raw.DNS.FallbackFilter.GeoIP && !strings.EqualFold(strings.TrimSpace(raw.DNS.FallbackFilter.GeoIPCode), "LAN") {
+			if raw.GeodataMode {
+				usage.geoip = true
+			} else {
+				usage.mmdb = true
+			}
+		}
+		if len(raw.DNS.Fallback) > 0 && len(raw.DNS.FallbackFilter.GeoSite) > 0 {
+			usage.geosite = true
+		}
+		if policyHasGeoSite(raw.DNS.NameServerPolicy) || policyHasGeoSite(raw.DNS.ProxyServerNameserverPolicy) {
+			usage.geosite = true
+		}
+		for _, item := range raw.DNS.FakeIPFilter {
+			if isGeoSitePattern(item) {
+				usage.geosite = true
+				break
+			}
+		}
+	}
+	return usage
+}
+
+func pruneUnusedGeoFiles(raw *config.RawConfig) {
+	if !isAndroidRuntime || raw == nil || len(raw.Proxy) == 0 {
+		return
+	}
+	usage := analyzeGeoUsage(raw)
+	if !usage.geoip {
+		_ = os.Remove(constant.Path.GeoIP())
+	}
+	if !usage.asn {
+		_ = os.Remove(constant.Path.ASN())
+	}
+	if !usage.geosite {
+		_ = os.Remove(constant.Path.GeoSite())
+	}
+	if !usage.mmdb {
+		_ = os.Remove(constant.Path.MMDB())
+	}
+}
+
+func filterUnavailableGeoRules(raw *config.RawConfig) []string {
+	if raw == nil {
+		return nil
+	}
+	avail := currentGeoAvailability()
+	missing := map[string]bool{}
+	recordMissing := func(needs geoUsage) bool {
+		unavailable := false
+		if needs.mmdb && !avail.mmdb {
+			missing["MMDB"] = true
+			unavailable = true
+		}
+		if needs.geoip && !avail.geoip {
+			missing["GEOIP"] = true
+			unavailable = true
+		}
+		if needs.geosite && !avail.geosite {
+			missing["GEOSITE"] = true
+			unavailable = true
+		}
+		if needs.asn && !avail.asn {
+			missing["ASN"] = true
+			unavailable = true
+		}
+		return unavailable
+	}
+	filterRules := func(rules []string) []string {
+		if len(rules) == 0 {
+			return rules
+		}
+		filtered := make([]string, 0, len(rules))
+		for _, rule := range rules {
+			if recordMissing(ruleGeoNeeds(rule, raw.GeodataMode)) {
+				continue
+			}
+			filtered = append(filtered, rule)
+		}
+		return filtered
+	}
+	raw.Rule = filterRules(raw.Rule)
+	for name, rules := range raw.SubRules {
+		raw.SubRules[name] = filterRules(rules)
+	}
+	if raw.DNS.Enable {
+		if len(raw.DNS.Fallback) > 0 && raw.DNS.FallbackFilter.GeoIP && !strings.EqualFold(strings.TrimSpace(raw.DNS.FallbackFilter.GeoIPCode), "LAN") {
+			var fbGeo geoUsage
+			if raw.GeodataMode {
+				fbGeo.geoip = true
+			} else {
+				fbGeo.mmdb = true
+			}
+			if recordMissing(fbGeo) {
+				raw.DNS.FallbackFilter.GeoIP = false
+			}
+		}
+		if len(raw.DNS.Fallback) > 0 && len(raw.DNS.FallbackFilter.GeoSite) > 0 && !avail.geosite {
+			missing["GEOSITE"] = true
+			raw.DNS.FallbackFilter.GeoSite = nil
+		}
+		if !avail.geosite {
+			if prunePolicyGeoSite(raw.DNS.NameServerPolicy) {
+				missing["GEOSITE"] = true
+			}
+			if prunePolicyGeoSite(raw.DNS.ProxyServerNameserverPolicy) {
+				missing["GEOSITE"] = true
+			}
+			if len(raw.DNS.FakeIPFilter) > 0 {
+				filtered := make([]string, 0, len(raw.DNS.FakeIPFilter))
+				for _, item := range raw.DNS.FakeIPFilter {
+					if isGeoSitePattern(item) {
+						missing["GEOSITE"] = true
+						continue
+					}
+					filtered = append(filtered, item)
+				}
+				raw.DNS.FakeIPFilter = filtered
+			}
+		}
+	}
+	var deferred []string
+	for _, name := range []string{"MMDB", "GEOIP", "GEOSITE", "ASN"} {
+		if missing[name] {
+			deferred = append(deferred, name)
+		}
+	}
+	return deferred
+}
+
+func setDeferredGeoResources(types []string) {
+	deferredGeoMu.Lock()
+	defer deferredGeoMu.Unlock()
+	deferredGeoTypes = types
+}
+
+func deferredGeoSnapshot() []string {
+	deferredGeoMu.Lock()
+	defer deferredGeoMu.Unlock()
+	return append([]string(nil), deferredGeoTypes...)
+}
+
+func prepareRawConfigForParse(raw *config.RawConfig) {
+	pruneUnusedGeoFiles(raw)
+	setDeferredGeoResources(filterUnavailableGeoRules(raw))
+}
+
+func scheduleDeferredGeoDownloads() {
+	if !isRunning.Load() {
+		return
+	}
+	deferredGeoMu.Lock()
+	defer deferredGeoMu.Unlock()
+	if len(deferredGeoTypes) == 0 {
+		return
+	}
+	if deferredGeoTimer != nil {
+		deferredGeoTimer.Stop()
+	}
+	deferredGeoTimer = time.AfterFunc(deferredGeoDownloadDelay, func() {
+		if !isRunning.Load() {
+			return
+		}
+		deferredGeoMu.Lock()
+		pending := deferredGeoTypes
+		deferredGeoTypes = nil
+		deferredGeoMu.Unlock()
+		for _, geoType := range pending {
+			_ = handleUpdateGeoData(GeoUpdateParams{Type: geoType})
+		}
+	})
 }

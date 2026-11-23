@@ -18,7 +18,6 @@ import (
 	"github.com/metacubex/mihomo/config"
 	"github.com/metacubex/mihomo/constant"
 	"github.com/metacubex/mihomo/hub"
-	"github.com/metacubex/mihomo/hub/executor"
 	"github.com/metacubex/mihomo/hub/route"
 	authStore "github.com/metacubex/mihomo/listener/auth"
 	LC "github.com/metacubex/mihomo/listener/config"
@@ -109,7 +108,12 @@ func loadConfig(path string) (*config.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	cfg, err := executor.ParseWithBytes(buf)
+	raw, err := unmarshalRawConfig(buf)
+	if err != nil {
+		return nil, err
+	}
+	prepareRawConfigForParse(raw)
+	cfg, err := config.ParseRawConfig(raw)
 	if err != nil {
 		return nil, err
 	}
@@ -170,6 +174,7 @@ func applyConfig(params *SetupParams) error {
 	// older epoch, and its failure goes with it.
 	bumpRouteEpoch()
 	reconcileGeoUpdater()
+	scheduleDeferredGeoDownloads()
 	scheduleLoadMemoryRelease()
 	if err != nil {
 		// The host tells this apart from a call that failed: the default config runs.

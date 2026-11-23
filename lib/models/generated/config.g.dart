@@ -280,7 +280,7 @@ _NetworkProps _$NetworkPropsFromJson(Map<String, dynamic> json) =>
       pacMode: json['pacMode'] as bool? ?? false,
       pacScript: json['pacScript'] as String? ?? defaultPacScript,
       bypassPrivateRoute: json['bypassPrivateRoute'] as bool? ?? true,
-      appendSystemDns: json['appendSystemDns'] as bool? ?? false,
+      appendSystemDns: json['appendSystemDns'] as bool? ?? true,
       authentication: json['authentication'] == null
           ? defaultAuthenticationProps
           : AuthenticationProps.fromJson(

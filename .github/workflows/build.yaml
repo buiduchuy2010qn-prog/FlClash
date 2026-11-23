@@ -256,10 +256,10 @@ jobs:
           make_latest: true
           body: |
             <!-- flclash:changelog:begin -->
-            - Nâng số phiên bản tự động mỗi bản build (`v0.9.5`, `v0.9.6`...) để cập nhật OTA 1 chạm hoạt động chính xác ngay trong app.
-            - Tối ưu 4G SIM 0đ (VLESS/VMess/Trojan + WS): ưu tiên DNS hệ thống nhà mạng (`system://`), giữ kết nối 15s chống rớt mạng di động, bật UDP & Chrome uTLS mặc định.
-            - Đo Ping thật chuẩn xác (HTTPS anti-hijack + UnifiedDelay 1-RTT), tự động đo khi bật VPN hoặc đổi mạng, và hiển thị Ping trực tiếp trên Trang chủ điện thoại.
-            - Bản Lite nhẹ (~41 MB APK), tải Geo theo nhu cầu, chuyển mạng thông minh Wi-Fi ↔ 4G/5G.
+            - Bật sẵn DNS nhà mạng SIM 0đ (`appendSystemDns` mặc định bật + tự ưu tiên `system://` cho `default-nameserver` & `proxy-server-nameserver` ngay cả khi nâng cấp OTA từ bản cũ).
+            - Chống kẹt tải `GEOIP` khi khởi động mới trên SIM 4G 0đ không có Wi-Fi (kết nối VLESS tức thì rồi tải Geo ngầm qua proxy) & tự động dọn bỏ ~30 MB file Geo thừa cũ (`GEOIP.dat`, `ASN.mmdb`, `GEOSITE.dat`) giúp giải phóng bộ nhớ điện thoại.
+            - Sửa điểm phạt chuyển mạng thông minh cho SIM 0đ trong `NetworkObserver`: Wi-Fi mất Internet hoặc yếu sóng tự động nhảy sang 4G 0đ trong 25ms.
+            - Lưu bền vững toàn bộ tối ưu VLESS/Ping xuống `config.yaml` (giữ nguyên khi VPN tự chạy lại ngầm) và tự động tắt dò tiến trình thừa (`find-process-mode: off`) trên Android khi không dùng luật app giúp nhẹ CPU & tiết kiệm pin hơn.
             <!-- flclash:changelog:end -->
 
             ### Hướng dẫn chọn file APK phù hợp:

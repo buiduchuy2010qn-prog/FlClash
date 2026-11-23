@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/metacubex/mihomo/component/age"
@@ -98,29 +99,196 @@ func isMatchRule(rule string) bool {
 	return strings.EqualFold(strings.TrimSpace(kind), "MATCH")
 }
 
-func optimizeMergedRawConfig(raw *config.RawConfig, document *yaml.Node) {
-	root, err := documentMapping(document)
-	if err == nil {
-		if mappingValue(root, "unified-delay") == nil {
-			raw.UnifiedDelay = true
-		}
-		if mappingValue(root, "tcp-concurrent") == nil {
-			raw.TCPConcurrent = true
-		}
+var isAndroidRuntime = runtime.GOOS == "android"
+
+func boolNode(value bool) *yaml.Node {
+	v := "false"
+	if value {
+		v = "true"
 	}
-	for _, proxyMap := range raw.Proxy {
-		proxyType, _ := proxyMap["type"].(string)
-		switch proxyType {
+	return &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!bool", Value: v}
+}
+
+func strNode(value string) *yaml.Node {
+	return &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: value}
+}
+
+func isExplicitBool(node *yaml.Node, want bool) bool {
+	resolved := resolveAlias(node)
+	if resolved == nil || resolved.Kind != yaml.ScalarNode {
+		return false
+	}
+	target := "false"
+	if want {
+		target = "true"
+	}
+	return strings.EqualFold(strings.TrimSpace(resolved.Value), target)
+}
+
+func optimizeProxyNodes(root *yaml.Node) {
+	proxiesNode := resolveAlias(mappingValue(root, "proxies"))
+	if proxiesNode == nil || proxiesNode.Kind != yaml.SequenceNode {
+		return
+	}
+	for _, node := range proxiesNode.Content {
+		item := resolveAlias(node)
+		if item == nil || item.Kind != yaml.MappingNode {
+			continue
+		}
+		typeNode := resolveAlias(mappingValue(item, "type"))
+		if typeNode == nil || typeNode.Kind != yaml.ScalarNode {
+			continue
+		}
+		switch strings.ToLower(strings.TrimSpace(typeNode.Value)) {
 		case "vless", "vmess", "trojan":
-			if _, hasUDP := proxyMap["udp"]; !hasUDP {
-				proxyMap["udp"] = true
+			if mappingValue(item, "udp") == nil {
+				setMappingValue(item, "udp", boolNode(true))
 			}
-			if tlsEnabled, _ := proxyMap["tls"].(bool); tlsEnabled {
-				if fp, _ := proxyMap["client-fingerprint"].(string); fp == "" {
-					proxyMap["client-fingerprint"] = "chrome"
+			if isExplicitBool(mappingValue(item, "tls"), true) {
+				fpNode := resolveAlias(mappingValue(item, "client-fingerprint"))
+				if fpNode == nil || fpNode.Kind != yaml.ScalarNode || strings.TrimSpace(fpNode.Value) == "" {
+					setMappingValue(item, "client-fingerprint", strNode("chrome"))
 				}
 			}
 		}
+	}
+}
+
+func ensureSystemDNSNode(dnsNode *yaml.Node, key string) {
+	existing := resolveAlias(mappingValue(dnsNode, key))
+	if existing == nil || isNull(existing) || existing.Kind != yaml.SequenceNode {
+		setMappingValue(dnsNode, key, &yaml.Node{
+			Kind:    yaml.SequenceNode,
+			Tag:     "!!seq",
+			Content: []*yaml.Node{strNode("system")},
+		})
+		return
+	}
+	for _, item := range existing.Content {
+		resolved := resolveAlias(item)
+		if resolved == nil || resolved.Kind != yaml.ScalarNode {
+			continue
+		}
+		val := strings.TrimSpace(resolved.Value)
+		if val == "system" || val == "system://" {
+			return
+		}
+	}
+	content := make([]*yaml.Node, 0, len(existing.Content)+1)
+	content = append(content, strNode("system"))
+	content = append(content, existing.Content...)
+	setMappingValue(dnsNode, key, &yaml.Node{
+		Kind:    yaml.SequenceNode,
+		Tag:     "!!seq",
+		Content: content,
+	})
+}
+
+func walkParenthesizedRules(expr string, visit func(string) bool) bool {
+	depth := 0
+	start := -1
+	for i := 0; i < len(expr); i++ {
+		switch expr[i] {
+		case '(':
+			if depth == 0 {
+				start = i + 1
+			}
+			depth++
+		case ')':
+			if depth == 0 {
+				continue
+			}
+			depth--
+			if depth == 0 && start >= 0 {
+				inner := strings.TrimSpace(expr[start:i])
+				start = -1
+				if strings.HasPrefix(inner, "(") {
+					if walkParenthesizedRules(inner, visit) {
+						return true
+					}
+				} else if inner != "" && visit(inner) {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+func visitRuleParts(rule string, fn func(kind, payload string) bool) bool {
+	kind, rest, found := strings.Cut(strings.TrimSpace(rule), ",")
+	if !found && kind == "" {
+		return false
+	}
+	kind = strings.ToUpper(strings.TrimSpace(kind))
+	switch kind {
+	case "AND", "OR", "NOT", "SUB-RULE":
+		return walkParenthesizedRules(rest, func(sub string) bool {
+			return visitRuleParts(sub, fn)
+		})
+	default:
+		payload, _, _ := strings.Cut(rest, ",")
+		return fn(kind, strings.TrimSpace(payload))
+	}
+}
+
+func ruleUsesProcess(rule string) bool {
+	return visitRuleParts(rule, func(kind, _ string) bool {
+		return kind == "UID" || strings.HasPrefix(kind, "PROCESS-")
+	})
+}
+
+func seqHasProcessRule(seq *yaml.Node) bool {
+	if seq == nil || seq.Kind != yaml.SequenceNode {
+		return false
+	}
+	for _, item := range seq.Content {
+		resolved := resolveAlias(item)
+		if resolved != nil && resolved.Kind == yaml.ScalarNode && ruleUsesProcess(resolved.Value) {
+			return true
+		}
+	}
+	return false
+}
+
+func documentHasProcessRule(root *yaml.Node) bool {
+	if seqHasProcessRule(resolveAlias(mappingValue(root, "rules"))) {
+		return true
+	}
+	subRules := resolveAlias(mappingValue(root, "sub-rules"))
+	if subRules != nil && subRules.Kind == yaml.MappingNode {
+		for i := 0; i+1 < len(subRules.Content); i += 2 {
+			if seqHasProcessRule(resolveAlias(subRules.Content[i+1])) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func optimizeConfigDocument(document *yaml.Node) {
+	root, err := documentMapping(document)
+	if err != nil {
+		return
+	}
+	if mappingValue(root, "unified-delay") == nil {
+		setMappingValue(root, "unified-delay", boolNode(true))
+	}
+	if mappingValue(root, "tcp-concurrent") == nil {
+		setMappingValue(root, "tcp-concurrent", boolNode(true))
+	}
+	optimizeProxyNodes(root)
+	if !isAndroidRuntime {
+		return
+	}
+	if dnsNode := resolveAlias(mappingValue(root, "dns")); dnsNode != nil && dnsNode.Kind == yaml.MappingNode {
+		if !isExplicitBool(mappingValue(dnsNode, "enable"), false) {
+			ensureSystemDNSNode(dnsNode, "default-nameserver")
+			ensureSystemDNSNode(dnsNode, "proxy-server-nameserver")
+		}
+	}
+	if !documentHasProcessRule(root) {
+		setMappingValue(root, "find-process-mode", strNode("off"))
 	}
 }
 
@@ -129,14 +297,15 @@ func loadConfigWithBase(base *SetupBase, configPath string) (*config.Config, err
 	if err != nil {
 		return nil, err
 	}
+	optimizeConfigDocument(document)
 	raw := config.DefaultRawConfig()
 	if err := document.Decode(raw); err != nil {
 		return nil, err
 	}
-	optimizeMergedRawConfig(raw, document)
 	if err := writeConfigDocument(configPath, document); err != nil {
 		return nil, err
 	}
+	prepareRawConfigForParse(raw)
 	cfg, err := config.ParseRawConfig(raw)
 	if err != nil {
 		return nil, err

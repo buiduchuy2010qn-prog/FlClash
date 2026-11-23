@@ -21,18 +21,25 @@ import java.util.concurrent.ConcurrentHashMap
 private data class NetworkInfo(
     @Volatile var losingUntilMillis: Long = 0,
     @Volatile var validated: Boolean = false,
+    @Volatile var captivePortal: Boolean = false,
     @Volatile var notSuspended: Boolean = true,
     @Volatile var blocked: Boolean = false,
     @Volatile var dnsList: List<InetAddress> = emptyList(),
 ) {
-    val priorityPenalty: Int
-        get() {
-            var penalty = 0
-            if (!validated) penalty += 50
-            if (!notSuspended || blocked) penalty += 30
-            if (losingUntilMillis > System.currentTimeMillis()) penalty += 25
-            return penalty
+    fun priorityPenalty(isCellular: Boolean): Int {
+        var penalty = 0
+        if (!validated) {
+            // 0-balance cellular SIMs fail Android's direct gstatic validation
+            // probe even though tunneled proxy traffic works. Keep a small
+            // tie-breaker so a validated SIM beats an unvalidated one while
+            // unvalidated/losing Wi-Fi (+50 / +25) yields to 4G immediately.
+            penalty += if (isCellular) 12 else 50
         }
+        if (captivePortal && !isCellular) penalty += 20
+        if (!notSuspended || blocked) penalty += 30
+        if (losingUntilMillis > System.currentTimeMillis()) penalty += 25
+        return penalty
+    }
 }
 
 // Outlives every service run: the Core also tests delays and updates providers
@@ -69,6 +76,9 @@ object NetworkObserver {
                 validated = capabilities?.hasCapability(
                     NetworkCapabilities.NET_CAPABILITY_VALIDATED,
                 ) == true,
+                captivePortal = capabilities?.hasCapability(
+                    NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL,
+                ) == true,
                 notSuspended = Build.VERSION.SDK_INT < Build.VERSION_CODES.P ||
                     capabilities?.hasCapability(
                         NetworkCapabilities.NET_CAPABILITY_NOT_SUSPENDED,
@@ -86,12 +96,17 @@ object NetworkObserver {
             val nowValidated = networkCapabilities.hasCapability(
                 NetworkCapabilities.NET_CAPABILITY_VALIDATED,
             )
+            val isCaptivePortal = networkCapabilities.hasCapability(
+                NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL,
+            )
             info.validated = nowValidated
+            info.captivePortal = isCaptivePortal
             info.notSuspended = Build.VERSION.SDK_INT < Build.VERSION_CODES.P ||
                 networkCapabilities.hasCapability(
                     NetworkCapabilities.NET_CAPABILITY_NOT_SUSPENDED,
                 )
-            val urgent = network == currentNetwork && wasValidated && !nowValidated
+            val urgent = network == currentNetwork &&
+                ((wasValidated && !nowValidated) || isCaptivePortal || !info.notSuspended)
             scheduleUpdateDns(urgent = urgent)
         }
 
@@ -148,7 +163,8 @@ object NetworkObserver {
 
     private fun networkPriority(entry: Map.Entry<Network, NetworkInfo>): Int {
         val capabilities = connectivity?.getNetworkCapabilities(entry.key)
-        return when {
+        val isCellular = capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true
+        val base = when {
             capabilities == null -> 100
             capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN) -> 90
             capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> 0
@@ -157,12 +173,13 @@ object NetworkObserver {
                 capabilities.hasTransport(TRANSPORT_USB) -> 2
 
             capabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH) -> 3
-            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> 4
+            isCellular -> 4
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM &&
                 capabilities.hasTransport(TRANSPORT_SATELLITE) -> 5
 
             else -> 20
-        } + entry.value.priorityPenalty
+        }
+        return base + entry.value.priorityPenalty(isCellular = isCellular)
     }
 
     @Synchronized
