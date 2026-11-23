@@ -3734,4 +3734,33 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get vpnServiceStartFailed => 'VPN 服务无法启动。';
+
+  @override
+  String get updateVerifying => 'Verifying update';
+
+  @override
+  String get updateVerifyingDesc =>
+      'Checking SHA-256 signature for integrity...';
+
+  @override
+  String get updateInstalling => 'Installing update';
+
+  @override
+  String get updateInstallingDesc =>
+      'Confirm the system prompt to finish updating. The APK will be deleted automatically.';
+
+  @override
+  String get updateReadyAutoCleanDesc =>
+      'Verified and ready. The APK will be deleted automatically after updating.';
+
+  @override
+  String updateCleanedTip(Object version, Object size) {
+    return 'Updated to v$version and deleted installer APK ($size).';
+  }
+
+  @override
+  String get updateDeleteFile => 'Delete APK';
+
+  @override
+  String get updateInstallNow => 'Install now';
 }

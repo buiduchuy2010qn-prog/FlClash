@@ -6955,6 +6955,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The VPN service could not start.'**
   String get vpnServiceStartFailed;
+
+  /// No description provided for @updateVerifying.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying update'**
+  String get updateVerifying;
+
+  /// No description provided for @updateVerifyingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking SHA-256 signature for integrity...'**
+  String get updateVerifyingDesc;
+
+  /// No description provided for @updateInstalling.
+  ///
+  /// In en, this message translates to:
+  /// **'Installing update'**
+  String get updateInstalling;
+
+  /// No description provided for @updateInstallingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm the system prompt to finish updating. The APK will be deleted automatically.'**
+  String get updateInstallingDesc;
+
+  /// No description provided for @updateReadyAutoCleanDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified and ready. The APK will be deleted automatically after updating.'**
+  String get updateReadyAutoCleanDesc;
+
+  /// No description provided for @updateCleanedTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated to v{version} and deleted installer APK ({size}).'**
+  String updateCleanedTip(Object version, Object size);
+
+  /// No description provided for @updateDeleteFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete APK'**
+  String get updateDeleteFile;
+
+  /// No description provided for @updateInstallNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Install now'**
+  String get updateInstallNow;
 }
 
 class _AppLocalizationsDelegate

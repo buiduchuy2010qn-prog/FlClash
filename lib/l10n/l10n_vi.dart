@@ -3955,4 +3955,32 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get vpnServiceStartFailed => 'Không thể khởi động dịch vụ VPN.';
+
+  @override
+  String get updateVerifying => 'Đang xác minh bản cập nhật';
+
+  @override
+  String get updateVerifyingDesc => 'Đang kiểm tra chữ ký bảo mật SHA-256...';
+
+  @override
+  String get updateInstalling => 'Đang cài đặt bản cập nhật';
+
+  @override
+  String get updateInstallingDesc =>
+      'Chọn Cập nhật trên hộp thoại hệ thống để hoàn tất. Tệp APK sẽ tự động xóa sau khi cài xong.';
+
+  @override
+  String get updateReadyAutoCleanDesc =>
+      'Đã xác minh an toàn. Tệp APK sẽ tự động xóa sau khi cập nhật xong.';
+
+  @override
+  String updateCleanedTip(Object version, Object size) {
+    return 'Đã cập nhật lên v$version và tự động xóa tệp APK ($size).';
+  }
+
+  @override
+  String get updateDeleteFile => 'Xóa tệp APK';
+
+  @override
+  String get updateInstallNow => 'Cài đặt ngay';
 }
