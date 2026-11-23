@@ -40,6 +40,10 @@ android {
         versionName = flutter.versionName
     }
 
+    androidResources {
+        localeFilters += listOf("vi", "en", "zh", "ja", "ko", "ru", "fr", "es")
+    }
+
     signingConfigs {
         if (hasReleaseSigning) {
             create("release") {

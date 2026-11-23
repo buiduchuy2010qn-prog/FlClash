@@ -139,6 +139,7 @@ List<String> flutterBuildArguments(
     'build',
     if (android) 'apk' else context.os.name,
     '--dart-define-from-file=env.json',
+    if (android) '--split-debug-info=build/symbols',
     if (android && split.isNotEmpty) ...[
       '--split-per-abi',
       '--target-platform',

@@ -169,6 +169,11 @@ class VpnService : SystemVpnService(), ManagedService {
                         options = options.tunOptions,
                     ),
                 ) { "Core rejected the tun file descriptor" }
+                NetworkObserver.setUnderlyingNetworkListener { network ->
+                    runCatching {
+                        setUnderlyingNetworks(network?.let { arrayOf(it) })
+                    }
+                }
             } catch (error: Exception) {
                 stopTunLocked()
                 throw error
@@ -286,6 +291,8 @@ class VpnService : SystemVpnService(), ManagedService {
     }
 
     private fun stopTunLocked() {
+        NetworkObserver.setUnderlyingNetworkListener(null)
+        runCatching { setUnderlyingNetworks(null) }
         if (tunRunning) {
             Core.stopTun()
             tunRunning = false

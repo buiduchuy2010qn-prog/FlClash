@@ -63,6 +63,7 @@ void main() {
           'build',
           'apk',
           '--dart-define-from-file=env.json',
+          '--split-debug-info=build/symbols',
           '--split-per-abi',
           '--target-platform',
           'android-arm64,android-arm',

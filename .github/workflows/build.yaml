@@ -77,8 +77,17 @@ jobs:
         run: |
           yq -i '.hooks.user_defines.setup.build_assets = false' pubspec.yaml
 
-      - name: Run localization and lint tests
-        run: flutter test test/l10n test/lint test/common/app_localizations_test.dart
+      - name: Run localization, packaging, OTA, and lint tests
+        run: >-
+          flutter test
+          test/l10n
+          test/lint
+          test/tool/package_test.dart
+          test/common/app_localizations_test.dart
+          test/common/app_update_test.dart
+          test/common/request_test.dart
+          test/common/helpers_test.dart
+          test/widgets/update_dialog_test.dart
 
   build-apk:
     name: Build Android APK
@@ -92,24 +101,36 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
-      - name: Resolve tag version
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Resolve OTA version and tag
         shell: bash
         env:
           TAG: ${{ github.ref_name }}
         run: |
-          if [[ ! "$TAG" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)(-pre\.[0-9]+(\+[0-9]+)?)?$ ]]; then
-            echo "::error::$TAG is neither vX.Y.Z nor vX.Y.Z-pre.N[+M]"
-            exit 1
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            if [[ ! "$TAG" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)(-pre\.[0-9]+(\+[0-9]+)?)?$ ]]; then
+              echo "::error::$TAG is neither vX.Y.Z nor vX.Y.Z-pre.N[+M]"
+              exit 1
+            fi
+            base="${BASH_REMATCH[1]}"
+            committed="$(sed -n 's/^version: .*+\([0-9]*\)$/\1/p' pubspec.yaml)"
+            build="$(date -u +%Y%m%d%H)"
+            if ((build <= ${committed:-0})); then
+              build=$((committed + 1))
+            fi
+            release_tag="$TAG"
+          else
+            base="$(sed -n 's/^version: \([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p' pubspec.yaml)"
+            committed="$(sed -n 's/^version: .*+\([0-9]*\)$/\1/p' pubspec.yaml)"
+            build="$(date -u +%Y%m%d%H)"
+            if ((build <= ${committed:-0})); then
+              build=$((committed + 1))
+            fi
+            release_tag="v${base}-vi.${build}"
           fi
-          name="${BASH_REMATCH[1]}"
-          committed="$(sed -n 's/^version: .*+\([0-9]*\)$/\1/p' pubspec.yaml)"
-          build="$(date -u +%Y%m%d%H)"
-          if ((build <= ${committed:-0})); then
-            build=$((committed + 1))
-          fi
-          sed "s/^version: .*/version: $name+$build/" pubspec.yaml > pubspec.yaml.tmp
+          sed "s/^version: .*/version: ${base}+${build}/" pubspec.yaml > pubspec.yaml.tmp
           mv pubspec.yaml.tmp pubspec.yaml
+          echo "RELEASE_TAG=$release_tag" >> "$GITHUB_ENV"
+          echo "Resolved version: ${base}+${build} | OTA tag: $release_tag"
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -150,6 +171,15 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
           cache-dependency-path: core/go.sum
+
+      - name: Verify Go Core
+        working-directory: core
+        env:
+          CGO_ENABLED: 0
+        run: |
+          test -z "$(gofmt -l ./*.go)" || { gofmt -l ./*.go >&2; exit 1; }
+          go test -count=1 .
+          GOOS=android GOARCH=arm64 go vet -tags=with_gvisor . ./mobile ./tun ./platform
 
       - name: Setup Rust cache
         uses: Swatinem/rust-cache@v2
@@ -193,13 +223,10 @@ jobs:
       - name: Build Android APK
         env:
           ANDROID_NDK_HOME: ${{ steps.build-ndk.outputs.ndk-path }}
-        run: dart tool/package.dart android --env stable -v
+        run: dart tool/package.dart android --tag "${{ env.RELEASE_TAG }}" --env stable -v
 
-      - name: Generate Checksums
-        run: |
-          cd dist
-          sha256sum *.apk > SHA256SUMS.txt
-          ls -lh
+      - name: List dist artifacts
+        run: ls -lh dist
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
@@ -208,7 +235,7 @@ jobs:
           path: ./dist
           overwrite: true
 
-      - name: Refresh Rolling Tag
+      - name: Cleanup legacy vi-latest tag
         if: "!startsWith(github.ref, 'refs/tags/v')"
         env:
           GH_TOKEN: ${{ github.token }}
@@ -218,17 +245,20 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'vi-latest' }}
-          name: ${{ startsWith(github.ref, 'refs/tags/v') && format('FlClash Việt Hóa {0}', github.ref_name) || 'FlClash Việt Hóa (APK Android mới nhất)' }}
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: FlClash Việt Hóa Lite ${{ env.RELEASE_TAG }}
+          make_latest: true
           body: |
-            ## FlClash Bản Việt Hóa (Android APK)
-
-            Phiên bản Việt hóa đầy đủ giao diện ứng dụng (ngôn ngữ **Tiếng Việt** trong mục **Công cụ → Ngôn ngữ** hoặc tự động theo ngôn ngữ máy) dựa trên mã nguồn chính thức **chen08209/FlClash**.
+            <!-- flclash:changelog:begin -->
+            - Tối ưu dung lượng APK nhẹ hơn ~18 MB (và giảm ~64 MB bộ nhớ cài đặt trên điện thoại) bằng cách tải dữ liệu Geo theo nhu cầu thực tế và tách debug symbols.
+            - Hỗ trợ kiểm tra & tự động cập nhật OTA trực tiếp ngay trong ứng dụng (Giới thiệu → Kiểm tra cập nhật), kèm tùy chọn "Không nhắc lại".
+            - Nâng cấp chuyển mạng thông minh (Wi-Fi ↔ 4G/5G): ưu tiên mạng đã xác thực có Internet thật, đồng bộ mạng nền VPN, và tự kiểm tra lại độ trễ các node proxy ngay sau khi đổi mạng.
+            <!-- flclash:changelog:end -->
 
             ### Hướng dẫn chọn file APK phù hợp:
-            - **`android-arm64.apk`**: Dùng cho hầu hết điện thoại Android đời mới (64-bit ARMv8) — **Khuyên dùng**.
-            - **`android-armv7.apk`**: Dùng cho điện thoại Android cũ (32-bit ARMv7).
-            - **`android-amd64.apk`**: Dùng cho giả lập Android trên máy tính / thiết bị x86_64.
+            - **`android-arm64.apk`**: Điện thoại Android đời mới (64-bit ARMv8) — **Khuyên dùng**.
+            - **`android-armv7.apk`**: Điện thoại Android cũ (32-bit ARMv7).
+            - **`android-amd64.apk`**: Giả lập Android trên máy tính / thiết bị x86_64.
           files: |
             ./dist/*.apk
-            ./dist/SHA256SUMS.txt
+            ./dist/FlClash-*-SHA256SUMS

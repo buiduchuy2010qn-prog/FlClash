@@ -49,16 +49,13 @@ extension type CoreController._(CoreHandlerInterface _interface)
   static Future<void> initGeo() async {
     final homePath = await appPath.homeDirPath;
     const geoFileNameList = [MMDB, GEOIP, GEOSITE, ASN];
-    try {
-      for (final geoFileName in geoFileNameList) {
-        final geoFile = File(join(homePath, geoFileName));
-        final isExists = await geoFile.exists();
-        if (isExists) {
-          continue;
-        }
-        final asset = 'assets/data/$geoFileName';
-        // rootBundle inflates the asset on the platform thread, which Android
-        // shares with the UI: the four files stall frames for over 100 ms.
+    for (final geoFileName in geoFileNameList) {
+      final geoFile = File(join(homePath, geoFileName));
+      if (await geoFile.exists()) {
+        continue;
+      }
+      final asset = 'assets/data/$geoFileName';
+      try {
         if (app case final app?) {
           await app.extractAsset(asset, geoFile.path);
           continue;
@@ -66,13 +63,9 @@ extension type CoreController._(CoreHandlerInterface _interface)
         final data = await rootBundle.load(asset);
         final List<int> bytes = data.buffer.asUint8List();
         await geoFile.writeAsBytes(bytes, flush: true);
+      } on Object {
+        continue;
       }
-    } catch (e) {
-      commonPrint.log(
-        'Failed to initialize geo data: $e',
-        logLevel: LogLevel.error,
-      );
-      rethrow;
     }
   }
 

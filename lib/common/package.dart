@@ -12,30 +12,46 @@ extension PackageInfoExtension on PackageInfo {
   ].join(' ');
 }
 
+int _parseSegment(List<String> parts, int index) {
+  if (index >= parts.length) {
+    return 0;
+  }
+  return int.tryParse(parts[index]) ?? 0;
+}
+
+int _extractBuildNumber(String version) {
+  if (version.contains('+')) {
+    final afterPlus = version.split('+')[1];
+    final digits = RegExp(r'^\d+').stringMatch(afterPlus);
+    return digits == null ? 0 : (int.tryParse(digits) ?? 0);
+  }
+  final viMatch = RegExp(r'-vi\.(\d+)').firstMatch(version);
+  if (viMatch != null) {
+    return int.tryParse(viMatch.group(1)!) ?? 0;
+  }
+  return 0;
+}
+
 int compareVersions(String version1, String version2) {
-  final List<String> v1 = version1.split('+')[0].split('.');
-  final List<String> v2 = version2.split('+')[0].split('.');
-  final int major1 = int.parse(v1[0]);
-  final int major2 = int.parse(v2[0]);
+  final List<String> v1 = version1.split('+')[0].split('-')[0].split('.');
+  final List<String> v2 = version2.split('+')[0].split('-')[0].split('.');
+  final int major1 = _parseSegment(v1, 0);
+  final int major2 = _parseSegment(v2, 0);
   if (major1 != major2) {
     return major1.compareTo(major2);
   }
-  final int minor1 = v1.length > 1 ? int.parse(v1[1]) : 0;
-  final int minor2 = v2.length > 1 ? int.parse(v2[1]) : 0;
+  final int minor1 = _parseSegment(v1, 1);
+  final int minor2 = _parseSegment(v2, 1);
   if (minor1 != minor2) {
     return minor1.compareTo(minor2);
   }
-  final int patch1 = v1.length > 2 ? int.parse(v1[2]) : 0;
-  final int patch2 = v2.length > 2 ? int.parse(v2[2]) : 0;
+  final int patch1 = _parseSegment(v1, 2);
+  final int patch2 = _parseSegment(v2, 2);
   if (patch1 != patch2) {
     return patch1.compareTo(patch2);
   }
-  final int build1 = version1.contains('+')
-      ? int.parse(version1.split('+')[1])
-      : 0;
-  final int build2 = version2.contains('+')
-      ? int.parse(version2.split('+')[1])
-      : 0;
+  final int build1 = _extractBuildNumber(version1);
+  final int build2 = _extractBuildNumber(version2);
   return build1.compareTo(build2);
 }
 

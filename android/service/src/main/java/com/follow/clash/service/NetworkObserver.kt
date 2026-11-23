@@ -20,10 +20,19 @@ import java.util.concurrent.ConcurrentHashMap
 
 private data class NetworkInfo(
     @Volatile var losingUntilMillis: Long = 0,
+    @Volatile var validated: Boolean = false,
+    @Volatile var notSuspended: Boolean = true,
+    @Volatile var blocked: Boolean = false,
     @Volatile var dnsList: List<InetAddress> = emptyList(),
 ) {
     val priorityPenalty: Int
-        get() = if (losingUntilMillis > System.currentTimeMillis()) 10 else 0
+        get() {
+            var penalty = 0
+            if (!validated) penalty += 50
+            if (!notSuspended || blocked) penalty += 30
+            if (losingUntilMillis > System.currentTimeMillis()) penalty += 25
+            return penalty
+        }
 }
 
 // Outlives every service run: the Core also tests delays and updates providers
@@ -41,6 +50,9 @@ object NetworkObserver {
     private var currentNetwork: Network? = null
     private var started = false
 
+    @Volatile
+    private var underlyingListener: ((Network?) -> Unit)? = null
+
     private val request = NetworkRequest.Builder().apply {
         addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
         addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
@@ -52,14 +64,47 @@ object NetworkObserver {
 
     private val callback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
-            networkInfos[network] = NetworkInfo()
+            val capabilities = connectivity?.getNetworkCapabilities(network)
+            networkInfos[network] = NetworkInfo(
+                validated = capabilities?.hasCapability(
+                    NetworkCapabilities.NET_CAPABILITY_VALIDATED,
+                ) == true,
+                notSuspended = Build.VERSION.SDK_INT < Build.VERSION_CODES.P ||
+                    capabilities?.hasCapability(
+                        NetworkCapabilities.NET_CAPABILITY_NOT_SUSPENDED,
+                    ) != false,
+            )
             scheduleUpdateDns()
+        }
+
+        override fun onCapabilitiesChanged(
+            network: Network,
+            networkCapabilities: NetworkCapabilities,
+        ) {
+            val info = networkInfos.computeIfAbsent(network) { NetworkInfo() }
+            val wasValidated = info.validated
+            val nowValidated = networkCapabilities.hasCapability(
+                NetworkCapabilities.NET_CAPABILITY_VALIDATED,
+            )
+            info.validated = nowValidated
+            info.notSuspended = Build.VERSION.SDK_INT < Build.VERSION_CODES.P ||
+                networkCapabilities.hasCapability(
+                    NetworkCapabilities.NET_CAPABILITY_NOT_SUSPENDED,
+                )
+            val urgent = network == currentNetwork && wasValidated && !nowValidated
+            scheduleUpdateDns(urgent = urgent)
+        }
+
+        override fun onBlockedStatusChanged(network: Network, blocked: Boolean) {
+            val info = networkInfos[network] ?: return
+            info.blocked = blocked
+            scheduleUpdateDns(urgent = blocked && network == currentNetwork)
         }
 
         override fun onLosing(network: Network, maxMsToLive: Int) {
             val info = networkInfos[network] ?: return
             info.losingUntilMillis = System.currentTimeMillis() + maxMsToLive
-            scheduleUpdateDns()
+            scheduleUpdateDns(urgent = network == currentNetwork)
             if (maxMsToLive > 0) {
                 handler.postDelayed({
                     if (networkInfos.containsKey(network)) {
@@ -71,7 +116,7 @@ object NetworkObserver {
 
         override fun onLost(network: Network) {
             networkInfos.remove(network)
-            scheduleUpdateDns()
+            scheduleUpdateDns(urgent = network == currentNetwork)
         }
 
         override fun onLinkPropertiesChanged(network: Network, linkProperties: LinkProperties) {
@@ -82,11 +127,15 @@ object NetworkObserver {
 
     private val updateDnsTask = Runnable(::updateDns)
 
-    // A switch arrives as a burst, and a network that just came up has no DNS
-    // until its link properties follow; the Core flushes its cache per list.
-    private fun scheduleUpdateDns() {
+    fun setUnderlyingNetworkListener(listener: ((Network?) -> Unit)?) {
+        underlyingListener = listener
+        listener?.invoke(currentNetwork)
+    }
+
+    private fun scheduleUpdateDns(urgent: Boolean = false) {
         handler.removeCallbacks(updateDnsTask)
-        handler.postDelayed(updateDnsTask, DNS_UPDATE_DELAY_MILLIS)
+        val delay = if (urgent) FAST_SWITCH_DELAY_MILLIS else DNS_UPDATE_DELAY_MILLIS
+        handler.postDelayed(updateDnsTask, delay)
     }
 
     @Synchronized
@@ -129,18 +178,28 @@ object NetworkObserver {
             currentDnsList = dnsList
             Core.updateDNS(dnsList.joinToString(","))
         }
-        val network = preferred?.key ?: return
-        // Sockets protected onto the network we left stay bound to it; closing
-        // them makes apps reconnect now instead of after a TCP timeout.
-        if (currentNetwork != null && currentNetwork != network) {
-            Core.resetNetwork()
+        val network = preferred?.key
+        if (network == null) {
+            if (currentNetwork != null) {
+                currentNetwork = null
+                underlyingListener?.invoke(null)
+            }
+            return
         }
-        currentNetwork = network
+        val previous = currentNetwork
+        if (previous != network) {
+            currentNetwork = network
+            underlyingListener?.invoke(network)
+            if (previous != null) {
+                Core.resetNetwork()
+            }
+        }
     }
 }
 
 private const val DNS_PORT = 53
-private const val DNS_UPDATE_DELAY_MILLIS = 200L
+private const val FAST_SWITCH_DELAY_MILLIS = 25L
+private const val DNS_UPDATE_DELAY_MILLIS = 120L
 
 private fun InetAddress.asSocketAddressText(port: Int): String = when (this) {
     is Inet6Address -> "[$hostAddress]:$port"

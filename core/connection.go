@@ -1,6 +1,9 @@
 package core
 
 import (
+	"sync"
+	"time"
+
 	"github.com/metacubex/mihomo/component/resolver"
 	"github.com/metacubex/mihomo/constant"
 	"github.com/metacubex/mihomo/dns"
@@ -66,10 +69,47 @@ func handleNetworkChanged() {
 // A connection that went out over a network the device has left hangs until
 // TCP gives up on it, and so do the DNS clients' pooled connections and the
 // socket or QUIC connection a WireGuard, Hysteria2 or TUIC outbound shares.
+const postResetProbeDelay = 1200 * time.Millisecond
+
+var (
+	postResetProbeMu    sync.Mutex
+	postResetProbeTimer *time.Timer
+)
+
+func schedulePostResetHealthCheck() {
+	if !isRunning.Load() {
+		return
+	}
+	postResetProbeMu.Lock()
+	defer postResetProbeMu.Unlock()
+	if postResetProbeTimer != nil {
+		postResetProbeTimer.Stop()
+	}
+	postResetProbeTimer = time.AfterFunc(postResetProbeDelay, func() {
+		if !isRunning.Load() {
+			return
+		}
+		var wg sync.WaitGroup
+		for _, pd := range tunnel.ProvidersSnapshot() {
+			wg.Add(1)
+			p := pd
+			safeGo("postResetHealthCheck", func() {
+				defer wg.Done()
+				p.HealthCheck()
+			})
+		}
+		wg.Wait()
+		if isRunning.Load() {
+			refreshRoute()
+		}
+	})
+}
+
 func handleResetNetwork() {
 	handleCloseConnections()
 	resetOutbounds()
 	handleNetworkChanged()
+	schedulePostResetHealthCheck()
 }
 
 type networkResetter interface{ ResetNetwork() }

@@ -108,10 +108,15 @@ class Request {
   /// Null when this build is current; throws when GitHub cannot be asked.
   Future<Map<String, dynamic>?> checkForUpdate() async {
     final release = await latestRelease();
-    final remoteVersion = release['tag_name'] as String;
-    final version = globalState.packageInfo.version;
-    final hasUpdate =
-        compareVersions(remoteVersion.replaceAll('v', ''), version) > 0;
+    final tag = release['tag_name'] as String;
+    final remoteVersion = tag.startsWith('v') ? tag.substring(1) : tag;
+    final hasBuild =
+        remoteVersion.contains('+') || remoteVersion.contains('-vi.');
+    final info = globalState.packageInfo;
+    final localVersion = hasBuild && info.buildNumber.isNotEmpty
+        ? '${info.version}+${info.buildNumber}'
+        : info.version;
+    final hasUpdate = compareVersions(remoteVersion, localVersion) > 0;
     return hasUpdate ? release : null;
   }
 
