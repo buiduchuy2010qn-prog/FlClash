@@ -1139,5 +1139,13 @@
   "coreRunningDesc": "Приложение подключено к ядру",
   "forceRestartCore": "Принудительный перезапуск",
   "vpnPermissionNotGranted": "Разрешение на VPN не выдано, поэтому VPN не запущен. Постоянная VPN, заданная для другого приложения, тоже мешает запуску.",
-  "vpnServiceStartFailed": "Не удалось запустить службу VPN."
+  "vpnServiceStartFailed": "Не удалось запустить службу VPN.",
+  "updateVerifying": "Проверка обновления",
+  "updateVerifyingDesc": "Проверка подписи SHA-256 на целостность...",
+  "updateInstalling": "Установка обновления",
+  "updateInstallingDesc": "Подтвердите системный запрос для завершения обновления. Файл APK будет удалён автоматически.",
+  "updateReadyAutoCleanDesc": "Проверено и готово к установке. Файл APK будет удалён автоматически после обновления.",
+  "updateCleanedTip": "Обновлено до v{version}, установочный APK ({size}) удалён.",
+  "updateDeleteFile": "Удалить APK",
+  "updateInstallNow": "Установить сейчас"
 }

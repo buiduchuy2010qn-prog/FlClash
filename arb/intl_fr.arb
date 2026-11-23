@@ -1139,5 +1139,13 @@
   "coreRunningDesc": "L’application est connectée au cœur",
   "forceRestartCore": "Forcer le redémarrage",
   "vpnPermissionNotGranted": "L'autorisation VPN n'a pas été accordée, le VPN n'a donc pas démarré. Un VPN permanent défini pour une autre application l'empêche aussi.",
-  "vpnServiceStartFailed": "Le service VPN n'a pas pu démarrer."
+  "vpnServiceStartFailed": "Le service VPN n'a pas pu démarrer.",
+  "updateVerifying": "Vérification de la mise à jour",
+  "updateVerifyingDesc": "Vérification de la signature SHA-256 pour garantir l'intégrité...",
+  "updateInstalling": "Installation de la mise à jour",
+  "updateInstallingDesc": "Confirmez l'invite système pour terminer la mise à jour. L'APK sera supprimé automatiquement.",
+  "updateReadyAutoCleanDesc": "Vérifié et prêt. L'APK sera supprimé automatiquement après la mise à jour.",
+  "updateCleanedTip": "Mis à jour vers v{version} et fichier APK supprimé ({size}).",
+  "updateDeleteFile": "Supprimer l'APK",
+  "updateInstallNow": "Installer maintenant"
 }

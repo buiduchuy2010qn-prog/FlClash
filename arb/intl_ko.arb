@@ -1139,5 +1139,13 @@
   "coreRunningDesc": "앱이 코어에 연결되어 있습니다",
   "forceRestartCore": "강제 다시 시작",
   "vpnPermissionNotGranted": "VPN 권한이 허용되지 않아 VPN을 시작하지 않았습니다. 다른 앱이 상시 사용 VPN으로 설정되어 있어도 시작할 수 없습니다.",
-  "vpnServiceStartFailed": "VPN 서비스를 시작하지 못했습니다."
+  "vpnServiceStartFailed": "VPN 서비스를 시작하지 못했습니다.",
+  "updateVerifying": "업데이트 확인 중",
+  "updateVerifyingDesc": "무결성을 위해 SHA-256 서명을 확인하는 중...",
+  "updateInstalling": "업데이트 설치 중",
+  "updateInstallingDesc": "시스템 창에서 확인하여 업데이트를 완료하세요. 완료 후 APK가 자동으로 삭제됩니다.",
+  "updateReadyAutoCleanDesc": "검증이 완료되어 설치할 준비가 되었습니다. 업데이트 후 APK가 자동으로 삭제됩니다.",
+  "updateCleanedTip": "v{version}(으)로 업데이트되었으며 설치 APK({size})를 삭제했습니다.",
+  "updateDeleteFile": "APK 삭제",
+  "updateInstallNow": "지금 설치"
 }

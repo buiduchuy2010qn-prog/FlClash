@@ -1139,5 +1139,13 @@
   "coreRunningDesc": "アプリはコアに接続されています",
   "forceRestartCore": "強制再起動",
   "vpnPermissionNotGranted": "VPN の権限が許可されなかったため、VPN は起動しませんでした。ほかのアプリが常時接続 VPN に設定されている場合も起動できません。",
-  "vpnServiceStartFailed": "VPN サービスを起動できませんでした。"
+  "vpnServiceStartFailed": "VPN サービスを起動できませんでした。",
+  "updateVerifying": "アップデートを検証中",
+  "updateVerifyingDesc": "整合性のため SHA-256 署名を確認しています...",
+  "updateInstalling": "アップデートをインストール中",
+  "updateInstallingDesc": "システムの確認画面でインストールを完了してください。完了後、APK は自動的に削除されます。",
+  "updateReadyAutoCleanDesc": "検証済みで準備完了です。更新後、APK は自動的に削除されます。",
+  "updateCleanedTip": "v{version} に更新し、インストーラー APK ({size}) を削除しました。",
+  "updateDeleteFile": "APK を削除",
+  "updateInstallNow": "今すぐインストール"
 }

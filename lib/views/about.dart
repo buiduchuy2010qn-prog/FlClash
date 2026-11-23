@@ -486,12 +486,12 @@ class _UpdateProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(99),
+    return ClipPath.shape(
+      shape: AppShape.full,
       child: SizedBox(
         height: 8,
         child: DecoratedBox(
-          decoration: BoxDecoration(color: trackColor),
+          decoration: ShapeDecoration(color: trackColor, shape: AppShape.full),
           child: switch (value) {
             final v? => TweenAnimationBuilder<double>(
               duration: const Duration(milliseconds: 220),
