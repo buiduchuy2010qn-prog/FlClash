@@ -1085,6 +1085,7 @@ void main() {
 
   group('smart proxy & notification', () {
     test('picks lowest positive delay and skips builtin nodes', () async {
+      addTearDown(() => debouncer.cancel(FunctionTag.updateGroups));
       when(
         () => core.changeProxy(any()),
       ).thenAnswer((_) async => const ChangeProxyResult(changed: true));
@@ -1116,6 +1117,7 @@ void main() {
           const ChangeProxyParams(groupName: 'Proxy', proxyName: 'SG-Fast'),
         ),
       ).called(1);
+      debouncer.cancel(FunctionTag.updateGroups);
     });
 
     test('notificationTitleFor formats node, ping, timeout and fallback', () {
@@ -1154,11 +1156,32 @@ void main() {
     });
 
     testWidgets('auto-ping probes active node and fails over', (tester) async {
+      addTearDown(() => debouncer.cancel(FunctionTag.updateGroups));
       when(
         () => core.changeProxy(any()),
       ).thenAnswer((_) async => const ChangeProxyResult(changed: true));
       when(core.closeConnections).thenAnswer((_) async => true);
-      when(core.getProxies).thenAnswer((_) async => ProxiesData.empty());
+      when(core.getProxies).thenAnswer(
+        (_) async => ProxiesData(
+          all: const ['Proxy'],
+          proxies: Map<String, dynamic>.from({
+            'Proxy': Map<String, dynamic>.from({
+              'name': 'Proxy',
+              'type': 'Selector',
+              'now': 'SG-Fast',
+              'all': ['HK-Slow', 'SG-Fast'],
+            }),
+            'HK-Slow': Map<String, dynamic>.from({
+              'name': 'HK-Slow',
+              'type': 'ss',
+            }),
+            'SG-Fast': Map<String, dynamic>.from({
+              'name': 'SG-Fast',
+              'type': 'ss',
+            }),
+          }),
+        ),
+      );
       var failActive = false;
       when(() => core.testDelay(_delayTest(_testUrl))).thenAnswer((
         invocation,
