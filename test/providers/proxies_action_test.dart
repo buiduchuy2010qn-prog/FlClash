@@ -1094,7 +1094,8 @@ void main() {
       ) async {
         final name =
             (invocation.positionalArguments[0] as TestDelayParams).proxyName;
-        return Delay(name: name, url: _testUrl, value: name == 'SG-Fast' ? 38 : 180);
+        final value = name == 'SG-Fast' ? 38 : 180;
+        return Delay(name: name, url: _testUrl, value: value);
       });
       final container = _delayContainer(
         () => buildContainer(profile: _selectedProfile('HK-Slow')),
@@ -1152,9 +1153,7 @@ void main() {
       );
     });
 
-    testWidgets('auto-ping probes active node only and fails over on timeout', (
-      tester,
-    ) async {
+    testWidgets('auto-ping probes active node and fails over', (tester) async {
       when(
         () => core.changeProxy(any()),
       ).thenAnswer((_) async => const ChangeProxyResult(changed: true));

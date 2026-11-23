@@ -115,12 +115,10 @@ class ProxiesAction extends _$ProxiesAction {
     final selectedMap = ref.read(
       currentProfileProvider.select((state) => state?.selectedMap ?? {}),
     );
-    final activeName = primary.getCurrentSelectedName(
-      selectedMap[primary.name] ?? '',
-    );
-    final activeProxy = primary.all.firstWhereOrNull(
-      (p) => p.name == activeName,
-    );
+    final selected = selectedMap[primary.name] ?? '';
+    final activeName = primary.getCurrentSelectedName(selected);
+    final proxies = primary.all;
+    final activeProxy = proxies.firstWhereOrNull((p) => p.name == activeName);
     if (activeProxy == null || _builtinNames.contains(activeProxy.name)) {
       await _runDelayTests([(proxies: primary.all, testUrl: primary.testUrl)]);
       return;
@@ -208,9 +206,8 @@ class ProxiesAction extends _$ProxiesAction {
         }
         return;
       }
-      final currentName = group.getCurrentSelectedName(
-        selectedMap[groupName] ?? '',
-      );
+      final selected = selectedMap[groupName] ?? '';
+      final currentName = group.getCurrentSelectedName(selected);
       final switched = bestProxy.name != currentName;
       if (switched && group.type == GroupType.Selector) {
         await changeProxy(groupName: groupName, proxyName: bestProxy.name);
