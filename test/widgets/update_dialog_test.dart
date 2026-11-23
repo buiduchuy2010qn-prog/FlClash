@@ -344,8 +344,8 @@ void main() {
 
     testWidgets('reuses downloaded APK without dialog', (tester) async {
       final apkFile = File('${home.path}/update/$asset');
-      await apkFile.parent.create(recursive: true);
-      await apkFile.writeAsBytes(package);
+      apkFile.parent.createSync(recursive: true);
+      apkFile.writeAsBytesSync(package);
 
       final container = await pumpApp(tester);
       final ready = UpdateReady('v0.8.96', apkFile.path);
