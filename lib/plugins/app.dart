@@ -29,6 +29,7 @@ class App {
   late MethodChannel methodChannel;
   Function()? onExit;
   Function()? onPackagesChanged;
+  Function()? onSwitchFastestProxy;
   final floatingKeyboard = ValueNotifier(false);
   late final _networkChanges = StreamController<NetworkState>.broadcast(
     onListen: () => methodChannel.invokeMethod<bool>('watchNetwork', true),
@@ -47,6 +48,8 @@ class App {
           }
         case 'packagesChanged':
           onPackagesChanged?.call();
+        case 'switchFastestProxy':
+          onSwitchFastestProxy?.call();
         case 'floatingImeChanged':
           floatingKeyboard.value = call.arguments as bool;
         case 'networkChanged':

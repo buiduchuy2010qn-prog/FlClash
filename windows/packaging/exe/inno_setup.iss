@@ -170,6 +170,7 @@ begin
 end;
 
 [Languages]
+Name: "vietnamese"; MessagesFile: "{{VIETNAMESE_MESSAGES}}"
 Name: "chineseSimplified"; MessagesFile: "{{CHINESE_SIMPLIFIED_MESSAGES}}"
 Name: "english"; MessagesFile: "compiler:Default.isl"
 

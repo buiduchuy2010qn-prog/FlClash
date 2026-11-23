@@ -25,6 +25,8 @@ class _DelayTestJob {
 
 @Riverpod(keepAlive: true)
 class ProxiesAction extends _$ProxiesAction {
+  static const _builtinNames = {'DIRECT', 'REJECT', 'REJECT-DROP', 'PASS'};
+  static const _failoverSlowDelayMs = 2500;
   CoreController get _core => ref.read(coreHandlerProvider);
 
   final TaskPool _delayTestPool = TaskPool(maxConcurrentDelayTests);
@@ -104,13 +106,133 @@ class ProxiesAction extends _$ProxiesAction {
     if (visible.isEmpty) {
       return;
     }
-    final firstGroup = visible.first;
-    if (firstGroup.all.isEmpty) {
+    final primary =
+        visible.firstWhereOrNull((g) => g.type == GroupType.Selector) ??
+        visible.first;
+    if (primary.all.isEmpty) {
       return;
     }
-    await _runDelayTests([
-      (proxies: firstGroup.all, testUrl: firstGroup.testUrl),
-    ]);
+    final selectedMap = ref.read(
+      currentProfileProvider.select((state) => state?.selectedMap ?? {}),
+    );
+    final activeName = primary.getCurrentSelectedName(
+      selectedMap[primary.name] ?? '',
+    );
+    final activeProxy = primary.all.firstWhereOrNull(
+      (p) => p.name == activeName,
+    );
+    if (activeProxy == null || _builtinNames.contains(activeProxy.name)) {
+      await _runDelayTests([(proxies: primary.all, testUrl: primary.testUrl)]);
+      return;
+    }
+    await _runDelayTests([(proxies: [activeProxy], testUrl: primary.testUrl)]);
+    if (!ref.read(isStartProvider) ||
+        ref.read(coreStatusProvider) != CoreStatus.connected) {
+      return;
+    }
+    final groups = ref.read(groupsProvider);
+    final testUrl = ref.read(realTestUrlProvider(primary.testUrl));
+    final delayMap = ref.read(delayDataSourceProvider);
+    final activeDelay = computeProxyDelayState(
+      proxyName: activeProxy.name,
+      testUrl: testUrl,
+      groups: groups,
+      selectedMap: selectedMap,
+      delayMap: delayMap,
+    ).delay;
+    final unhealthy = activeDelay <= 0 || activeDelay >= _failoverSlowDelayMs;
+    if (unhealthy &&
+        primary.type == GroupType.Selector &&
+        ref.read(autoFailoverProvider)) {
+      await selectFastestProxy(primary.name, automatic: true);
+    }
+  }
+
+  Future<void> selectFastestActiveGroup({bool automatic = false}) async {
+    final visible = ref.read(visibleGroupsStateProvider).value;
+    if (visible.isEmpty) return;
+    final primary =
+        visible.firstWhereOrNull((g) => g.type == GroupType.Selector) ??
+        visible.first;
+    await selectFastestProxy(primary.name, automatic: automatic);
+  }
+
+  Future<void> selectFastestProxy(
+    String groupName, {
+    bool automatic = false,
+  }) async {
+    final group = ref.read(groupsProvider).getGroup(groupName);
+    if (group == null || group.all.isEmpty) {
+      return;
+    }
+    final testing = ref.read(delayTestingGroupsProvider.notifier);
+    if (!testing.start(groupName)) {
+      return;
+    }
+    try {
+      final filtered = [
+        for (final proxy in group.all)
+          if (!_builtinNames.contains(proxy.name)) proxy,
+      ];
+      final candidates = filtered.isNotEmpty ? filtered : group.all;
+      await delayTest(candidates, group.testUrl);
+
+      final groups = ref.read(groupsProvider);
+      final selectedMap = ref.read(
+        currentProfileProvider.select((state) => state?.selectedMap ?? {}),
+      );
+      final defaultTestUrl = ref.read(realTestUrlProvider(group.testUrl));
+      final delayMap = ref.read(delayDataSourceProvider);
+
+      Proxy? bestProxy;
+      var bestDelay = 1 << 30;
+      for (final candidate in candidates) {
+        final delay = computeProxyDelayState(
+          proxyName: candidate.name,
+          testUrl: defaultTestUrl,
+          groups: groups,
+          selectedMap: selectedMap,
+          delayMap: delayMap,
+        ).delay;
+        if (delay > 0 && delay < bestDelay) {
+          bestDelay = delay;
+          bestProxy = candidate;
+        }
+      }
+      if (bestProxy == null) {
+        if (!automatic) {
+          dialogs.showBanner(
+            currentAppLocalizations.noAvailableProxyTip,
+            level: BannerLevel.warning,
+          );
+        }
+        return;
+      }
+      final currentName = group.getCurrentSelectedName(
+        selectedMap[groupName] ?? '',
+      );
+      final switched = bestProxy.name != currentName;
+      if (switched && group.type == GroupType.Selector) {
+        await changeProxy(groupName: groupName, proxyName: bestProxy.name);
+        updateGroupsDebounce();
+      }
+      if (automatic && !switched) {
+        return;
+      }
+      final delayLabel = '${bestDelay}ms';
+      final tip = automatic
+          ? currentAppLocalizations.autoFailoverSwitchedTip(
+              bestProxy.name,
+              delayLabel,
+            )
+          : currentAppLocalizations.fastestProxySelectedTip(
+              bestProxy.name,
+              delayLabel,
+            );
+      dialogs.showBanner(tip, level: BannerLevel.success);
+    } finally {
+      testing.stop(groupName);
+    }
   }
 
   void cancelDelayTests() {

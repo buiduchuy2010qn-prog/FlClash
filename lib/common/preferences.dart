@@ -56,6 +56,18 @@ class Preferences {
     await preferences?.setInt('upgradeVersion', version);
   }
 
+  static const _autoFailoverKey = 'smart_auto_failover';
+
+  Future<bool> getAutoFailover() async {
+    final preferences = await _store.value;
+    return preferences?.getBool(_autoFailoverKey) ?? true;
+  }
+
+  Future<void> setAutoFailover(bool value) async {
+    final preferences = await _store.value;
+    await preferences?.setBool(_autoFailoverKey, value);
+  }
+
   Future<void> saveShareState(SharedState shareState) async {
     final preferences = await _store.value;
     await preferences?.setString('sharedState', json.encode(shareState));

@@ -1147,5 +1147,10 @@
   "updateReadyAutoCleanDesc": "Vérifié et prêt. L'APK sera supprimé automatiquement après la mise à jour.",
   "updateCleanedTip": "Mis à jour vers v{version} et fichier APK supprimé ({size}).",
   "updateDeleteFile": "Supprimer l'APK",
-  "updateInstallNow": "Installer maintenant"
+  "updateInstallNow": "Installer maintenant",
+  "selectFastestProxy": "Choisir le nœud le plus rapide",
+  "autoFailover": "Bascule auto en cas de coupure",
+  "fastestProxySelectedTip": "Basculé vers le nœud le plus rapide : {proxy} ({delay})",
+  "autoFailoverSwitchedTip": "Bascule automatique vers {proxy} ({delay})",
+  "noAvailableProxyTip": "Aucun nœud joignable trouvé"
 }

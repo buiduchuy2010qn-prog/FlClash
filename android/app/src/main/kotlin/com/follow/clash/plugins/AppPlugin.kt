@@ -151,6 +151,14 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
         }
     }
 
+    private val switchFastestReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == "${GlobalState.application.packageName}.action.SWITCH_FASTEST") {
+                onMainThread { channel.invokeMethod("switchFastestProxy", null) }
+            }
+        }
+    }
+
     private var skipNotificationPermissionRequest = false
 
     @Suppress("DEPRECATION")
@@ -844,6 +852,10 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
             IntentFilter(INSTALL_STATUS_ACTION),
             exported = true,
         )
+        flutterPluginBinding.applicationContext.registerReceiverCompat(
+            switchFastestReceiver,
+            IntentFilter("${flutterPluginBinding.applicationContext.packageName}.action.SWITCH_FASTEST"),
+        )
     }
 
     private fun watchPackageChanges(context: Context) {
@@ -863,6 +875,7 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
         packageChangeContext?.unregisterReceiver(packageChangeReceiver)
         packageChangeContext = null
         binding.applicationContext.unregisterReceiver(installStatusReceiver)
+        binding.applicationContext.unregisterReceiver(switchFastestReceiver)
         channel.setMethodCallHandler(null)
         scope.cancel()
         invokeVpnPrepareCallback(false)

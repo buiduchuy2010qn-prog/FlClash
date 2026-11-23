@@ -382,11 +382,19 @@ class CommonAction extends _$CommonAction {
       await clearUpdateDownloads();
       return;
     }
+    ref.read(updateDownloadStateProvider.notifier).value = UpdateInstalling(
+      download.tag,
+      download.path,
+    );
     final started = windows?.runas(download.path, windowsUpdateArguments(pid));
     if (started == true) {
       await ref.read(systemActionProvider.notifier).handleExit();
-    } else if (started == false) {
-      await _showUpdateFailure(currentAppLocalizations.updateInstallFailed);
+    } else {
+      ref.read(updateDownloadStateProvider.notifier).value =
+          File(download.path).existsSync() ? download : null;
+      if (started == false) {
+        await _showUpdateFailure(currentAppLocalizations.updateInstallFailed);
+      }
     }
   }
 

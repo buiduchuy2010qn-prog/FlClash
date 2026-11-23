@@ -1,6 +1,7 @@
 package com.follow.clash.service.modules
 
 import android.app.Notification.FOREGROUND_SERVICE_IMMEDIATE
+import android.app.PendingIntent
 import android.app.Service
 import android.app.Service.STOP_FOREGROUND_REMOVE
 import android.content.Intent
@@ -11,6 +12,7 @@ import androidx.core.content.getSystemService
 import com.follow.clash.common.Components
 import com.follow.clash.common.GlobalState
 import com.follow.clash.common.QuickAction
+import com.follow.clash.common.R as CommonR
 import com.follow.clash.common.ensureNotificationChannel
 import com.follow.clash.common.quickIntent
 import com.follow.clash.common.receiveBroadcastFlow
@@ -110,12 +112,26 @@ internal class NotificationModule(
 
     private val stopIntent by lazy { QuickAction.STOP.quickIntent.toPendingIntent }
 
+    private val switchFastestIntent by lazy {
+        PendingIntent.getBroadcast(
+            service,
+            1,
+            Intent("${service.packageName}.action.SWITCH_FASTEST").setPackage(service.packageName),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+    }
+
     private fun update(params: ExtendedNotificationParams) {
         service.startForeground(
             with(notificationBuilder) {
                 setContentTitle(params.title)
                 setContentText(params.contentText)
                 clearActions()
+                addAction(
+                    0,
+                    service.getString(CommonR.string.notification_switch_fastest),
+                    switchFastestIntent,
+                )
                 if (params.showStopAction) {
                     addAction(0, params.stopText, stopIntent)
                 }

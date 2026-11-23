@@ -2,4 +2,5 @@
 <resources>
     <string name="app_name">FlClash</string>
     <string name="service_channel_name">FlClash Service</string>
+    <string name="notification_switch_fastest">Fastest</string>
 </resources>

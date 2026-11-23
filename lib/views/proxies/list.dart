@@ -636,6 +636,13 @@ class ListHeader extends ConsumerWidget {
               onScrollToSelected: () {
                 onScrollToSelected(groupName);
               },
+              onSelectFastest: group.type == GroupType.Selector
+                  ? () {
+                      ref
+                          .read(proxiesActionProvider.notifier)
+                          .selectFastestProxy(groupName);
+                    }
+                  : null,
               onDelayTest: () {
                 ref
                     .read(proxiesActionProvider.notifier)
@@ -807,6 +814,7 @@ class _GroupActions extends StatelessWidget {
     required this.isDelayTesting,
     required this.groupType,
     required this.onScrollToSelected,
+    required this.onSelectFastest,
     required this.onDelayTest,
     required this.onToggle,
   });
@@ -815,6 +823,7 @@ class _GroupActions extends StatelessWidget {
   final bool isDelayTesting;
   final String groupType;
   final VoidCallback onScrollToSelected;
+  final VoidCallback? onSelectFastest;
   final VoidCallback onDelayTest;
   final VoidCallback onToggle;
 
@@ -828,6 +837,13 @@ class _GroupActions extends StatelessWidget {
             TonalButtonGroup(
               size: TonalButtonSize.compact,
               children: [
+                if (onSelectFastest != null)
+                  IconButton(
+                    tooltip: context.appLocalizations.selectFastestProxy,
+                    onPressed: isDelayTesting ? null : onSelectFastest,
+                    iconSize: 19,
+                    icon: const GlyphIcon(AppGlyphs.sparkle),
+                  ),
                 IconButton(
                   tooltip: context.appLocalizations.scrollToSelected,
                   onPressed: onScrollToSelected,

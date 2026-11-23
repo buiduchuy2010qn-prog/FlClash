@@ -38,6 +38,7 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
   List<PopupMenuItem> _buildMenuItems(
     BuildContext context,
     ProxiesStyleProps style,
+    bool autoFailover,
   ) {
     final appLocalizations = context.appLocalizations;
     return [
@@ -110,6 +111,12 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
               state.copyWith(hideTimeoutProxies: !state.hideTimeoutProxies),
         ),
       ),
+      PopupMenuItem(
+        glyph: AppGlyphs.swap,
+        label: appLocalizations.autoFailover,
+        checked: autoFailover,
+        onPressed: () => ref.read(autoFailoverProvider.notifier).toggle(),
+      ),
     ];
   }
 
@@ -153,6 +160,7 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
   @override
   Widget build(BuildContext context) {
     final style = ref.watch(proxiesStyleSettingProvider);
+    final autoFailover = ref.watch(autoFailoverProvider);
     final isLoading = ref.watch(loadingProvider(LoadingTag.proxies));
     final picker = widget.picker;
     final primaryAction = _buildPrimaryAction();
@@ -162,6 +170,14 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
       primaryAction: primaryAction,
       searchActions: [?primaryAction],
       iconActions: [
+        if (_isTab)
+          IconButtonData(
+            glyph: AppGlyphs.sparkle,
+            onPressed: () {
+              _proxiesTabKey.currentState?.selectFastestCurrentGroup();
+            },
+            tooltip: context.appLocalizations.selectFastestProxy,
+          ),
         if (_isTab && !picker)
           IconButtonData(
             glyph: AppGlyphs.locate,
@@ -171,7 +187,9 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
             tooltip: context.appLocalizations.scrollToSelected,
           ),
       ],
-      menuItems: picker ? const [] : _buildMenuItems(context, style),
+      menuItems: picker
+          ? const []
+          : _buildMenuItems(context, style, autoFailover),
       title: context.appLocalizations.proxies,
       searchState: AppBarSearchState(onSearch: _onSearch),
       body: switch (style.type) {

@@ -1268,5 +1268,22 @@
     }
   },
   "updateDeleteFile": "Delete APK",
-  "updateInstallNow": "Install now"
+  "updateInstallNow": "Install now",
+  "selectFastestProxy": "Select fastest node",
+  "autoFailover": "Auto-switch on drop",
+  "fastestProxySelectedTip": "Switched to fastest node {proxy} ({delay})",
+  "@fastestProxySelectedTip": {
+    "placeholders": {
+      "proxy": {},
+      "delay": {}
+    }
+  },
+  "autoFailoverSwitchedTip": "Auto-switched to {proxy} ({delay})",
+  "@autoFailoverSwitchedTip": {
+    "placeholders": {
+      "proxy": {},
+      "delay": {}
+    }
+  },
+  "noAvailableProxyTip": "No reachable node found"
 }

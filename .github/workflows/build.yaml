@@ -386,9 +386,10 @@ jobs:
           make_latest: true
           body: |
             <!-- flclash:changelog:begin -->
-            - Sửa lỗi ấn Cập nhật trực tiếp trên Android không bật trình cài đặt: kiểm tra quyền Cài đặt ứng dụng không xác định, dùng FileProvider ACTION_VIEW tương thích Android 14+/One UI với fallback PackageInstaller, và ấn cập nhật lại sẽ cài ngay bản đã tải.
-            - Chống tải trùng 2 lần APK: giữ lại bộ cài phiên bản mới đã xác minh SHA-256 trên máy để dùng lại ngay, chống bấm đúp hộp thoại OTA, và khử trùng các tác vụ trùng URL trong DownloadManager.
-            - Thêm bản build máy tính Windows (bộ cài .exe hỗ trợ tự cập nhật OTA và bản .zip chạy ngay) cùng quy trình CI build song song Android ARM64 + Windows x64 nhanh hơn.
+            - 1 chạm chọn node mượt nhất ngay tại trang Proxy & trên thanh thông báo Android, kèm tùy chọn Tự đổi node khi rớt mạng (tự chuyển sang node sống ping thấp nhất khi node hiện tại timeout hoặc quá chậm).
+            - Nâng cấp thanh thông báo Android: hiển thị trực tiếp tên server đang kết nối kèm ping (ms / Timeout) và thêm nút Đổi mượt ngay ngoài màn hình thông báo.
+            - Tối ưu đo ping khi đổi sóng Wi-Fi / 4G: chỉ kiểm tra nhanh node đang dùng để tiết kiệm pin và tránh nghẽn 4G, chỉ quét lại cả nhóm nếu node đang dùng gặp lỗi.
+            - Bổ sung giao diện cài đặt Tiếng Việt cho trình cài đặt Windows (.exe) và cập nhật thông tin phát hành, hỗ trợ trạng thái đang cài đặt khi tự cập nhật trên Windows.
             <!-- flclash:changelog:end -->
 
             ### Hướng dẫn chọn file tải phù hợp:

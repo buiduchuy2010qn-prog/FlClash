@@ -1147,5 +1147,10 @@
   "updateReadyAutoCleanDesc": "Verificado y listo. El APK se eliminará automáticamente tras actualizar.",
   "updateCleanedTip": "Actualizado a v{version} y APK de instalación eliminado ({size}).",
   "updateDeleteFile": "Eliminar APK",
-  "updateInstallNow": "Instalar ahora"
+  "updateInstallNow": "Instalar ahora",
+  "selectFastestProxy": "Elegir nodo más rápido",
+  "autoFailover": "Cambio automático ante caídas",
+  "fastestProxySelectedTip": "Cambiado al nodo más rápido: {proxy} ({delay})",
+  "autoFailoverSwitchedTip": "Cambio automático a {proxy} ({delay})",
+  "noAvailableProxyTip": "No se encontró ningún nodo disponible"
 }

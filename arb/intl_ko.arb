@@ -1147,5 +1147,10 @@
   "updateReadyAutoCleanDesc": "검증이 완료되어 설치할 준비가 되었습니다. 업데이트 후 APK가 자동으로 삭제됩니다.",
   "updateCleanedTip": "v{version}(으)로 업데이트되었으며 설치 APK({size})를 삭제했습니다.",
   "updateDeleteFile": "APK 삭제",
-  "updateInstallNow": "지금 설치"
+  "updateInstallNow": "지금 설치",
+  "selectFastestProxy": "가장 빠른 노드 선택",
+  "autoFailover": "연결 끊김 시 자동 전환",
+  "fastestProxySelectedTip": "가장 빠른 노드로 전환됨: {proxy} ({delay})",
+  "autoFailoverSwitchedTip": "연결 불안정으로 {proxy} ({delay})(으)로 자동 전환됨",
+  "noAvailableProxyTip": "응답하는 노드를 찾을 수 없습니다"
 }

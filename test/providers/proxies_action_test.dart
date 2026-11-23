@@ -14,6 +14,7 @@ import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/providers/core.dart';
 import 'package:fl_clash/providers/database.dart';
 import 'package:fl_clash/providers/route_state.dart';
+import 'package:fl_clash/providers/smart_proxy.dart';
 import 'package:fl_clash/providers/state.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -1079,6 +1080,127 @@ void main() {
         'Proxy',
         'Auto',
       });
+    });
+  });
+
+  group('smart proxy & notification', () {
+    test('picks lowest positive delay and skips builtin nodes', () async {
+      when(
+        () => core.changeProxy(any()),
+      ).thenAnswer((_) async => const ChangeProxyResult(changed: true));
+      when(core.closeConnections).thenAnswer((_) async => true);
+      when(() => core.testDelay(_delayTest(_testUrl))).thenAnswer((
+        invocation,
+      ) async {
+        final name =
+            (invocation.positionalArguments[0] as TestDelayParams).proxyName;
+        return Delay(name: name, url: _testUrl, value: name == 'SG-Fast' ? 38 : 180);
+      });
+      final container = _delayContainer(
+        () => buildContainer(profile: _selectedProfile('HK-Slow')),
+      );
+      container.read(groupsProvider.notifier).value = [
+        _group('Proxy', const [
+          Proxy(name: 'DIRECT', type: 'direct'),
+          Proxy(name: 'HK-Slow', type: 'ss'),
+          Proxy(name: 'SG-Fast', type: 'ss'),
+        ]),
+      ];
+
+      await actionOf(container).selectFastestProxy('Proxy');
+
+      verifyNever(() => core.testDelay(_delayTest(_testUrl, 'DIRECT')));
+      verify(
+        () => core.changeProxy(
+          const ChangeProxyParams(groupName: 'Proxy', proxyName: 'SG-Fast'),
+        ),
+      ).called(1);
+    });
+
+    test('notificationTitleFor formats node, ping, timeout and fallback', () {
+      expect(
+        notificationTitleFor(
+          profileName: '4G',
+          activeProxyName: 'SG-01',
+          activeDelay: 42,
+        ),
+        'SG-01 · 42ms',
+      );
+      expect(
+        notificationTitleFor(
+          profileName: '4G',
+          activeProxyName: 'SG-01',
+          activeDelay: -1,
+        ),
+        'SG-01 · Timeout',
+      );
+      expect(
+        notificationTitleFor(
+          profileName: '4G',
+          activeProxyName: 'SG-01',
+          activeDelay: null,
+        ),
+        '4G · SG-01',
+      );
+      expect(
+        notificationTitleFor(
+          profileName: '',
+          activeProxyName: null,
+          activeDelay: null,
+        ),
+        appName,
+      );
+    });
+
+    testWidgets('auto-ping probes active node only and fails over on timeout', (
+      tester,
+    ) async {
+      when(
+        () => core.changeProxy(any()),
+      ).thenAnswer((_) async => const ChangeProxyResult(changed: true));
+      when(core.closeConnections).thenAnswer((_) async => true);
+      when(core.getProxies).thenAnswer((_) async => ProxiesData.empty());
+      var failActive = false;
+      when(() => core.testDelay(_delayTest(_testUrl))).thenAnswer((
+        invocation,
+      ) async {
+        final name =
+            (invocation.positionalArguments[0] as TestDelayParams).proxyName;
+        if (name == 'HK-Slow') {
+          return Delay(name: name, url: _testUrl, value: failActive ? -1 : 45);
+        }
+        return Delay(name: name, url: _testUrl, value: 32);
+      });
+      final container = _delayContainer(
+        () => buildContainer(profile: _selectedProfile('HK-Slow')),
+      );
+      container.read(coreStatusProvider.notifier).value = CoreStatus.connected;
+      container.read(groupsProvider.notifier).value = [
+        _group('Proxy', const [
+          Proxy(name: 'HK-Slow', type: 'ss'),
+          Proxy(name: 'SG-Fast', type: 'ss'),
+        ]),
+      ];
+      actionOf(container);
+
+      container.read(runTimeProvider.notifier).value = 1;
+      await tester.pump(const Duration(milliseconds: 650));
+
+      verify(() => core.testDelay(_delayTest(_testUrl, 'HK-Slow'))).called(1);
+      verifyNever(() => core.testDelay(_delayTest(_testUrl, 'SG-Fast')));
+      verifyNever(() => core.changeProxy(any()));
+
+      failActive = true;
+      container.read(runTimeProvider.notifier).value = null;
+      container.read(runTimeProvider.notifier).value = 2;
+      await tester.pump(const Duration(milliseconds: 650));
+      await tester.pump(const Duration(seconds: 2));
+
+      verify(
+        () => core.changeProxy(
+          const ChangeProxyParams(groupName: 'Proxy', proxyName: 'SG-Fast'),
+        ),
+      ).called(1);
     });
   });
 }

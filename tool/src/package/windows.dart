@@ -62,6 +62,13 @@ Map<String, String> innoVariables(
     'OUTPUT_BASE_FILENAME': outputBaseName,
     'SOURCE_DIR': sourceDir,
     'SETUP_ICON_FILE': context.path(config['setup_icon_file'] as String),
+    'VIETNAMESE_MESSAGES': p.join(
+      context.root,
+      'windows',
+      'packaging',
+      'exe',
+      'Vietnamese.isl',
+    ),
     'CHINESE_SIMPLIFIED_MESSAGES': p.join(
       context.root,
       'windows',

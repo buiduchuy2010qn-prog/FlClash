@@ -1147,5 +1147,10 @@
   "updateReadyAutoCleanDesc": "校验通过且已就绪，更新完成后将自动删除 APK 安装包。",
   "updateCleanedTip": "已更新至 v{version}，并自动清理安装包 ({size})。",
   "updateDeleteFile": "删除 APK",
-  "updateInstallNow": "立即安装"
+  "updateInstallNow": "立即安装",
+  "selectFastestProxy": "选择最快节点",
+  "autoFailover": "断线自动切换最快节点",
+  "fastestProxySelectedTip": "已切换至最快节点：{proxy} ({delay})",
+  "autoFailoverSwitchedTip": "当前节点异常，已自动切换至 {proxy} ({delay})",
+  "noAvailableProxyTip": "未找到可用节点"
 }

@@ -193,7 +193,19 @@ SharedState sharedState(Ref ref) {
       ),
     ),
   );
-  final currentProfileName = currentProfile.label;
+  final activeTarget = ref.watch(activeProxyTargetProvider);
+  final activeDelay = activeTarget == null
+      ? null
+      : ref.watch(
+          delayDataSourceProvider.select(
+            (map) => map[activeTarget.testUrl]?[activeTarget.proxyName],
+          ),
+        );
+  final currentProfileName = notificationTitleFor(
+    profileName: currentProfile.label,
+    activeProxyName: activeTarget?.proxyName,
+    activeDelay: activeDelay,
+  );
   final selectedMap = currentProfile.selectedMap;
   final onlyStatisticsProxy = appSetting.onlyStatisticsProxy;
   return SharedState(

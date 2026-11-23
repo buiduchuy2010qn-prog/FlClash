@@ -48,10 +48,17 @@ class _AndroidContainerState extends ConsumerState<AndroidManager>
     });
     service?.addListener(this);
     app?.onPackagesChanged = _reloadPackages;
+    app?.onSwitchFastestProxy = _switchFastestProxy;
   }
 
   /// A reload reads every installed app's label, and a round of store updates
   /// reports each app on its own.
+  void _switchFastestProxy() {
+    unawaited(
+      ref.read(proxiesActionProvider.notifier).selectFastestActiveGroup(),
+    );
+  }
+
   void _reloadPackages() {
     if (ref.read(packagesProvider).isEmpty) {
       return;
@@ -68,6 +75,9 @@ class _AndroidContainerState extends ConsumerState<AndroidManager>
     debouncer.cancel(FunctionTag.reloadPackages);
     if (app?.onPackagesChanged == _reloadPackages) {
       app?.onPackagesChanged = null;
+    }
+    if (app?.onSwitchFastestProxy == _switchFastestProxy) {
+      app?.onSwitchFastestProxy = null;
     }
     service?.removeListener(this);
     super.dispose();

@@ -1147,5 +1147,10 @@
   "updateReadyAutoCleanDesc": "Проверено и готово к установке. Файл APK будет удалён автоматически после обновления.",
   "updateCleanedTip": "Обновлено до v{version}, установочный APK ({size}) удалён.",
   "updateDeleteFile": "Удалить APK",
-  "updateInstallNow": "Установить сейчас"
+  "updateInstallNow": "Установить сейчас",
+  "selectFastestProxy": "Выбрать самый быстрый узел",
+  "autoFailover": "Автопереключение при обрыве",
+  "fastestProxySelectedTip": "Выбран самый быстрый узел: {proxy} ({delay})",
+  "autoFailoverSwitchedTip": "Автопереключение на {proxy} ({delay})",
+  "noAvailableProxyTip": "Доступные узлы не найдены"
 }

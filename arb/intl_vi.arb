@@ -1147,5 +1147,22 @@
   "updateReadyAutoCleanDesc": "Đã xác minh an toàn. Tệp APK sẽ tự động xóa sau khi cập nhật xong.",
   "updateCleanedTip": "Đã cập nhật lên v{version} và tự động xóa tệp APK ({size}).",
   "updateDeleteFile": "Xóa tệp APK",
-  "updateInstallNow": "Cài đặt ngay"
+  "updateInstallNow": "Cài đặt ngay",
+  "selectFastestProxy": "Chọn node mượt nhất",
+  "autoFailover": "Tự đổi node khi rớt mạng",
+  "fastestProxySelectedTip": "Đã chọn node mượt nhất: {proxy} ({delay})",
+  "@fastestProxySelectedTip": {
+    "placeholders": {
+      "proxy": {},
+      "delay": {}
+    }
+  },
+  "autoFailoverSwitchedTip": "Mạng yếu/lỗi — đã tự chuyển sang {proxy} ({delay})",
+  "@autoFailoverSwitchedTip": {
+    "placeholders": {
+      "proxy": {},
+      "delay": {}
+    }
+  },
+  "noAvailableProxyTip": "Không tìm thấy node nào phản hồi"
 }
