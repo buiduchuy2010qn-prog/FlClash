@@ -124,7 +124,12 @@ jobs:
             fi
             release_tag="$TAG"
           else
-            patch=$((2 + GITHUB_RUN_NUMBER))
+            latest_patch="$(git tag -l 'v0.9.*' | sed -n 's/^v0\.9\.\([0-9][0-9]*\)$/\1/p' | sort -n | tail -n 1)"
+            if [ -n "$latest_patch" ]; then
+              patch=$((latest_patch + 1))
+            else
+              patch=7
+            fi
             base="0.9.${patch}"
             committed="$(sed -n 's/^version: .*+\([0-9]*\)$/\1/p' pubspec.yaml)"
             build="$(date -u +%Y%m%d%H)"

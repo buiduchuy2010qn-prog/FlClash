@@ -266,15 +266,19 @@ func documentHasProcessRule(root *yaml.Node) bool {
 	return false
 }
 
-func optimizeConfigDocument(document *yaml.Node) {
+func optimizeConfigDocument(document, profile *yaml.Node) {
 	root, err := documentMapping(document)
 	if err != nil {
 		return
 	}
-	if mappingValue(root, "unified-delay") == nil {
+	defaultsSource := profile
+	if defaultsSource == nil {
+		defaultsSource = root
+	}
+	if mappingValue(defaultsSource, "unified-delay") == nil {
 		setMappingValue(root, "unified-delay", boolNode(true))
 	}
-	if mappingValue(root, "tcp-concurrent") == nil {
+	if mappingValue(defaultsSource, "tcp-concurrent") == nil {
 		setMappingValue(root, "tcp-concurrent", boolNode(true))
 	}
 	optimizeProxyNodes(root)
@@ -293,11 +297,11 @@ func optimizeConfigDocument(document *yaml.Node) {
 }
 
 func loadConfigWithBase(base *SetupBase, configPath string) (*config.Config, error) {
-	document, err := mergeProfileBase(base)
+	document, profile, err := mergeProfileDocuments(base)
 	if err != nil {
 		return nil, err
 	}
-	optimizeConfigDocument(document)
+	optimizeConfigDocument(document, profile)
 	raw := config.DefaultRawConfig()
 	if err := document.Decode(raw); err != nil {
 		return nil, err
@@ -314,28 +318,33 @@ func loadConfigWithBase(base *SetupBase, configPath string) (*config.Config, err
 }
 
 func mergeProfileBase(base *SetupBase) (*yaml.Node, error) {
+	document, _, err := mergeProfileDocuments(base)
+	return document, err
+}
+
+func mergeProfileDocuments(base *SetupBase) (*yaml.Node, *yaml.Node, error) {
 	buf, err := os.ReadFile(base.Path)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if buf, err = age.DecryptBytes(buf); err != nil {
-		return nil, fmt.Errorf("decrypt config error: %w", err)
+		return nil, nil, fmt.Errorf("decrypt config error: %w", err)
 	}
 	retag := bytes.Contains(buf, []byte("short-id"))
 	var profileDocument, overlayDocument yaml.Node
 	if err := yaml.Unmarshal(buf, &profileDocument); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if err := yaml.Unmarshal([]byte(base.Overlay), &overlayDocument); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	profile, err := documentMapping(&profileDocument)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	root, err := documentMapping(&overlayDocument)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	for _, key := range profileBaseSections {
 		if value := mappingValue(profile, key); value != nil {
@@ -344,7 +353,7 @@ func mergeProfileBase(base *SetupBase) (*yaml.Node, error) {
 	}
 	rules, err := appendRules(mappingValue(root, "rules"), mappingValue(profile, "rules"))
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if rules != nil {
 		setMappingValue(root, "rules", rules)
@@ -352,7 +361,7 @@ func mergeProfileBase(base *SetupBase) (*yaml.Node, error) {
 	if retag {
 		retagShortIDs(root)
 	}
-	return &yaml.Node{Kind: yaml.DocumentNode, Content: []*yaml.Node{root}}, nil
+	return &yaml.Node{Kind: yaml.DocumentNode, Content: []*yaml.Node{root}}, profile, nil
 }
 
 func documentMapping(document *yaml.Node) (*yaml.Node, error) {
