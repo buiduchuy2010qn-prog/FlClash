@@ -3986,4 +3986,23 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get updateInstallNow => 'Установить сейчас';
+
+  @override
+  String get selectFastestProxy => 'Выбрать самый быстрый узел';
+
+  @override
+  String get autoFailover => 'Автопереключение при обрыве';
+
+  @override
+  String fastestProxySelectedTip(Object proxy, Object delay) {
+    return 'Выбран самый быстрый узел: $proxy ($delay)';
+  }
+
+  @override
+  String autoFailoverSwitchedTip(Object proxy, Object delay) {
+    return 'Автопереключение на $proxy ($delay)';
+  }
+
+  @override
+  String get noAvailableProxyTip => 'Доступные узлы не найдены';
 }

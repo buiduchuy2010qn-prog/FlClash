@@ -3992,4 +3992,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get updateInstallNow => 'Install now';
+
+  @override
+  String get selectFastestProxy => 'Select fastest node';
+
+  @override
+  String get autoFailover => 'Auto-switch on drop';
+
+  @override
+  String fastestProxySelectedTip(Object proxy, Object delay) {
+    return 'Switched to fastest node $proxy ($delay)';
+  }
+
+  @override
+  String autoFailoverSwitchedTip(Object proxy, Object delay) {
+    return 'Auto-switched to $proxy ($delay)';
+  }
+
+  @override
+  String get noAvailableProxyTip => 'No reachable node found';
 }

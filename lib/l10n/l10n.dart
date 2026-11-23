@@ -7003,6 +7003,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Install now'**
   String get updateInstallNow;
+
+  /// No description provided for @selectFastestProxy.
+  ///
+  /// In en, this message translates to:
+  /// **'Select fastest node'**
+  String get selectFastestProxy;
+
+  /// No description provided for @autoFailover.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-switch on drop'**
+  String get autoFailover;
+
+  /// No description provided for @fastestProxySelectedTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Switched to fastest node {proxy} ({delay})'**
+  String fastestProxySelectedTip(Object proxy, Object delay);
+
+  /// No description provided for @autoFailoverSwitchedTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-switched to {proxy} ({delay})'**
+  String autoFailoverSwitchedTip(Object proxy, Object delay);
+
+  /// No description provided for @noAvailableProxyTip.
+  ///
+  /// In en, this message translates to:
+  /// **'No reachable node found'**
+  String get noAvailableProxyTip;
 }
 
 class _AppLocalizationsDelegate

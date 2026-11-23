@@ -3886,4 +3886,23 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get updateInstallNow => '지금 설치';
+
+  @override
+  String get selectFastestProxy => '가장 빠른 노드 선택';
+
+  @override
+  String get autoFailover => '연결 끊김 시 자동 전환';
+
+  @override
+  String fastestProxySelectedTip(Object proxy, Object delay) {
+    return '가장 빠른 노드로 전환됨: $proxy ($delay)';
+  }
+
+  @override
+  String autoFailoverSwitchedTip(Object proxy, Object delay) {
+    return '연결 불안정으로 $proxy ($delay)(으)로 자동 전환됨';
+  }
+
+  @override
+  String get noAvailableProxyTip => '응답하는 노드를 찾을 수 없습니다';
 }

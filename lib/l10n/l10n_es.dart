@@ -4034,4 +4034,23 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get updateInstallNow => 'Instalar ahora';
+
+  @override
+  String get selectFastestProxy => 'Elegir nodo más rápido';
+
+  @override
+  String get autoFailover => 'Cambio automático ante caídas';
+
+  @override
+  String fastestProxySelectedTip(Object proxy, Object delay) {
+    return 'Cambiado al nodo más rápido: $proxy ($delay)';
+  }
+
+  @override
+  String autoFailoverSwitchedTip(Object proxy, Object delay) {
+    return 'Cambio automático a $proxy ($delay)';
+  }
+
+  @override
+  String get noAvailableProxyTip => 'No se encontró ningún nodo disponible';
 }

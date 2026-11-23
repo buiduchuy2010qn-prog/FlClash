@@ -3760,4 +3760,23 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get updateInstallNow => '立即安装';
+
+  @override
+  String get selectFastestProxy => '选择最快节点';
+
+  @override
+  String get autoFailover => '断线自动切换最快节点';
+
+  @override
+  String fastestProxySelectedTip(Object proxy, Object delay) {
+    return '已切换至最快节点：$proxy ($delay)';
+  }
+
+  @override
+  String autoFailoverSwitchedTip(Object proxy, Object delay) {
+    return '当前节点异常，已自动切换至 $proxy ($delay)';
+  }
+
+  @override
+  String get noAvailableProxyTip => '未找到可用节点';
 }

@@ -4039,4 +4039,23 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get updateInstallNow => 'Installer maintenant';
+
+  @override
+  String get selectFastestProxy => 'Choisir le nœud le plus rapide';
+
+  @override
+  String get autoFailover => 'Bascule auto en cas de coupure';
+
+  @override
+  String fastestProxySelectedTip(Object proxy, Object delay) {
+    return 'Basculé vers le nœud le plus rapide : $proxy ($delay)';
+  }
+
+  @override
+  String autoFailoverSwitchedTip(Object proxy, Object delay) {
+    return 'Bascule automatique vers $proxy ($delay)';
+  }
+
+  @override
+  String get noAvailableProxyTip => 'Aucun nœud joignable trouvé';
 }

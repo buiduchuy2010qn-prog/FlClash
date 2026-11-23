@@ -3810,4 +3810,23 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get updateInstallNow => '今すぐインストール';
+
+  @override
+  String get selectFastestProxy => '最速ノードを選択';
+
+  @override
+  String get autoFailover => '切断時に自動切替';
+
+  @override
+  String fastestProxySelectedTip(Object proxy, Object delay) {
+    return '最速ノードに切り替えました: $proxy ($delay)';
+  }
+
+  @override
+  String autoFailoverSwitchedTip(Object proxy, Object delay) {
+    return '接続不良のため $proxy ($delay) に自動切替しました';
+  }
+
+  @override
+  String get noAvailableProxyTip => '応答するノードが見つかりません';
 }

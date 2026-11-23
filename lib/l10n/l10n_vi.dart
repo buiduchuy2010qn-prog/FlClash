@@ -3983,4 +3983,23 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get updateInstallNow => 'Cài đặt ngay';
+
+  @override
+  String get selectFastestProxy => 'Chọn node mượt nhất';
+
+  @override
+  String get autoFailover => 'Tự đổi node khi rớt mạng';
+
+  @override
+  String fastestProxySelectedTip(Object proxy, Object delay) {
+    return 'Đã chọn node mượt nhất: $proxy ($delay)';
+  }
+
+  @override
+  String autoFailoverSwitchedTip(Object proxy, Object delay) {
+    return 'Mạng yếu/lỗi — đã tự chuyển sang $proxy ($delay)';
+  }
+
+  @override
+  String get noAvailableProxyTip => 'Không tìm thấy node nào phản hồi';
 }
