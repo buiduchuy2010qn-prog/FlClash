@@ -170,7 +170,7 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
       primaryAction: primaryAction,
       searchActions: [?primaryAction],
       iconActions: [
-        if (_isTab)
+        if (_isTab && !picker)
           IconButtonData(
             glyph: AppGlyphs.sparkle,
             onPressed: () {

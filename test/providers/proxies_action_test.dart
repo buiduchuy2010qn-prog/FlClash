@@ -1201,7 +1201,7 @@ void main() {
         _group('Proxy', const [
           Proxy(name: 'HK-Slow', type: 'ss'),
           Proxy(name: 'SG-Fast', type: 'ss'),
-        ]),
+        ]).copyWith(hidden: false),
       ];
       actionOf(container);
 
@@ -1214,6 +1214,7 @@ void main() {
 
       failActive = true;
       container.read(runTimeProvider.notifier).value = null;
+      await tester.pump();
       container.read(runTimeProvider.notifier).value = 2;
       await tester.pump(const Duration(milliseconds: 650));
       await tester.pump(const Duration(seconds: 2));
