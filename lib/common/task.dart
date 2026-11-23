@@ -366,11 +366,17 @@ Future<RealProfile> _makeRealProfileTask(MakeRealProfileState data) async {
     rawConfig['ntp'] = {...rawNtp, ...ntpOverride};
   }
   if (appendSystemDns) {
-    final List<String> nameserver = List<String>.from(
-      rawConfig['dns']['nameserver'] ?? [],
-    );
-    if (!nameserver.contains(systemDns)) {
-      rawConfig['dns']['nameserver'] = [...nameserver, systemDns];
+    for (final key in const [
+      'nameserver',
+      'default-nameserver',
+      'proxy-server-nameserver',
+    ]) {
+      final List<String> servers = List<String>.from(
+        rawConfig['dns'][key] ?? [],
+      );
+      if (!servers.contains(systemDns)) {
+        rawConfig['dns'][key] = [systemDns, ...servers];
+      }
     }
   }
   if (data.safeMode) {

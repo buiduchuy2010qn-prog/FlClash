@@ -71,12 +71,26 @@ func reportMissingDelayTestProxy(name string) {
 	logError("delay test: %q is not part of the applied config", name)
 }
 
+func normalizeProbeURL(rawURL string) string {
+	switch rawURL {
+	case "http://www.gstatic.com/generate_204":
+		return "https://www.gstatic.com/generate_204"
+	case "http://cp.cloudflare.com/generate_204":
+		return "https://cp.cloudflare.com/generate_204"
+	case "http://connectivitycheck.gstatic.com/generate_204":
+		return "https://connectivitycheck.gstatic.com/generate_204"
+	default:
+		return rawURL
+	}
+}
+
 // A nil answer means the test never got a slot, which says nothing about the proxy.
 func handleTestDelay(params *TestDelayParams) *Delay {
 	url := params.TestUrl
 	if url == "" {
 		url = currentTestURL()
 	}
+	probeURL := normalizeProbeURL(url)
 	result := &Delay{Name: params.ProxyName, Url: url, Value: delayFailed}
 
 	proxy := lookupProxy(params.ProxyName)
@@ -96,7 +110,7 @@ func handleTestDelay(params *TestDelayParams) *Delay {
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	delay, err := proxy.URLTest(ctx, url, anyDelayTestStatus)
+	delay, err := proxy.URLTest(ctx, probeURL, anyDelayTestStatus)
 	if err != nil {
 		delay = 0
 	}

@@ -28,7 +28,11 @@ const baselineDnsOverrideKeys = {
 const baselineDns = Dns(
   enable: true,
   enhancedMode: DnsMode.fakeIp,
-  nameserver: ['https://doh.pub/dns-query', 'https://dns.alidns.com/dns-query'],
+  nameserver: [
+    'system://',
+    'https://cloudflare-dns.com/dns-query',
+    'https://dns.google/dns-query',
+  ],
 );
 const defaultGeoXUrl = {
   GeoResource.MMDB:
@@ -42,7 +46,7 @@ const defaultGeoXUrl = {
 };
 
 const defaultMixedPort = 7890;
-const defaultKeepAliveInterval = 30;
+const defaultKeepAliveInterval = 15;
 const defaultTunMtu = 9000;
 const minTunMtu = 1280;
 const maxTunMtu = 65535;

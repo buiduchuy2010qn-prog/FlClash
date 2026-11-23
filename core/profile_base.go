@@ -98,6 +98,32 @@ func isMatchRule(rule string) bool {
 	return strings.EqualFold(strings.TrimSpace(kind), "MATCH")
 }
 
+func optimizeMergedRawConfig(raw *config.RawConfig, document *yaml.Node) {
+	root, err := documentMapping(document)
+	if err == nil {
+		if mappingValue(root, "unified-delay") == nil {
+			raw.UnifiedDelay = true
+		}
+		if mappingValue(root, "tcp-concurrent") == nil {
+			raw.TCPConcurrent = true
+		}
+	}
+	for _, proxyMap := range raw.Proxy {
+		proxyType, _ := proxyMap["type"].(string)
+		switch proxyType {
+		case "vless", "vmess", "trojan":
+			if _, hasUDP := proxyMap["udp"]; !hasUDP {
+				proxyMap["udp"] = true
+			}
+			if tlsEnabled, _ := proxyMap["tls"].(bool); tlsEnabled {
+				if fp, _ := proxyMap["client-fingerprint"].(string); fp == "" {
+					proxyMap["client-fingerprint"] = "chrome"
+				}
+			}
+		}
+	}
+}
+
 func loadConfigWithBase(base *SetupBase, configPath string) (*config.Config, error) {
 	document, err := mergeProfileBase(base)
 	if err != nil {
@@ -107,6 +133,7 @@ func loadConfigWithBase(base *SetupBase, configPath string) (*config.Config, err
 	if err := document.Decode(raw); err != nil {
 		return nil, err
 	}
+	optimizeMergedRawConfig(raw, document)
 	if err := writeConfigDocument(configPath, document); err != nil {
 		return nil, err
 	}

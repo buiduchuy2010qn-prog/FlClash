@@ -162,6 +162,8 @@ func applyConfig(params *SetupParams) error {
 
 	currentConfig = cfg
 	hub.ApplyConfig(cfg)
+	adapter.UnifiedDelay.Store(cfg.General.UnifiedDelay)
+	dialer.SetTcpConcurrent(cfg.General.TCPConcurrent)
 	patchSelectGroup(params.SelectedMap)
 	updateListeners(cfg)
 	// After the listeners: a probe sent while the TUN is rebuilt carries the

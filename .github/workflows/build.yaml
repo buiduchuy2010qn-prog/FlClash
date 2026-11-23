@@ -77,12 +77,17 @@ jobs:
         run: |
           yq -i '.hooks.user_defines.setup.build_assets = false' pubspec.yaml
 
-      - name: Run localization, packaging, OTA, and lint tests
+      - name: Run localization, packaging, OTA, 4G, and lint tests
         run: >-
           flutter test
           test/l10n
           test/lint
           test/tool/package_test.dart
+          test/models/dns_override_test.dart
+          test/common/task_test.dart
+          test/common/task_general_override_test.dart
+          test/providers/proxies_action_test.dart
+          test/views/dashboard/proxy_groups_card_test.dart
           test/common/app_localizations_test.dart
           test/common/app_update_test.dart
           test/common/request_test.dart
@@ -119,13 +124,14 @@ jobs:
             fi
             release_tag="$TAG"
           else
-            base="$(sed -n 's/^version: \([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p' pubspec.yaml)"
+            patch=$((2 + GITHUB_RUN_NUMBER))
+            base="0.9.${patch}"
             committed="$(sed -n 's/^version: .*+\([0-9]*\)$/\1/p' pubspec.yaml)"
             build="$(date -u +%Y%m%d%H)"
             if ((build <= ${committed:-0})); then
               build=$((committed + 1))
             fi
-            release_tag="v${base}-vi.${build}"
+            release_tag="v${base}"
           fi
           sed "s/^version: .*/version: ${base}+${build}/" pubspec.yaml > pubspec.yaml.tmp
           mv pubspec.yaml.tmp pubspec.yaml
@@ -250,9 +256,10 @@ jobs:
           make_latest: true
           body: |
             <!-- flclash:changelog:begin -->
-            - Tối ưu dung lượng APK nhẹ hơn ~18 MB (và giảm ~64 MB bộ nhớ cài đặt trên điện thoại) bằng cách tải dữ liệu Geo theo nhu cầu thực tế và tách debug symbols.
-            - Hỗ trợ kiểm tra & tự động cập nhật OTA trực tiếp ngay trong ứng dụng (Giới thiệu → Kiểm tra cập nhật), kèm tùy chọn "Không nhắc lại".
-            - Nâng cấp chuyển mạng thông minh (Wi-Fi ↔ 4G/5G): ưu tiên mạng đã xác thực có Internet thật, đồng bộ mạng nền VPN, và tự kiểm tra lại độ trễ các node proxy ngay sau khi đổi mạng.
+            - Nâng số phiên bản tự động mỗi bản build (`v0.9.5`, `v0.9.6`...) để cập nhật OTA 1 chạm hoạt động chính xác ngay trong app.
+            - Tối ưu 4G SIM 0đ (VLESS/VMess/Trojan + WS): ưu tiên DNS hệ thống nhà mạng (`system://`), giữ kết nối 15s chống rớt mạng di động, bật UDP & Chrome uTLS mặc định.
+            - Đo Ping thật chuẩn xác (HTTPS anti-hijack + UnifiedDelay 1-RTT), tự động đo khi bật VPN hoặc đổi mạng, và hiển thị Ping trực tiếp trên Trang chủ điện thoại.
+            - Bản Lite nhẹ (~41 MB APK), tải Geo theo nhu cầu, chuyển mạng thông minh Wi-Fi ↔ 4G/5G.
             <!-- flclash:changelog:end -->
 
             ### Hướng dẫn chọn file APK phù hợp:

@@ -111,6 +111,30 @@ class _SelectedName extends ConsumerWidget {
   }
 }
 
+class _MobilePingChip extends ConsumerWidget {
+  const _MobilePingChip({required this.groups});
+
+  final List<Group> groups;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    for (final group in groups) {
+      final delay = ref.watch(
+        delayProvider(proxyName: group.name, testUrl: group.testUrl),
+      );
+      if (delay != null && delay > 0) {
+        final tone = switch (delay) {
+          <= 200 => DashboardChipTone.ok,
+          <= 500 => DashboardChipTone.idle,
+          _ => DashboardChipTone.warn,
+        };
+        return DashboardChip(label: '$delay ms', tone: tone);
+      }
+    }
+    return const SizedBox.shrink();
+  }
+}
+
 class _TimeoutChip extends ConsumerWidget {
   const _TimeoutChip({required this.groups});
 
@@ -288,6 +312,7 @@ class _GroupsHeader extends StatelessWidget {
             message: appLocalizations.groupCount(groups.length),
             child: DashboardChip(label: '${groups.length}'),
           ),
+        if (mobile) _MobilePingChip(groups: groups),
         _TimeoutChip(groups: groups),
       ],
       trailing: [

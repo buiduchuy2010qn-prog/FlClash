@@ -39,16 +39,78 @@ class ProxiesAction extends _$ProxiesAction {
 
   Timer? _delayFlushTimer;
 
+  Timer? _autoPingTimer;
+
+  int _lastAutoPingEpoch = -1;
+
   final Map<String, String> _pendingSelectedRollback = {};
 
   @override
   void build() {
-    ref.onDispose(() => _delayFlushTimer?.cancel());
+    ref.onDispose(() {
+      _delayFlushTimer?.cancel();
+      _autoPingTimer?.cancel();
+    });
     ref.listen(coreStatusProvider, (_, next) {
       if (next != CoreStatus.connected) {
+        _autoPingTimer?.cancel();
+        _lastAutoPingEpoch = -1;
         cancelDelayTests();
       }
     });
+    ref.listen(isStartProvider, (prev, next) {
+      if (!next) {
+        _autoPingTimer?.cancel();
+        _lastAutoPingEpoch = -1;
+        return;
+      }
+      if (prev != true) {
+        _scheduleAutoPing();
+      }
+    });
+    ref.listen(groupsProvider, (prev, next) {
+      if ((prev == null || prev.isEmpty) &&
+          next.isNotEmpty &&
+          ref.read(isStartProvider)) {
+        _scheduleAutoPing();
+      }
+    });
+    ref.listen(routeTrackerProvider.select((state) => state.coreEpoch), (
+      prev,
+      next,
+    ) {
+      if (next != prev &&
+          next != _lastAutoPingEpoch &&
+          ref.read(isStartProvider)) {
+        _lastAutoPingEpoch = next;
+        _scheduleAutoPing();
+      }
+    });
+  }
+
+  void _scheduleAutoPing() {
+    _autoPingTimer?.cancel();
+    _autoPingTimer = Timer(const Duration(milliseconds: 600), () {
+      unawaited(_autoTestActiveGroup());
+    });
+  }
+
+  Future<void> _autoTestActiveGroup() async {
+    if (!ref.read(isStartProvider) ||
+        ref.read(coreStatusProvider) != CoreStatus.connected) {
+      return;
+    }
+    final visible = ref.read(visibleGroupsStateProvider).value;
+    if (visible.isEmpty) {
+      return;
+    }
+    final firstGroup = visible.first;
+    if (firstGroup.all.isEmpty) {
+      return;
+    }
+    await _runDelayTests([
+      (proxies: firstGroup.all, testUrl: firstGroup.testUrl),
+    ]);
   }
 
   void cancelDelayTests() {
