@@ -29,7 +29,6 @@ const baselineDns = Dns(
   enable: true,
   enhancedMode: DnsMode.fakeIp,
   nameserver: [
-    'system://',
     'https://cloudflare-dns.com/dns-query',
     'https://dns.google/dns-query',
   ],
