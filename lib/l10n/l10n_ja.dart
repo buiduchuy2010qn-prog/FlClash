@@ -144,6 +144,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get ru => 'ロシア語';
 
   @override
+  String get vi => 'ベトナム語';
+
+  @override
   String get zhCN => '簡体字中国語';
 
   @override

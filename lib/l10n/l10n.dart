@@ -11,6 +11,7 @@ import 'l10n_fr.dart';
 import 'l10n_ja.dart';
 import 'l10n_ko.dart';
 import 'l10n_ru.dart';
+import 'l10n_vi.dart';
 import 'l10n_zh.dart';
 
 // ignore_for_file: type=lint
@@ -105,6 +106,7 @@ abstract class AppLocalizations {
     Locale('ja'),
     Locale('ko'),
     Locale('ru'),
+    Locale('vi'),
     Locale('zh'),
   ];
 
@@ -377,6 +379,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Russian'**
   String get ru;
+
+  /// No description provided for @vi.
+  ///
+  /// In en, this message translates to:
+  /// **'Vietnamese'**
+  String get vi;
 
   /// No description provided for @zhCN.
   ///
@@ -6966,6 +6974,7 @@ class _AppLocalizationsDelegate
     'ja',
     'ko',
     'ru',
+    'vi',
     'zh',
   ].contains(locale.languageCode);
 
@@ -6988,6 +6997,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsKo();
     case 'ru':
       return AppLocalizationsRu();
+    case 'vi':
+      return AppLocalizationsVi();
     case 'zh':
       return AppLocalizationsZh();
   }

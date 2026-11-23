@@ -144,6 +144,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ru => '俄语';
 
   @override
+  String get vi => '越南语';
+
+  @override
   String get zhCN => '中文简体';
 
   @override
