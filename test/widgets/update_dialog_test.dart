@@ -11,6 +11,7 @@ import 'package:fl_clash/providers/action.dart';
 import 'package:fl_clash/providers/app.dart';
 import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/state.dart';
+import 'package:fl_clash/views/about.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -357,5 +358,55 @@ void main() {
     await tapCancel(tester);
     await shown;
     expect(container.read(appSettingProvider).autoCheckUpdate, isTrue);
+  });
+
+  testWidgets('about view renders multi-stage OTA update states', (
+    tester,
+  ) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    globalState.container = container;
+    container.listen(appSettingProvider, (_, _) {}, fireImmediately: true);
+    container
+        .read(viewSizeProvider.notifier)
+        .update((_) => const Size(600, 900));
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const TestApp(child: HostScaffold(body: AboutView())),
+      ),
+    );
+    await tester.pump();
+
+    container.read(updateDownloadStateProvider.notifier).value =
+        const UpdateDownloading(
+          'v0.9.8',
+          received: 20 * 1024 * 1024,
+          total: 40 * 1024 * 1024,
+          speedBytesPerSec: 4 * 1024 * 1024,
+        );
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(find.text('Downloading update'), findsOneWidget);
+    expect(find.text('50%'), findsOneWidget);
+    expect(find.textContaining('0.8.95 → 0.9.8'), findsOneWidget);
+    expect(find.textContaining('/s'), findsOneWidget);
+
+    container.read(updateDownloadStateProvider.notifier).value =
+        const UpdateVerifying('v0.9.8', total: 40 * 1024 * 1024);
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(find.text('Verifying update'), findsOneWidget);
+
+    container.read(updateDownloadStateProvider.notifier).value =
+        const UpdateInstalling('v0.9.8', '/tmp/a.apk');
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(find.text('Installing update'), findsOneWidget);
+
+    container.read(updateDownloadStateProvider.notifier).value =
+        const UpdateReady('v0.9.8', '/tmp/a.apk');
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(find.text('Update ready'), findsOneWidget);
+    expect(find.text('Install now'), findsOneWidget);
+    expect(find.text('Delete APK'), findsOneWidget);
   });
 }

@@ -1139,5 +1139,13 @@
   "coreRunningDesc": "Ứng dụng đã kết nối với nhân",
   "forceRestartCore": "Buộc khởi động lại",
   "vpnPermissionNotGranted": "Chưa được cấp quyền VPN nên VPN không thể khởi động. Nếu một ứng dụng khác đang đặt VPN luôn bật, điều này cũng xảy ra.",
-  "vpnServiceStartFailed": "Không thể khởi động dịch vụ VPN."
+  "vpnServiceStartFailed": "Không thể khởi động dịch vụ VPN.",
+  "updateVerifying": "Đang xác minh bản cập nhật",
+  "updateVerifyingDesc": "Đang kiểm tra chữ ký bảo mật SHA-256...",
+  "updateInstalling": "Đang cài đặt bản cập nhật",
+  "updateInstallingDesc": "Chọn Cập nhật trên hộp thoại hệ thống để hoàn tất. Tệp APK sẽ tự động xóa sau khi cài xong.",
+  "updateReadyAutoCleanDesc": "Đã xác minh an toàn. Tệp APK sẽ tự động xóa sau khi cập nhật xong.",
+  "updateCleanedTip": "Đã cập nhật lên v{version} và tự động xóa tệp APK ({size}).",
+  "updateDeleteFile": "Xóa tệp APK",
+  "updateInstallNow": "Cài đặt ngay"
 }

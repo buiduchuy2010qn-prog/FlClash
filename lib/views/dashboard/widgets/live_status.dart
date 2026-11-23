@@ -63,8 +63,7 @@ List<LiveStatus> watchLiveStatuses(
     if (core == CoreStatus.disconnected ||
         separateCore && core == CoreStatus.connecting)
       CoreLiveStatus(core),
-    if (download is UpdateReady) UpdateStatus(download),
-    if (download is UpdateDownloading) UpdateStatus(download),
+    if (download != null) UpdateStatus(download),
     if (awaitingConsent.isNotEmpty)
       MitmConsentStatus([for (final module in awaitingConsent) module.name]),
     if (separateCore && core == CoreStatus.connected)
@@ -156,6 +155,8 @@ class LiveStatusButton extends ConsumerWidget {
 
 Object _pillKindOf(LiveStatus status) => switch (status) {
   UpdateStatus(download: UpdateReady()) => UpdateReady,
+  UpdateStatus(download: UpdateVerifying()) => UpdateVerifying,
+  UpdateStatus(download: UpdateInstalling()) => UpdateInstalling,
   CoreLiveStatus(:final phase) => phase,
   _ => status.key,
 };
@@ -211,7 +212,8 @@ class _LiveStatusPill extends StatelessWidget {
         colorScheme.errorContainer,
         colorScheme.onErrorContainer,
       ),
-      UpdateStatus(download: UpdateReady()) => (
+      UpdateStatus(download: UpdateReady()) ||
+      UpdateStatus(download: UpdateInstalling()) => (
         colorScheme.successContainer,
         colorScheme.onSuccessContainer,
       ),
@@ -226,6 +228,10 @@ class _LiveStatusPill extends StatelessWidget {
         appLocalizations.coreStopped,
       CoreLiveStatus() => appLocalizations.connecting,
       UpdateStatus(download: UpdateReady()) => appLocalizations.updateReady,
+      UpdateStatus(download: UpdateVerifying()) =>
+        appLocalizations.updateVerifying,
+      UpdateStatus(download: UpdateInstalling()) =>
+        appLocalizations.updateInstalling,
       UpdateStatus() => appLocalizations.downloadingUpdate,
       MitmConsentStatus() => appLocalizations.mitmModulesTurnedOff,
     };
@@ -244,6 +250,11 @@ class _LiveStatusPill extends StatelessWidget {
         UpdateStatus(download: UpdateReady()) => const GlyphIcon(
           AppGlyphs.checkCircle,
           fill: 1,
+        ),
+        UpdateStatus(download: UpdateVerifying()) ||
+        UpdateStatus(download: UpdateInstalling()) => Builder(
+          builder: (context) =>
+              ActivityIndicator(color: IconTheme.of(context).color),
         ),
         UpdateStatus(
           download: UpdateDownloading(:final received, :final total),

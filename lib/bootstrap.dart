@@ -10,6 +10,7 @@ import 'package:fl_clash/common/tray.dart';
 import 'package:fl_clash/common/window.dart';
 import 'package:fl_clash/database/database.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/plugins/app.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
@@ -157,7 +158,7 @@ class Bootstrap {
     unawaited(
       _container.read(profilesActionProvider.notifier).autoUpdateProfiles(),
     );
-    unawaited(clearUpdateDownloads());
+    unawaited(_cleanupAfterUpdate());
     unawaited(_container.read(commonActionProvider.notifier).autoCheckUpdate());
     unawaited(
       autoLaunch?.updateStatus(_container.read(appSettingProvider).autoLaunch),
@@ -187,6 +188,21 @@ class Bootstrap {
     unawaited(_container.read(mitmModulesActionProvider.notifier).autoUpdate());
     await bootGuard.markRunning();
     unawaited(_container.read(locationPermissionsProvider.notifier).refresh());
+  }
+
+  Future<void> _cleanupAfterUpdate() async {
+    final cleanedByReceiver = await app?.consumeCleanedUpdateBytes() ?? 0;
+    final cleanedNow = await clearUpdateDownloads();
+    final totalCleaned = cleanedByReceiver + cleanedNow;
+    if (totalCleaned > 0) {
+      dialogs.showBanner(
+        currentAppLocalizations.updateCleanedTip(
+          globalState.packageInfo.version,
+          totalCleaned.traffic.show,
+        ),
+        level: BannerLevel.success,
+      );
+    }
   }
 
   Future<void> _showCrashRecoveryTip() async {

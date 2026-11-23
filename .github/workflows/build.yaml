@@ -261,10 +261,9 @@ jobs:
           make_latest: true
           body: |
             <!-- flclash:changelog:begin -->
-            - Bật sẵn DNS nhà mạng SIM 0đ (`appendSystemDns` mặc định bật + tự ưu tiên `system://` cho `default-nameserver` & `proxy-server-nameserver` ngay cả khi nâng cấp OTA từ bản cũ).
-            - Chống kẹt tải `GEOIP` khi khởi động mới trên SIM 4G 0đ không có Wi-Fi (kết nối VLESS tức thì rồi tải Geo ngầm qua proxy) & tự động dọn bỏ ~30 MB file Geo thừa cũ (`GEOIP.dat`, `ASN.mmdb`, `GEOSITE.dat`) giúp giải phóng bộ nhớ điện thoại.
-            - Sửa điểm phạt chuyển mạng thông minh cho SIM 0đ trong `NetworkObserver`: Wi-Fi mất Internet hoặc yếu sóng tự động nhảy sang 4G 0đ trong 25ms.
-            - Lưu bền vững toàn bộ tối ưu VLESS/Ping xuống `config.yaml` (giữ nguyên khi VPN tự chạy lại ngầm) và tự động tắt dò tiến trình thừa (`find-process-mode: off`) trên Android khi không dùng luật app giúp nhẹ CPU & tiết kiệm pin hơn.
+            - Giao diện cập nhật OTA trực quan ngay tại màn hình Giới thiệu: thanh tiến trình mượt, hiện rõ `%`, dung lượng MB đã tải, tốc độ tải thực tế (`MB/s`), trạng thái xác minh chữ ký SHA-256 và trạng thái đang mở trình cài đặt Android.
+            - Tự động bật trình cài đặt Android ngay sau khi tải & xác minh xong (giữ lại tệp nếu lỡ bấm hủy để cài lại ngay mà không cần tải lại, kèm nút Xóa tệp APK tức thì).
+            - Tự động xóa sạch tệp cài đặt APK & dọn lịch sử trình tải xuống ngay khi cập nhật hoàn tất (`MY_PACKAGE_REPLACED` + kiểm tra dọn lại khi mở app) kèm thông báo dung lượng vừa giải phóng.
             <!-- flclash:changelog:end -->
 
             ### Hướng dẫn chọn file APK phù hợp:

@@ -1254,5 +1254,19 @@
   "coreRunningDesc": "The app is connected to the core",
   "forceRestartCore": "Force restart",
   "vpnPermissionNotGranted": "VPN permission was not granted, so the VPN did not start. An always-on VPN set for another app also blocks it.",
-  "vpnServiceStartFailed": "The VPN service could not start."
+  "vpnServiceStartFailed": "The VPN service could not start.",
+  "updateVerifying": "Verifying update",
+  "updateVerifyingDesc": "Checking SHA-256 signature for integrity...",
+  "updateInstalling": "Installing update",
+  "updateInstallingDesc": "Confirm the system prompt to finish updating. The APK will be deleted automatically.",
+  "updateReadyAutoCleanDesc": "Verified and ready. The APK will be deleted automatically after updating.",
+  "updateCleanedTip": "Updated to v{version} and deleted installer APK ({size}).",
+  "@updateCleanedTip": {
+    "placeholders": {
+      "version": {},
+      "size": {}
+    }
+  },
+  "updateDeleteFile": "Delete APK",
+  "updateInstallNow": "Install now"
 }

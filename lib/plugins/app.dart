@@ -17,10 +17,12 @@ const _packageInstallSucceeded = 0;
 const _packageInstallAborted = 3;
 const _downloadSuccessful = 8;
 const _downloadFailed = 16;
-const _downloadPollInterval = Duration(milliseconds: 500);
+const _downloadPollInterval = Duration(milliseconds: 250);
 
 bool packageInstallFailed(int status) =>
     status != _packageInstallSucceeded && status != _packageInstallAborted;
+
+bool packageInstallAborted(int status) => status == _packageInstallAborted;
 
 class App {
   static App? _instance;
@@ -277,8 +279,15 @@ class App {
     }
   }
 
-  Future<void> clearDownloads() async {
-    await methodChannel.invokeMethod<bool>('clearDownloads');
+  Future<int> clearDownloads() async {
+    return await methodChannel.invokeMethod<int>('clearDownloads') ?? 0;
+  }
+
+  Future<int> consumeCleanedUpdateBytes() async {
+    return await methodChannel.invokeMethod<int>(
+          'consumeCleanedUpdateBytes',
+        ) ??
+        0;
   }
 
   /// An accepted update ends this process before its status can arrive.

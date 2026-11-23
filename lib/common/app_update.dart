@@ -19,12 +19,31 @@ sealed class UpdateDownload {
 }
 
 final class UpdateDownloading extends UpdateDownload {
-  const UpdateDownloading(super.tag, {this.received = 0, this.total = 0});
+  const UpdateDownloading(
+    super.tag, {
+    this.received = 0,
+    this.total = 0,
+    this.speedBytesPerSec = 0,
+  });
 
   final int received;
 
   /// Zero until the server reports a length.
   final int total;
+
+  final int speedBytesPerSec;
+}
+
+final class UpdateVerifying extends UpdateDownload {
+  const UpdateVerifying(super.tag, {this.total = 0});
+
+  final int total;
+}
+
+final class UpdateInstalling extends UpdateDownload {
+  const UpdateInstalling(super.tag, this.path);
+
+  final String path;
 }
 
 final class UpdateReady extends UpdateDownload {
@@ -62,10 +81,23 @@ Future<String> fileSha256(String path) {
 }
 
 // The installer that relaunched the app may still hold its file open.
-Future<void> clearUpdateDownloads() async {
+Future<int> clearUpdateDownloads() async {
+  var dirBytes = 0;
+  var systemBytes = 0;
   try {
-    await app?.clearDownloads();
-    await safeDeletePath(await appPath.updateDirPath);
+    final updateDir = Directory(await appPath.updateDirPath);
+    if (await updateDir.exists()) {
+      await for (final entity in updateDir.list(
+        recursive: true,
+        followLinks: false,
+      )) {
+        if (entity is File) {
+          dirBytes += await entity.length();
+        }
+      }
+    }
+    systemBytes = await app?.clearDownloads() ?? 0;
+    await safeDeletePath(updateDir.path);
   } on PlatformException catch (error) {
     commonPrint.log(
       'Clearing system downloads failed: ${compactError(error)}',
@@ -77,6 +109,7 @@ Future<void> clearUpdateDownloads() async {
       logLevel: LogLevel.warning,
     );
   }
+  return systemBytes > dirBytes ? systemBytes : dirBytes;
 }
 
 // Inno Setup writes unins000.exe beside the app; the portable zip has none.

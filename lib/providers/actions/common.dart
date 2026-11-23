@@ -219,29 +219,57 @@ class CommonAction extends _$CommonAction {
       await clearUpdateDownloads();
       await Directory(directory).create(recursive: true);
       var shown = 0;
+      var lastTotal = 0;
+      var lastSampleAt = DateTime.now();
+      var lastSampleBytes = 0;
+      var smoothedSpeed = 0;
       final path = await request.downloadVerifiedRelease(
         tag: tag,
         name: name,
         directory: directory,
         cancelToken: cancelToken,
         onReceiveProgress: (received, total) {
+          lastTotal = total;
+          final now = DateTime.now();
+          final elapsedMs = now.difference(lastSampleAt).inMilliseconds;
+          if (elapsedMs >= 250 || (received == total && elapsedMs > 0)) {
+            final delta = received - lastSampleBytes;
+            if (delta > 0 && elapsedMs > 0) {
+              final instant = (delta * 1000) ~/ elapsedMs;
+              smoothedSpeed = smoothedSpeed == 0
+                  ? instant
+                  : (smoothedSpeed * 6 + instant * 4) ~/ 10;
+            }
+            lastSampleAt = now;
+            lastSampleBytes = received;
+          }
           // Every chunk would otherwise rebuild the status on its own frame.
           final step = total > 0 ? total / 100 : 1 << 20;
-          if (received - shown < step && received != total) return;
+          if (received - shown < step && elapsedMs < 250 && received != total) {
+            return;
+          }
           shown = received;
           download.value = UpdateDownloading(
             tag,
             received: received,
             total: total,
+            speedBytesPerSec: smoothedSpeed,
           );
+        },
+        onVerifying: () {
+          download.value = UpdateVerifying(tag, total: lastTotal);
         },
       );
       download.value = UpdateReady(tag, path);
-      dialogs.showBanner(
-        currentAppLocalizations.updateReadyTip,
-        level: BannerLevel.success,
-        onTap: () => unawaited(installUpdate()),
-      );
+      if (system.isAndroid && app != null) {
+        unawaited(installUpdate());
+      } else {
+        dialogs.showBanner(
+          currentAppLocalizations.updateReadyTip,
+          level: BannerLevel.success,
+          onTap: () => unawaited(installUpdate()),
+        );
+      }
     } catch (error) {
       download.value = null;
       await clearUpdateDownloads();
@@ -281,8 +309,19 @@ class CommonAction extends _$CommonAction {
     final download = ref.read(updateDownloadStateProvider);
     if (download is! UpdateReady) return;
     if (system.isAndroid) {
-      ref.read(updateDownloadStateProvider.notifier).value = null;
+      ref.read(updateDownloadStateProvider.notifier).value = UpdateInstalling(
+        download.tag,
+        download.path,
+      );
       final status = await app?.installPackage(download.path);
+      if (status != null && packageInstallAborted(status)) {
+        ref.read(updateDownloadStateProvider.notifier).value = UpdateReady(
+          download.tag,
+          download.path,
+        );
+        return;
+      }
+      ref.read(updateDownloadStateProvider.notifier).value = null;
       await clearUpdateDownloads();
       if (status != null && packageInstallFailed(status)) {
         await _showUpdateFailure(currentAppLocalizations.updateInstallFailed);

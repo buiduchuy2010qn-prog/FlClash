@@ -688,10 +688,13 @@ List<BoxShadow> _backShadows(ColorScheme colorScheme) => [
 
 String _progressText(UpdateDownloading download) {
   final received = download.received.traffic.show;
-  if (download.total <= 0) {
-    return received;
+  final size = download.total <= 0
+      ? received
+      : '$received / ${download.total.traffic.show}';
+  if (download.speedBytesPerSec <= 0) {
+    return size;
   }
-  return '$received / ${download.total.traffic.show}';
+  return '$size · ${download.speedBytesPerSec.traffic.show}/s';
 }
 
 String _readyTip(AppLocalizations appLocalizations) => system.isWindows
@@ -832,6 +835,24 @@ class _StatusCard extends ConsumerWidget {
         appLocalizations.cancel,
         onAsk,
         (neutral, colorScheme.onSurface),
+      ),
+      UpdateStatus(download: final UpdateVerifying download) => (
+        colorScheme.primaryContainer,
+        _StageSpinnerHero(tag: download.tag, tone: colorScheme.primary),
+        appLocalizations.updateVerifying,
+        appLocalizations.updateVerifyingDesc,
+        null,
+        null,
+        null,
+      ),
+      UpdateStatus(download: final UpdateInstalling download) => (
+        colorScheme.successContainer,
+        _StageSpinnerHero(tag: download.tag, tone: colorScheme.success),
+        appLocalizations.updateInstalling,
+        appLocalizations.updateInstallingDesc,
+        null,
+        null,
+        null,
       ),
       UpdateStatus(download: final UpdateReady download) => (
         colorScheme.successContainer,
@@ -1330,6 +1351,61 @@ class _HeroChip extends StatelessWidget {
                 color: color,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StageSpinnerHero extends StatelessWidget {
+  const _StageSpinnerHero({required this.tag, required this.tone});
+
+  final String tag;
+  final Color tone;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = context.colorScheme;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          spacing: 14,
+          children: [
+            SizedBox.square(
+              dimension: 60,
+              child: DecoratedBox(
+                decoration: ShapeDecoration(
+                  color: SurfaceLevel.floatingOf(
+                    colorScheme,
+                  ).colorOf(colorScheme),
+                  shape: AppShape.circle,
+                ),
+                child: Center(child: ActivityIndicator(size: 26, color: tone)),
+              ),
+            ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              spacing: 8,
+              children: [
+                _HeroChip(
+                  globalState.packageInfo.version,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                GlyphIcon(
+                  AppGlyphs.chevronForward,
+                  size: 16,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                _HeroChip(
+                  tag.replaceFirst(RegExp('^v'), ''),
+                  color: tone,
+                  emphasized: true,
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

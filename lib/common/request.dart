@@ -155,6 +155,7 @@ class Request {
     required String name,
     required String directory,
     ProgressCallback? onReceiveProgress,
+    void Function()? onVerifying,
     CancelToken? cancelToken,
   }) async {
     final checksums = updateChecksumsName(tag);
@@ -190,6 +191,7 @@ class Request {
         );
       }
     });
+    onVerifying?.call();
     if (await fileSha256(path) != expected) {
       throw ReleaseNotVerifiedException(name);
     }

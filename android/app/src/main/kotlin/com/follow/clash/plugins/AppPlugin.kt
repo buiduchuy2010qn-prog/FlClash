@@ -37,6 +37,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.follow.clash.R
 import com.follow.clash.SystemCaStore
+import com.follow.clash.UpdateStorageCleaner
 import com.follow.clash.common.Components
 import com.follow.clash.common.GlobalState
 import com.follow.clash.common.PendingCallback
@@ -325,8 +326,11 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
             }
 
             "clearDownloads" -> reply(result) {
-                clearDownloads()
-                true
+                UpdateStorageCleaner.clean(GlobalState.application)
+            }
+
+            "consumeCleanedUpdateBytes" -> reply(result) {
+                UpdateStorageCleaner.consumeCleanedBytes(GlobalState.application)
             }
 
             "installPackage" -> {
@@ -457,18 +461,6 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
                 ),
                 "total" to cursor.getLong(column(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)),
             )
-        }
-    }
-
-    // A query only sees the downloads this app started, which are all updates;
-    // removing one deletes its file too.
-    private fun clearDownloads() {
-        val ids = downloadManager.query(DownloadManager.Query())?.use { cursor ->
-            val column = cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_ID)
-            buildList { while (cursor.moveToNext()) add(cursor.getLong(column)) }
-        }.orEmpty()
-        if (ids.isNotEmpty()) {
-            downloadManager.remove(*ids.toLongArray())
         }
     }
 
