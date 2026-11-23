@@ -123,7 +123,9 @@ class ProxiesAction extends _$ProxiesAction {
       await _runDelayTests([(proxies: primary.all, testUrl: primary.testUrl)]);
       return;
     }
-    await _runDelayTests([(proxies: [activeProxy], testUrl: primary.testUrl)]);
+    await _runDelayTests([
+      (proxies: [activeProxy], testUrl: primary.testUrl),
+    ]);
     if (!ref.read(isStartProvider) ||
         ref.read(coreStatusProvider) != CoreStatus.connected) {
       return;
