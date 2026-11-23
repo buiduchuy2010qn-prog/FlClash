@@ -80,6 +80,72 @@ Future<String> fileSha256(String path) {
   });
 }
 
+final _updateAssetVersion = RegExp(
+  r'^FlClash-(\d+\.\d+\.\d+(?:-[0-9A-Za-z.]+)?)-',
+);
+
+/// Removes downloaded installers for [currentVersion] or older from [directory]
+/// while preserving a newer pending installer so tapping Update again reuses it
+/// without re-downloading.
+@visibleForTesting
+Future<({int freedBytes, bool keptNewer})> cleanObsoleteUpdateFilesIn(
+  String directory,
+  String currentVersion,
+) async {
+  var freedBytes = 0;
+  var keptNewer = false;
+  final updateDir = Directory(directory);
+  if (!await updateDir.exists()) {
+    return (freedBytes: 0, keptNewer: false);
+  }
+  await for (final entity in updateDir.list(followLinks: false)) {
+    if (entity is! File) {
+      await safeDeletePath(entity.path);
+      continue;
+    }
+    final match = _updateAssetVersion.firstMatch(basename(entity.path));
+    final fileVersion = match?.group(1);
+    final isNewer =
+        fileVersion != null &&
+        compareVersions(fileVersion, currentVersion) > 0;
+    if (isNewer) {
+      keptNewer = true;
+      continue;
+    }
+    freedBytes += await entity.length();
+    await safeDeletePath(entity.path);
+  }
+  return (freedBytes: freedBytes, keptNewer: keptNewer);
+}
+
+Future<int> cleanObsoleteUpdateDownloads(String currentVersion) async {
+  var freedBytes = 0;
+  try {
+    final result = await cleanObsoleteUpdateFilesIn(
+      await appPath.updateDirPath,
+      currentVersion,
+    );
+    freedBytes = result.freedBytes;
+    if (!result.keptNewer) {
+      final systemBytes = await app?.clearDownloads() ?? 0;
+      if (systemBytes > freedBytes) {
+        freedBytes = systemBytes;
+      }
+    }
+  } on PlatformException catch (error) {
+    commonPrint.log(
+      'Clearing obsolete system downloads failed: ${compactError(error)}',
+      logLevel: LogLevel.warning,
+    );
+  } on FileSystemException catch (error) {
+    commonPrint.log(
+      'Clearing obsolete update downloads failed: ${compactError(error)}',
+      logLevel: LogLevel.warning,
+    );
+  }
+  return freedBytes;
+}
+
 // The installer that relaunched the app may still hold its file open.
 Future<int> clearUpdateDownloads() async {
   var dirBytes = 0;

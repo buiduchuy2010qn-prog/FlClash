@@ -341,6 +341,32 @@ void main() {
       expect(container.read(updateDownloadStateProvider), isNull);
       expect(shows('Update failed'), isFalse);
     });
+
+    testWidgets(
+      'does not re-download when the same release is already downloaded',
+      (tester) async {
+        final apkFile = File('${home.path}/update/$asset');
+        await apkFile.parent.create(recursive: true);
+        await apkFile.writeAsBytes(package);
+
+        final container = await pumpApp(tester);
+        container.read(updateDownloadStateProvider.notifier).value =
+            UpdateReady('v0.8.96', apkFile.path);
+
+        final action = container.read(commonActionProvider.notifier);
+        await action.checkUpdateResultHandle(
+          data: release(_bulletsOnly),
+          isUser: true,
+        );
+        await tester.pump();
+
+        expect(find.byType(ModalRoute), findsNothing);
+        expect(
+          container.read(updateDownloadStateProvider),
+          isA<UpdateReady>(),
+        );
+      },
+    );
   });
 
   testWidgets('a manual check keeps the setting and reports a failure', (

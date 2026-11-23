@@ -111,4 +111,27 @@ void main() {
     expect(arguments, containsAll(['/SILENT', '/SUPPRESSMSGBOXES']));
     expect(arguments, contains('/updatefrom=4242'));
   });
+
+  test(
+    'cleanObsoleteUpdateFilesIn removes installed versions and keeps newer '
+    'pending installer',
+    () async {
+      final directory = await Directory.systemTemp.createTemp('update_clean');
+      addTearDown(() => directory.delete(recursive: true));
+      final older = File('${directory.path}/FlClash-0.9.7-android-arm64.apk')
+        ..writeAsStringSync('old');
+      final same = File('${directory.path}/FlClash-0.9.8-android-arm64.apk')
+        ..writeAsStringSync('same');
+      final newer = File('${directory.path}/FlClash-0.9.9-android-arm64.apk')
+        ..writeAsStringSync('newer');
+
+      final result = await cleanObsoleteUpdateFilesIn(directory.path, '0.9.8');
+
+      expect(older.existsSync(), isFalse);
+      expect(same.existsSync(), isFalse);
+      expect(newer.existsSync(), isTrue);
+      expect(result.keptNewer, isTrue);
+      expect(result.freedBytes, 7);
+    },
+  );
 }

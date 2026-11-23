@@ -172,6 +172,14 @@ class Request {
       throw ReleaseFileMissingException(name);
     }
     final path = join(directory, name);
+    final existingFile = File(path);
+    if (existingFile.existsSync() && existingFile.lengthSync() > 0) {
+      onVerifying?.call();
+      if (await fileSha256(path) == expected) {
+        return path;
+      }
+      await safeDeletePath(path);
+    }
     final uri = releaseAssetUri(tag, name);
     await _releaseFile(name, () async {
       if (app case final android?) {

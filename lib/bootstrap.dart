@@ -193,7 +193,9 @@ class Bootstrap {
 
   Future<void> _cleanupAfterUpdate() async {
     final cleanedByReceiver = await app?.consumeCleanedUpdateBytes() ?? 0;
-    final cleanedNow = await clearUpdateDownloads();
+    final cleanedNow = await cleanObsoleteUpdateDownloads(
+      globalState.packageInfo.version,
+    );
     final totalCleaned = cleanedByReceiver + cleanedNow;
     if (totalCleaned > 0) {
       dialogs.showBanner(

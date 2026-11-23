@@ -27,6 +27,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getSystemService
+import androidx.core.content.FileProvider
 import androidx.core.content.IntentCompat
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
@@ -94,6 +95,8 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
     private val requestLocalNetworkCallback = PendingCallback<Boolean>()
 
     private val installPackageCallback = PendingCallback<Int>()
+
+    private var pendingInstallApk: File? = null
 
     private var isRequestingNotificationPermission = false
 
@@ -437,6 +440,34 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
         title: String?,
         userAgent: String?,
     ): Long {
+        var existingId: Long? = null
+        val staleIds = mutableListOf<Long>()
+        runCatching {
+            downloadManager.query(DownloadManager.Query())?.use { cursor ->
+                val idCol = cursor.getColumnIndex(DownloadManager.COLUMN_ID)
+                val statusCol = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
+                val uriCol = cursor.getColumnIndex(DownloadManager.COLUMN_URI)
+                if (idCol < 0 || statusCol < 0) return@use
+                while (cursor.moveToNext()) {
+                    val id = cursor.getLong(idCol)
+                    val status = cursor.getInt(statusCol)
+                    val entryUri = if (uriCol >= 0) cursor.getString(uriCol) else null
+                    val active = status == DownloadManager.STATUS_PENDING ||
+                        status == DownloadManager.STATUS_RUNNING ||
+                        status == DownloadManager.STATUS_PAUSED
+                    if (active && entryUri == url && existingId == null) {
+                        existingId = id
+                    } else {
+                        staleIds.add(id)
+                    }
+                }
+            }
+        }
+        if (staleIds.isNotEmpty()) {
+            runCatching { downloadManager.remove(*staleIds.toLongArray()) }
+        }
+        existingId?.let { return it }
+        destination.parentFile?.mkdirs()
         destination.delete()
         val request = DownloadManager.Request(url.toUri())
             .setDestinationUri(Uri.fromFile(destination))
@@ -464,17 +495,75 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
         }
     }
 
-    private fun installPackage(apk: File, callback: (Int) -> Unit) {
+    private fun installPackage(apk: File, callback: (Int) -> Unit) = onMainThread {
+        if (!apk.exists() || apk.length() <= 0L) {
+            callback(PackageInstaller.STATUS_FAILURE)
+            return@onMainThread
+        }
         installPackageCallback.replace(
             callback,
             supersededValue = PackageInstaller.STATUS_FAILURE_ABORTED,
         )
-        scope.launch(Dispatchers.IO) {
+        val currentActivity = activity
+        if (currentActivity == null || currentActivity.isFinishing || currentActivity.isDestroyed) {
+            installPackageCallback.resolve(PackageInstaller.STATUS_FAILURE_ABORTED)
+            return@onMainThread
+        }
+        val application = GlobalState.application
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            !application.packageManager.canRequestPackageInstalls()
+        ) {
+            pendingInstallApk = apk
+            val settingsIntent = Intent(
+                Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                "package:${application.packageName}".toUri(),
+            )
             try {
-                commitInstallSession(apk)
+                @Suppress("DEPRECATION")
+                currentActivity.startActivityForResult(
+                    settingsIntent,
+                    INSTALL_PACKAGES_PERMISSION_REQUEST_CODE,
+                )
+                return@onMainThread
             } catch (error: Exception) {
-                GlobalState.log("Package install failed: $error")
-                installPackageCallback.resolve(PackageInstaller.STATUS_FAILURE)
+                GlobalState.log("Open unknown app sources settings failed: $error")
+                pendingInstallApk = null
+            }
+        }
+        launchApkInstaller(apk)
+    }
+
+    private fun launchApkInstaller(apk: File) {
+        val application = GlobalState.application
+        val currentActivity = activity
+        if (currentActivity == null || currentActivity.isFinishing || currentActivity.isDestroyed) {
+            installPackageCallback.resolve(PackageInstaller.STATUS_FAILURE_ABORTED)
+            return
+        }
+        try {
+            val uri = FileProvider.getUriForFile(
+                application,
+                "${application.packageName}.update.fileprovider",
+                apk,
+            )
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "application/vnd.android.package-archive")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
+                putExtra(Intent.EXTRA_RETURN_RESULT, true)
+                putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME, application.packageName)
+            }
+            @Suppress("DEPRECATION")
+            currentActivity.startActivityForResult(intent, INSTALL_APK_REQUEST_CODE)
+        } catch (error: Exception) {
+            GlobalState.log("FileProvider APK launch failed, falling back to PackageInstaller: $error")
+            scope.launch(Dispatchers.IO) {
+                try {
+                    commitInstallSession(apk)
+                } catch (sessionError: Exception) {
+                    GlobalState.log("Package install failed: $sessionError")
+                    installPackageCallback.resolve(PackageInstaller.STATUS_FAILURE)
+                }
             }
         }
     }
@@ -753,6 +842,7 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
         flutterPluginBinding.applicationContext.registerReceiverCompat(
             installStatusReceiver,
             IntentFilter(INSTALL_STATUS_ACTION),
+            exported = true,
         )
     }
 
@@ -779,6 +869,7 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
         invokeRequestNotificationCallback(false)
         invokeRequestLocalNetworkCallback(false)
         invokeRequestInstalledAppsCallback(false)
+        pendingInstallApk = null
         installPackageCallback.resolve(PackageInstaller.STATUS_FAILURE_ABORTED)
     }
 
@@ -840,11 +931,37 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
     }
 
     private fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
-        if (requestCode != VPN_PERMISSION_REQUEST_CODE) {
-            return false
+        return when (requestCode) {
+            VPN_PERMISSION_REQUEST_CODE -> {
+                invokeVpnPrepareCallback(resultCode == Activity.RESULT_OK)
+                true
+            }
+
+            INSTALL_PACKAGES_PERMISSION_REQUEST_CODE -> {
+                val apk = pendingInstallApk
+                pendingInstallApk = null
+                val granted = Build.VERSION.SDK_INT < Build.VERSION_CODES.O ||
+                    GlobalState.application.packageManager.canRequestPackageInstalls()
+                if (granted && apk != null && apk.exists()) {
+                    launchApkInstaller(apk)
+                } else {
+                    installPackageCallback.resolve(PackageInstaller.STATUS_FAILURE_ABORTED)
+                }
+                true
+            }
+
+            INSTALL_APK_REQUEST_CODE -> {
+                val status = when (resultCode) {
+                    Activity.RESULT_OK -> PackageInstaller.STATUS_SUCCESS
+                    Activity.RESULT_CANCELED -> PackageInstaller.STATUS_FAILURE_ABORTED
+                    else -> PackageInstaller.STATUS_FAILURE
+                }
+                installPackageCallback.resolve(status)
+                true
+            }
+
+            else -> false
         }
-        invokeVpnPrepareCallback(resultCode == Activity.RESULT_OK)
-        return true
     }
 
     private fun onRequestPermissionsResultListener(
@@ -884,6 +1001,8 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
         const val NOTIFICATION_PERMISSION_REQUEST_CODE = 1002
         const val INSTALLED_APPS_PERMISSION_REQUEST_CODE = 1003
         const val LOCAL_NETWORK_PERMISSION_REQUEST_CODE = 1004
+        const val INSTALL_PACKAGES_PERMISSION_REQUEST_CODE = 1005
+        const val INSTALL_APK_REQUEST_CODE = 1006
         const val INSTALL_STATUS_ACTION = "${Components.PACKAGE_NAME}.action.INSTALL_STATUS"
     }
 }

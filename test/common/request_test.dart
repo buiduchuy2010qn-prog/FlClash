@@ -242,6 +242,23 @@ void main() {
 
       await expectLater(download(request), throwsA(isA<DioException>()));
     });
+
+    test('reuses verified installer already on disk', () async {
+      await File('${directory.path}/$name').writeAsBytes(package);
+      var downloaded = false;
+      final request = requestAt({
+        sumsPath: () => ResponseBody.fromString('$digest  $name\n', 200),
+        '$release/$name': () {
+          downloaded = true;
+          return ResponseBody.fromBytes(package, 200);
+        },
+      });
+
+      final path = await download(request);
+
+      expect(downloaded, isFalse);
+      expect(await File(path).readAsBytes(), package);
+    });
   });
 
   group('downloadTarget', () {

@@ -4,6 +4,7 @@ part of '../action.dart';
 class CommonAction extends _$CommonAction {
   CoreController get _core => ref.read(coreHandlerProvider);
   bool _isUpdatingTraffic = false;
+  bool _isUpdateDialogOpen = false;
   CancelToken? _updateCancelToken;
 
   @override
@@ -157,15 +158,43 @@ class CommonAction extends _$CommonAction {
     if (data != null) {
       final context = globalState.navigatorKey.currentContext!;
       final tag = data['tag_name'] as String;
+      var existing = ref.read(updateDownloadStateProvider);
+      if (existing is UpdateReady && !File(existing.path).existsSync()) {
+        ref.read(updateDownloadStateProvider.notifier).value = null;
+        existing = null;
+      }
+      if (existing is UpdateReady && existing.tag == tag) {
+        if (isUser) {
+          unawaited(installUpdate());
+        }
+        return;
+      }
+      if (existing != null && existing.tag == tag) {
+        if (isUser) {
+          dialogs.showBanner(
+            existing is UpdateInstalling
+                ? currentAppLocalizations.updateInstalling
+                : currentAppLocalizations.updateDownloadStarted,
+          );
+        }
+        return;
+      }
+      if (_isUpdateDialogOpen) return;
+      _isUpdateDialogOpen = true;
+      final bool? res;
       final asset = selfUpdateAsset;
-      final res = await dialogs.showMessage(
-        title: currentAppLocalizations.discoverNewVersion,
-        message: _releaseSpan(context, tag, data['body'] as String?),
-        confirmText: asset == null
-            ? currentAppLocalizations.goDownload
-            : currentAppLocalizations.update,
-        cancelText: isUser ? null : currentAppLocalizations.noLongerRemind,
-      );
+      try {
+        res = await dialogs.showMessage(
+          title: currentAppLocalizations.discoverNewVersion,
+          message: _releaseSpan(context, tag, data['body'] as String?),
+          confirmText: asset == null
+              ? currentAppLocalizations.goDownload
+              : currentAppLocalizations.update,
+          cancelText: isUser ? null : currentAppLocalizations.noLongerRemind,
+        );
+      } finally {
+        _isUpdateDialogOpen = false;
+      }
       if (res == true) {
         if (asset == null) {
           _openReleasePage();
@@ -209,15 +238,35 @@ class CommonAction extends _$CommonAction {
 
   Future<void> _downloadUpdate(String tag, String name) async {
     final download = ref.read(updateDownloadStateProvider.notifier);
-    if (download.value != null) return;
+    final existing = download.value;
+    if (existing != null) {
+      if (existing is UpdateReady &&
+          existing.tag == tag &&
+          File(existing.path).existsSync()) {
+        unawaited(installUpdate());
+        return;
+      }
+      if (existing.tag == tag || existing is UpdateInstalling) {
+        return;
+      }
+      cancelUpdateDownload();
+    }
     final cancelToken = CancelToken();
     _updateCancelToken = cancelToken;
     download.value = UpdateDownloading(tag);
     dialogs.showBanner(currentAppLocalizations.updateDownloadStarted);
     try {
       final directory = await appPath.updateDirPath;
-      await clearUpdateDownloads();
-      await Directory(directory).create(recursive: true);
+      final updateDir = Directory(directory);
+      if (await updateDir.exists()) {
+        await for (final entity in updateDir.list(followLinks: false)) {
+          if (basename(entity.path) != name) {
+            await safeDeletePath(entity.path);
+          }
+        }
+      } else {
+        await updateDir.create(recursive: true);
+      }
       var shown = 0;
       var lastTotal = 0;
       var lastSampleAt = DateTime.now();
@@ -261,7 +310,9 @@ class CommonAction extends _$CommonAction {
         },
       );
       download.value = UpdateReady(tag, path);
-      if (system.isAndroid && app != null) {
+      final isResumed =
+          WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+      if (system.isAndroid && app != null && isResumed) {
         unawaited(installUpdate());
       } else {
         dialogs.showBanner(
@@ -321,11 +372,14 @@ class CommonAction extends _$CommonAction {
         );
         return;
       }
+      if (status != null && packageInstallFailed(status)) {
+        ref.read(updateDownloadStateProvider.notifier).value =
+            File(download.path).existsSync() ? download : null;
+        await _showUpdateFailure(currentAppLocalizations.updateInstallFailed);
+        return;
+      }
       ref.read(updateDownloadStateProvider.notifier).value = null;
       await clearUpdateDownloads();
-      if (status != null && packageInstallFailed(status)) {
-        await _showUpdateFailure(currentAppLocalizations.updateInstallFailed);
-      }
       return;
     }
     final started = windows?.runas(download.path, windowsUpdateArguments(pid));

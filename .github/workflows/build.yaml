@@ -21,8 +21,64 @@ env:
   NDK_VERSION: r28c
 
 jobs:
+  version:
+    name: Resolve Version & Scope
+    runs-on: ubuntu-latest
+    outputs:
+      release_tag: ${{ steps.meta.outputs.release_tag }}
+      app_version: ${{ steps.meta.outputs.app_version }}
+      core_changed: ${{ steps.meta.outputs.core_changed }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version and core diff
+        id: meta
+        shell: bash
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            if [[ ! "$TAG" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)(-pre\.[0-9]+(\+[0-9]+)?)?$ ]]; then
+              echo "::error::$TAG is neither vX.Y.Z nor vX.Y.Z-pre.N[+M]"
+              exit 1
+            fi
+            base="${BASH_REMATCH[1]}"
+            release_tag="$TAG"
+          else
+            latest_patch="$(git tag -l 'v0.9.*' | sed -n 's/^v0\.9\.\([0-9][0-9]*\)$/\1/p' | sort -n | tail -n 1)"
+            if [ -n "$latest_patch" ]; then
+              patch=$((latest_patch + 1))
+            else
+              patch=7
+            fi
+            base="0.9.${patch}"
+            release_tag="v${base}"
+          fi
+          committed="$(sed -n 's/^version: .*+\([0-9]*\)$/\1/p' pubspec.yaml)"
+          build="$(date -u +%Y%m%d%H)"
+          if ((build <= ${committed:-0})); then
+            build=$((committed + 1))
+          fi
+          app_version="${base}+${build}"
+
+          latest_tag="$(git tag -l 'v0.9.*' --sort=-v:refname | head -n 1)"
+          if [ -z "$latest_tag" ] || ! git diff --quiet "$latest_tag"..HEAD -- core/; then
+            core_changed="true"
+          else
+            core_changed="false"
+          fi
+
+          echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
+          echo "app_version=$app_version" >> "$GITHUB_OUTPUT"
+          echo "core_changed=$core_changed" >> "$GITHUB_OUTPUT"
+          echo "Resolved: version=$app_version tag=$release_tag core_changed=$core_changed"
+
   dart:
     name: L10n & Verify
+    needs: version
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -94,9 +150,9 @@ jobs:
           test/common/helpers_test.dart
           test/widgets/update_dialog_test.dart
 
-  build-apk:
-    name: Build Android APK
-    needs: dart
+  build-android:
+    name: Build Android APK (ARM64)
+    needs: version
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -106,42 +162,13 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
-      - name: Resolve OTA version and tag
+      - name: Apply version
         shell: bash
         env:
-          TAG: ${{ github.ref_name }}
+          APP_VERSION: ${{ needs.version.outputs.app_version }}
         run: |
-          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
-            if [[ ! "$TAG" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)(-pre\.[0-9]+(\+[0-9]+)?)?$ ]]; then
-              echo "::error::$TAG is neither vX.Y.Z nor vX.Y.Z-pre.N[+M]"
-              exit 1
-            fi
-            base="${BASH_REMATCH[1]}"
-            committed="$(sed -n 's/^version: .*+\([0-9]*\)$/\1/p' pubspec.yaml)"
-            build="$(date -u +%Y%m%d%H)"
-            if ((build <= ${committed:-0})); then
-              build=$((committed + 1))
-            fi
-            release_tag="$TAG"
-          else
-            latest_patch="$(git tag -l 'v0.9.*' | sed -n 's/^v0\.9\.\([0-9][0-9]*\)$/\1/p' | sort -n | tail -n 1)"
-            if [ -n "$latest_patch" ]; then
-              patch=$((latest_patch + 1))
-            else
-              patch=7
-            fi
-            base="0.9.${patch}"
-            committed="$(sed -n 's/^version: .*+\([0-9]*\)$/\1/p' pubspec.yaml)"
-            build="$(date -u +%Y%m%d%H)"
-            if ((build <= ${committed:-0})); then
-              build=$((committed + 1))
-            fi
-            release_tag="v${base}"
-          fi
-          sed "s/^version: .*/version: ${base}+${build}/" pubspec.yaml > pubspec.yaml.tmp
+          sed "s/^version: .*/version: $APP_VERSION/" pubspec.yaml > pubspec.yaml.tmp
           mv pubspec.yaml.tmp pubspec.yaml
-          echo "RELEASE_TAG=$release_tag" >> "$GITHUB_ENV"
-          echo "Resolved version: ${base}+${build} | OTA tag: $release_tag"
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -184,6 +211,7 @@ jobs:
           cache-dependency-path: core/go.sum
 
       - name: Verify Go Core
+        if: needs.version.outputs.core_changed == 'true'
         working-directory: core
         env:
           CGO_ENABLED: 0
@@ -220,6 +248,7 @@ jobs:
         run: |
           flutter --version
           flutter pub get
+          flutter gen-l10n
 
       - name: Fetch CA certificates
         shell: bash
@@ -231,20 +260,116 @@ jobs:
           curl -fsSL --retry 3 -o "$bundle" "https://curl.se/ca/$CA_BUNDLE"
           echo "$CA_BUNDLE_SHA256  $bundle" | sha256sum -c -
 
-      - name: Build Android APK
+      - name: Build Android APK (ARM64)
         env:
           ANDROID_NDK_HOME: ${{ steps.build-ndk.outputs.ndk-path }}
-        run: dart tool/package.dart android --tag "${{ env.RELEASE_TAG }}" --env stable -v
+        run: dart tool/package.dart android --arch arm64 --tag "${{ needs.version.outputs.release_tag }}" --env stable -v
 
       - name: List dist artifacts
         run: ls -lh dist
 
-      - name: Upload APK Artifact
+      - name: Upload Android Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: FlClash-VietHoa-APK
+          name: artifact-android
           path: ./dist
           overwrite: true
+
+  build-windows:
+    name: Build Windows (x64)
+    needs: version
+    runs-on: windows-2022
+    steps:
+      - name: Enable git long paths (Windows)
+        run: git config --global core.longpaths true
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref == 'refs/heads/main' && 'main' || github.ref }}
+          submodules: recursive
+
+      - name: Apply version
+        shell: bash
+        env:
+          APP_VERSION: ${{ needs.version.outputs.app_version }}
+        run: |
+          sed "s/^version: .*/version: $APP_VERSION/" pubspec.yaml > pubspec.yaml.tmp
+          mv pubspec.yaml.tmp pubspec.yaml
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+          cache-dependency-path: core/go.sum
+
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: windows-amd64
+          workspaces: |
+            services/helper
+            plugins/rust_api/rust
+          cache-directories: .dart_tool/hooks_runner
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Get Flutter Dependency
+        run: |
+          flutter --version
+          flutter pub get
+          flutter gen-l10n
+
+      - name: Fetch CA certificates
+        shell: bash
+        env:
+          CA_BUNDLE: cacert-2026-09-25.pem
+          CA_BUNDLE_SHA256: a41b5d356aea97a529fe27e0f7316d2f9d946d75927476cf9cf1b90637d00505
+        run: |
+          bundle=core/Clash.Meta/component/ca/ca-certificates.crt
+          curl -fsSL --retry 3 -o "$bundle" "https://curl.se/ca/$CA_BUNDLE"
+          echo "$CA_BUNDLE_SHA256  $bundle" | sha256sum -c -
+
+      - name: Build Windows Package
+        run: dart tool/package.dart windows --tag "${{ needs.version.outputs.release_tag }}" --env stable -v
+
+      - name: List dist artifacts
+        run: Get-ChildItem dist
+
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifact-windows
+          path: ./dist
+          overwrite: true
+
+  publish:
+    name: Publish GitHub Release
+    needs: [version, dart, build-android, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+          pattern: artifact-*
+
+      - name: Merge and verify artifacts
+        shell: bash
+        run: |
+          mkdir -p ./dist
+          find ./artifacts -maxdepth 2 -type f \( -name '*.apk' -o -name '*.exe' -o -name '*.zip' \) -exec cp -t ./dist {} +
+          sum_name="$(basename "$(find ./artifacts -maxdepth 2 -type f -name 'FlClash-*-SHA256SUMS' | head -n 1)")"
+          test -n "$sum_name"
+          find ./artifacts -maxdepth 2 -type f -name 'FlClash-*-SHA256SUMS' -exec cat {} + | tr -d '\r' | sort -k2 -u > "./dist/$sum_name"
+          (cd dist && sha256sum -c "$sum_name")
+          ls -lh dist
 
       - name: Cleanup legacy vi-latest tag
         if: "!startsWith(github.ref, 'refs/tags/v')"
@@ -256,20 +381,22 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.RELEASE_TAG }}
-          name: FlClash Việt Hóa Lite ${{ env.RELEASE_TAG }}
+          tag_name: ${{ needs.version.outputs.release_tag }}
+          name: FlClash Việt Hóa Lite ${{ needs.version.outputs.release_tag }}
           make_latest: true
           body: |
             <!-- flclash:changelog:begin -->
-            - Giao diện cập nhật OTA trực quan ngay tại màn hình Giới thiệu: thanh tiến trình mượt, hiện rõ `%`, dung lượng MB đã tải, tốc độ tải thực tế (`MB/s`), trạng thái xác minh chữ ký SHA-256 và trạng thái đang mở trình cài đặt Android.
-            - Tự động bật trình cài đặt Android ngay sau khi tải & xác minh xong (giữ lại tệp nếu lỡ bấm hủy để cài lại ngay mà không cần tải lại, kèm nút Xóa tệp APK tức thì).
-            - Tự động xóa sạch tệp cài đặt APK & dọn lịch sử trình tải xuống ngay khi cập nhật hoàn tất (`MY_PACKAGE_REPLACED` + kiểm tra dọn lại khi mở app) kèm thông báo dung lượng vừa giải phóng.
+            - Sửa lỗi ấn Cập nhật trực tiếp trên Android không bật trình cài đặt: kiểm tra quyền Cài đặt ứng dụng không xác định, dùng FileProvider ACTION_VIEW tương thích Android 14+/One UI với fallback PackageInstaller, và ấn cập nhật lại sẽ cài ngay bản đã tải.
+            - Chống tải trùng 2 lần APK: giữ lại bộ cài phiên bản mới đã xác minh SHA-256 trên máy để dùng lại ngay, chống bấm đúp hộp thoại OTA, và khử trùng các tác vụ trùng URL trong DownloadManager.
+            - Thêm bản build máy tính Windows (bộ cài .exe hỗ trợ tự cập nhật OTA và bản .zip chạy ngay) cùng quy trình CI build song song Android ARM64 + Windows x64 nhanh hơn.
             <!-- flclash:changelog:end -->
 
-            ### Hướng dẫn chọn file APK phù hợp:
-            - **`android-arm64.apk`**: Điện thoại Android đời mới (64-bit ARMv8) — **Khuyên dùng**.
-            - **`android-armv7.apk`**: Điện thoại Android cũ (32-bit ARMv7).
-            - **`android-amd64.apk`**: Giả lập Android trên máy tính / thiết bị x86_64.
+            ### Hướng dẫn chọn file tải phù hợp:
+            - **Android (`android-arm64.apk`)**: Điện thoại Android hiện đại (64-bit ARMv8).
+            - **Windows cài đặt (`windows-amd64-setup.exe`)**: Máy tính Windows 64-bit — **khuyên dùng**, hỗ trợ tự cập nhật OTA trong app.
+            - **Windows Portable (`windows-amd64-portable.zip`)**: Bản giải nén chạy ngay không cần cài đặt.
           files: |
             ./dist/*.apk
+            ./dist/*.exe
+            ./dist/*.zip
             ./dist/FlClash-*-SHA256SUMS
