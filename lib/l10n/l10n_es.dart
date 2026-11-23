@@ -4007,31 +4007,31 @@ class AppLocalizationsEs extends AppLocalizations {
   String get vpnServiceStartFailed => 'No se pudo iniciar el servicio VPN.';
 
   @override
-  String get updateVerifying => 'Verifying update';
+  String get updateVerifying => 'Verificando actualización';
 
   @override
   String get updateVerifyingDesc =>
-      'Checking SHA-256 signature for integrity...';
+      'Comprobando la firma SHA-256 para verificar la integridad...';
 
   @override
-  String get updateInstalling => 'Installing update';
+  String get updateInstalling => 'Instalando actualización';
 
   @override
   String get updateInstallingDesc =>
-      'Confirm the system prompt to finish updating. The APK will be deleted automatically.';
+      'Confirma el aviso del sistema para completar la actualización. El APK se eliminará automáticamente.';
 
   @override
   String get updateReadyAutoCleanDesc =>
-      'Verified and ready. The APK will be deleted automatically after updating.';
+      'Verificado y listo. El APK se eliminará automáticamente tras actualizar.';
 
   @override
   String updateCleanedTip(Object version, Object size) {
-    return 'Updated to v$version and deleted installer APK ($size).';
+    return 'Actualizado a v$version y APK de instalación eliminado ($size).';
   }
 
   @override
-  String get updateDeleteFile => 'Delete APK';
+  String get updateDeleteFile => 'Eliminar APK';
 
   @override
-  String get updateInstallNow => 'Install now';
+  String get updateInstallNow => 'Instalar ahora';
 }

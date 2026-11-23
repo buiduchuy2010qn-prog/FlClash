@@ -3860,31 +3860,30 @@ class AppLocalizationsKo extends AppLocalizations {
   String get vpnServiceStartFailed => 'VPN 서비스를 시작하지 못했습니다.';
 
   @override
-  String get updateVerifying => 'Verifying update';
+  String get updateVerifying => '업데이트 확인 중';
 
   @override
-  String get updateVerifyingDesc =>
-      'Checking SHA-256 signature for integrity...';
+  String get updateVerifyingDesc => '무결성을 위해 SHA-256 서명을 확인하는 중...';
 
   @override
-  String get updateInstalling => 'Installing update';
+  String get updateInstalling => '업데이트 설치 중';
 
   @override
   String get updateInstallingDesc =>
-      'Confirm the system prompt to finish updating. The APK will be deleted automatically.';
+      '시스템 창에서 확인하여 업데이트를 완료하세요. 완료 후 APK가 자동으로 삭제됩니다.';
 
   @override
   String get updateReadyAutoCleanDesc =>
-      'Verified and ready. The APK will be deleted automatically after updating.';
+      '검증이 완료되어 설치할 준비가 되었습니다. 업데이트 후 APK가 자동으로 삭제됩니다.';
 
   @override
   String updateCleanedTip(Object version, Object size) {
-    return 'Updated to v$version and deleted installer APK ($size).';
+    return 'v$version(으)로 업데이트되었으며 설치 APK($size)를 삭제했습니다.';
   }
 
   @override
-  String get updateDeleteFile => 'Delete APK';
+  String get updateDeleteFile => 'APK 삭제';
 
   @override
-  String get updateInstallNow => 'Install now';
+  String get updateInstallNow => '지금 설치';
 }

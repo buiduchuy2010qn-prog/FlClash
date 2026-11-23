@@ -3959,31 +3959,31 @@ class AppLocalizationsRu extends AppLocalizations {
   String get vpnServiceStartFailed => 'Не удалось запустить службу VPN.';
 
   @override
-  String get updateVerifying => 'Verifying update';
+  String get updateVerifying => 'Проверка обновления';
 
   @override
   String get updateVerifyingDesc =>
-      'Checking SHA-256 signature for integrity...';
+      'Проверка подписи SHA-256 на целостность...';
 
   @override
-  String get updateInstalling => 'Installing update';
+  String get updateInstalling => 'Установка обновления';
 
   @override
   String get updateInstallingDesc =>
-      'Confirm the system prompt to finish updating. The APK will be deleted automatically.';
+      'Подтвердите системный запрос для завершения обновления. Файл APK будет удалён автоматически.';
 
   @override
   String get updateReadyAutoCleanDesc =>
-      'Verified and ready. The APK will be deleted automatically after updating.';
+      'Проверено и готово к установке. Файл APK будет удалён автоматически после обновления.';
 
   @override
   String updateCleanedTip(Object version, Object size) {
-    return 'Updated to v$version and deleted installer APK ($size).';
+    return 'Обновлено до v$version, установочный APK ($size) удалён.';
   }
 
   @override
-  String get updateDeleteFile => 'Delete APK';
+  String get updateDeleteFile => 'Удалить APK';
 
   @override
-  String get updateInstallNow => 'Install now';
+  String get updateInstallNow => 'Установить сейчас';
 }

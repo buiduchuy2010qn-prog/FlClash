@@ -3785,31 +3785,29 @@ class AppLocalizationsJa extends AppLocalizations {
   String get vpnServiceStartFailed => 'VPN サービスを起動できませんでした。';
 
   @override
-  String get updateVerifying => 'Verifying update';
+  String get updateVerifying => 'アップデートを検証中';
 
   @override
-  String get updateVerifyingDesc =>
-      'Checking SHA-256 signature for integrity...';
+  String get updateVerifyingDesc => '整合性のため SHA-256 署名を確認しています...';
 
   @override
-  String get updateInstalling => 'Installing update';
+  String get updateInstalling => 'アップデートをインストール中';
 
   @override
   String get updateInstallingDesc =>
-      'Confirm the system prompt to finish updating. The APK will be deleted automatically.';
+      'システムの確認画面でインストールを完了してください。完了後、APK は自動的に削除されます。';
 
   @override
-  String get updateReadyAutoCleanDesc =>
-      'Verified and ready. The APK will be deleted automatically after updating.';
+  String get updateReadyAutoCleanDesc => '検証済みで準備完了です。更新後、APK は自動的に削除されます。';
 
   @override
   String updateCleanedTip(Object version, Object size) {
-    return 'Updated to v$version and deleted installer APK ($size).';
+    return 'v$version に更新し、インストーラー APK ($size) を削除しました。';
   }
 
   @override
-  String get updateDeleteFile => 'Delete APK';
+  String get updateDeleteFile => 'APK を削除';
 
   @override
-  String get updateInstallNow => 'Install now';
+  String get updateInstallNow => '今すぐインストール';
 }
