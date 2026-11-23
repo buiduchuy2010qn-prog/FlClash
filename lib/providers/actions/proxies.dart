@@ -60,20 +60,20 @@ class ProxiesAction extends _$ProxiesAction {
         cancelDelayTests();
       }
     });
-    ref.listen(isStartProvider, (prev, next) {
-      if (!next) {
+    ref.listen(runTimeProvider, (prev, next) {
+      if (next == null) {
         _autoPingTimer?.cancel();
         _lastAutoPingEpoch = -1;
         return;
       }
-      if (prev != true) {
+      if (prev == null) {
         _scheduleAutoPing();
       }
     });
     ref.listen(groupsProvider, (prev, next) {
       if ((prev == null || prev.isEmpty) &&
           next.isNotEmpty &&
-          ref.read(isStartProvider)) {
+          ref.read(runTimeProvider) != null) {
         _scheduleAutoPing();
       }
     });
@@ -83,7 +83,7 @@ class ProxiesAction extends _$ProxiesAction {
     ) {
       if (next != prev &&
           next != _lastAutoPingEpoch &&
-          ref.read(isStartProvider)) {
+          ref.read(runTimeProvider) != null) {
         _lastAutoPingEpoch = next;
         _scheduleAutoPing();
       }
@@ -98,7 +98,7 @@ class ProxiesAction extends _$ProxiesAction {
   }
 
   Future<void> _autoTestActiveGroup() async {
-    if (!ref.read(isStartProvider) ||
+    if (ref.read(runTimeProvider) == null ||
         ref.read(coreStatusProvider) != CoreStatus.connected) {
       return;
     }
@@ -126,7 +126,7 @@ class ProxiesAction extends _$ProxiesAction {
     await _runDelayTests([
       (proxies: [activeProxy], testUrl: primary.testUrl),
     ]);
-    if (!ref.read(isStartProvider) ||
+    if (ref.read(runTimeProvider) == null ||
         ref.read(coreStatusProvider) != CoreStatus.connected) {
       return;
     }

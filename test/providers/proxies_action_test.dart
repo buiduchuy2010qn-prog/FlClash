@@ -1101,6 +1101,7 @@ void main() {
       final container = _delayContainer(
         () => buildContainer(profile: _selectedProfile('HK-Slow')),
       );
+      container.listen(patchClashConfigProvider, (_, _) {});
       container.read(groupsProvider.notifier).value = [
         _group('Proxy', const [
           Proxy(name: 'DIRECT', type: 'direct'),
