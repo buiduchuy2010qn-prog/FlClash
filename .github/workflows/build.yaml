@@ -6,6 +6,9 @@ on:
       - main
     tags:
       - 'v*'
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 concurrency:
@@ -135,7 +138,7 @@ jobs:
               git push origin HEAD:main
             fi
           fi
-          dart format --output=none --set-exit-if-changed lib test tool plugins
+          dart format --output=none --set-exit-if-changed lib test tool plugins || { dart format lib test tool plugins && git diff -- lib test tool plugins; exit 1; }
 
       - name: Analyze
         run: flutter analyze --no-fatal-infos
@@ -151,8 +154,14 @@ jobs:
           test/lint
           test/tool/package_test.dart
           test/models/dns_override_test.dart
+          test/models/config_test.dart
           test/common/task_test.dart
           test/common/task_general_override_test.dart
+          test/common/protocol_test.dart
+          test/common/link_test.dart
+          test/common/v2ray_link_test.dart
+          test/common/daily_traffic_store_test.dart
+          test/common/version_gate_test.dart
           test/providers/proxies_action_test.dart
           test/views/dashboard/proxy_groups_card_test.dart
           test/common/app_localizations_test.dart
@@ -227,7 +236,7 @@ jobs:
         env:
           CGO_ENABLED: 0
         run: |
-          test -z "$(gofmt -l ./*.go)" || { gofmt -l ./*.go >&2; exit 1; }
+          test -z "$(gofmt -l ./*.go)" || { gofmt -d ./*.go >&2; exit 1; }
           go test -count=1 .
           GOOS=android GOARCH=arm64 go vet -tags=with_gvisor . ./mobile ./tun ./platform
 
@@ -362,6 +371,7 @@ jobs:
 
   publish:
     name: Publish GitHub Release
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
     needs: [version, dart, build-android, build-windows]
     runs-on: ubuntu-latest
     steps:

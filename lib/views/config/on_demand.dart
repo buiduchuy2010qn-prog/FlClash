@@ -293,6 +293,43 @@ class _OnDemandViewState extends ConsumerState<OnDemandView>
     );
   }
 
+  Widget _buildAutoVpnSection() {
+    final appLocalizations = context.appLocalizations;
+    final onCellular = ref.watch(autoVpnOnCellularProvider);
+    final offWifi = ref.watch(autoVpnOffWifiProvider);
+    final startOnBoot = ref.watch(autoStartOnBootProvider);
+    return generateSection(
+      title: appLocalizations.autoVpnSectionTitle,
+      items: [
+        ListItem.toggle(
+          title: Text(appLocalizations.autoVpnOnCellular),
+          subtitle: Text(appLocalizations.autoVpnOnCellularDesc),
+          value: onCellular,
+          onChanged: (value) {
+            ref.read(autoVpnOnCellularProvider.notifier).value = value;
+          },
+        ),
+        ListItem.toggle(
+          title: Text(appLocalizations.autoVpnOffWifi),
+          subtitle: Text(appLocalizations.autoVpnOffWifiDesc),
+          value: offWifi,
+          onChanged: (value) {
+            ref.read(autoVpnOffWifiProvider.notifier).value = value;
+          },
+        ),
+        ListItem.toggle(
+          title: Text(appLocalizations.autoStartOnBoot),
+          subtitle: Text(appLocalizations.autoStartOnBootDesc),
+          value: startOnBoot,
+          onChanged: (value) {
+            ref.read(autoStartOnBootProvider.notifier).value = value;
+          },
+        ),
+      ],
+      footer: appLocalizations.autoVpnSectionDesc,
+    );
+  }
+
   Widget _buildPrerequisites() {
     final appLocalizations = context.appLocalizations;
     return generateSection(
@@ -378,10 +415,17 @@ class _OnDemandViewState extends ConsumerState<OnDemandView>
     return Scaffold(
       body: CustomScrollView(
         slivers: [
+          if (_isAndroid)
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+              ).copyWith(top: context.sectionsTopPadding),
+              sliver: SliverToBoxAdapter(child: _buildAutoVpnSection()),
+            ),
           SliverPadding(
             padding: const EdgeInsets.symmetric(
               horizontal: 16,
-            ).copyWith(top: context.sectionsTopPadding),
+            ).copyWith(top: _isAndroid ? 0 : context.sectionsTopPadding),
             sliver: SliverToBoxAdapter(child: _buildPrerequisites()),
           ),
           SliverPadding(

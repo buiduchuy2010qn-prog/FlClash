@@ -3829,4 +3829,118 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get noAvailableProxyTip => '応答するノードが見つかりません';
+
+  @override
+  String get autoVpnSectionTitle => '自動VPNと起動設定';
+
+  @override
+  String get autoVpnOnCellular => 'モバイル通信 (4G/5G) で自動接続';
+
+  @override
+  String get autoVpnOnCellularDesc => 'モバイルデータ通信へ切り替わると自動でVPN接続します';
+
+  @override
+  String get autoVpnOffWifi => 'Wi-Fi 接続時に自動切断';
+
+  @override
+  String get autoVpnOffWifiDesc => 'Wi-Fi が利用可能になると自動で VPN を停止します';
+
+  @override
+  String get autoStartOnBoot => '端末起動時に自動開始';
+
+  @override
+  String get autoStartOnBootDesc => '再起動後に VPN を自動的に開始します';
+
+  @override
+  String get autoVpnSectionDesc =>
+      '位置情報権限なしでネットワーク変化を検知します。手動操作後45秒間は自動切替を一時停止します。';
+
+  @override
+  String get dailyTraffic => '日別トラフィック';
+
+  @override
+  String get dailyTrafficDesc => '日ごとの通信量をローカルに最大400日記録します';
+
+  @override
+  String get dailyTrafficToday => '今日';
+
+  @override
+  String get dailyTraffic7Days => '7日間';
+
+  @override
+  String get dailyTraffic30Days => '30日間';
+
+  @override
+  String get dailyTrafficRecord => '400日間の日別統計を記録';
+
+  @override
+  String get dailyTrafficRecordDesc => 'ダッシュボード表示用に日別合計を保存します';
+
+  @override
+  String get clearDailyTraffic => '履歴をリセット';
+
+  @override
+  String get clearDailyTrafficConfirm => '保存された400日間のトラフィック履歴をすべて削除しますか？';
+
+  @override
+  String get optimize4gTitle => '4G・グローバル最適化';
+
+  @override
+  String get optimize4gPreset => '4G 最適化 (Global · TUN · QUIC · 1.1.1.1)';
+
+  @override
+  String get optimize4gPresetDesc =>
+      'Global モード、TUN、1.1.1.1 DNS、QUIC 通過をワンタップで適用';
+
+  @override
+  String get optimize4gPresetFooter =>
+      '有効時に 1.1.1.1 / 8.8.8.8 DNS を設定し UDP/443 QUIC 拒否ルールを解除します。';
+
+  @override
+  String get optimize4gAppliedTip => '4G Global & QUIC プリセットを適用しました';
+
+  @override
+  String get hotspotSectionTitle => 'テザリング VPN 共有';
+
+  @override
+  String get hotspotLanProxy => 'テザリング用 LAN プロキシを共有';
+
+  @override
+  String get hotspotLanProxyDesc => 'Root なしで接続端末からプロキシを利用できるようにします';
+
+  @override
+  String get hotspotProxyAddress => 'プロキシアドレス (タップでコピー)';
+
+  @override
+  String hotspotCopiedTip(Object address) {
+    return 'プロキシアドレスをコピーしました: $address';
+  }
+
+  @override
+  String get hotspotRootShare => '透過テザリングトンネル (Root)';
+
+  @override
+  String get hotspotRootShareDesc => 'iptables と su を使用してテザリング通信を TUN へ直接転送します';
+
+  @override
+  String get hotspotRootEnabledTip => 'Root テザリング共有を有効にしました';
+
+  @override
+  String get hotspotRootFailed => 'Root 共有を有効にできません。TUN 起動状態と su 権限を確認してください。';
+
+  @override
+  String get hotspotSectionDesc =>
+      '非 Root では LAN プロキシ共有、Root では TUN 経由の透過転送を行います。';
+
+  @override
+  String get versionGateTitle => 'アップデートが必要です';
+
+  @override
+  String get versionGateDefaultDesc => 'このバージョンはサポート終了しました。FlClash を更新してください。';
+
+  @override
+  String get versionGateDownload => 'アップデートを入手';
+
+  @override
+  String get versionGateRetry => '再確認';
 }

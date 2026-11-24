@@ -7033,6 +7033,222 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No reachable node found'**
   String get noAvailableProxyTip;
+
+  /// No description provided for @autoVpnSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-VPN & Boot'**
+  String get autoVpnSectionTitle;
+
+  /// No description provided for @autoVpnOnCellular.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-connect on cellular (4G/5G)'**
+  String get autoVpnOnCellular;
+
+  /// No description provided for @autoVpnOnCellularDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect VPN automatically when switching to mobile data'**
+  String get autoVpnOnCellularDesc;
+
+  /// No description provided for @autoVpnOffWifi.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-disconnect on Wi-Fi'**
+  String get autoVpnOffWifi;
+
+  /// No description provided for @autoVpnOffWifiDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop VPN automatically once Wi-Fi becomes available'**
+  String get autoVpnOffWifiDesc;
+
+  /// No description provided for @autoStartOnBoot.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-start on device boot'**
+  String get autoStartOnBoot;
+
+  /// No description provided for @autoStartOnBootDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Start VPN automatically after the device restarts'**
+  String get autoStartOnBootDesc;
+
+  /// No description provided for @autoVpnSectionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses ConnectivityManager transport events without Location permission. Manual toggles pause auto-switching for 45 seconds.'**
+  String get autoVpnSectionDesc;
+
+  /// No description provided for @dailyTraffic.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily traffic'**
+  String get dailyTraffic;
+
+  /// No description provided for @dailyTrafficDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Track daily upload and download usage with up to 400 days of local history'**
+  String get dailyTrafficDesc;
+
+  /// No description provided for @dailyTrafficToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get dailyTrafficToday;
+
+  /// No description provided for @dailyTraffic7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'7 days'**
+  String get dailyTraffic7Days;
+
+  /// No description provided for @dailyTraffic30Days.
+  ///
+  /// In en, this message translates to:
+  /// **'30 days'**
+  String get dailyTraffic30Days;
+
+  /// No description provided for @dailyTrafficRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Record 400-day daily traffic'**
+  String get dailyTrafficRecord;
+
+  /// No description provided for @dailyTrafficRecordDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Persist daily traffic totals locally for dashboard charts'**
+  String get dailyTrafficRecordDesc;
+
+  /// No description provided for @clearDailyTraffic.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset traffic history'**
+  String get clearDailyTraffic;
+
+  /// No description provided for @clearDailyTrafficConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all saved 400-day daily traffic records?'**
+  String get clearDailyTrafficConfirm;
+
+  /// No description provided for @optimize4gTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'4G & Global Preset'**
+  String get optimize4gTitle;
+
+  /// No description provided for @optimize4gPreset.
+  ///
+  /// In en, this message translates to:
+  /// **'Optimize 4G (Global · TUN · QUIC · 1.1.1.1)'**
+  String get optimize4gPreset;
+
+  /// No description provided for @optimize4gPresetDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply Global mode, TUN, plain 1.1.1.1 DNS, and QUIC pass-through in one tap'**
+  String get optimize4gPresetDesc;
+
+  /// No description provided for @optimize4gPresetFooter.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeps plain 1.1.1.1 / 8.8.8.8 resolvers and strips UDP/443 QUIC reject rules when enabled.'**
+  String get optimize4gPresetFooter;
+
+  /// No description provided for @optimize4gAppliedTip.
+  ///
+  /// In en, this message translates to:
+  /// **'4G Global & QUIC preset applied'**
+  String get optimize4gAppliedTip;
+
+  /// No description provided for @hotspotSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hotspot VPN Sharing'**
+  String get hotspotSectionTitle;
+
+  /// No description provided for @hotspotLanProxy.
+  ///
+  /// In en, this message translates to:
+  /// **'Share proxy over Wi-Fi hotspot (LAN)'**
+  String get hotspotLanProxy;
+
+  /// No description provided for @hotspotLanProxyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Open local mixed proxy port so tethered devices can configure manual HTTP/SOCKS proxy'**
+  String get hotspotLanProxyDesc;
+
+  /// No description provided for @hotspotProxyAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Hotspot proxy address (tap to copy)'**
+  String get hotspotProxyAddress;
+
+  /// No description provided for @hotspotCopiedTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied proxy address: {address}'**
+  String hotspotCopiedTip(Object address);
+
+  /// No description provided for @hotspotRootShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Transparent hotspot VPN tunnel (Root)'**
+  String get hotspotRootShare;
+
+  /// No description provided for @hotspotRootShareDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward tethered hotspot traffic directly through TUN using iptables and su'**
+  String get hotspotRootShareDesc;
+
+  /// No description provided for @hotspotRootEnabledTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Root transparent hotspot VPN enabled'**
+  String get hotspotRootEnabledTip;
+
+  /// No description provided for @hotspotRootFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to enable root hotspot tunnel. Ensure TUN is active and root (su) is granted.'**
+  String get hotspotRootFailed;
+
+  /// No description provided for @hotspotSectionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Non-root sharing uses LAN HTTP/SOCKS proxy on tethered devices. Root mode routes hotspot traffic transparently through TUN.'**
+  String get hotspotSectionDesc;
+
+  /// No description provided for @versionGateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Required'**
+  String get versionGateTitle;
+
+  /// No description provided for @versionGateDefaultDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'This version is no longer supported. Please update FlClash to continue.'**
+  String get versionGateDefaultDesc;
+
+  /// No description provided for @versionGateDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Download update'**
+  String get versionGateDownload;
+
+  /// No description provided for @versionGateRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Check again'**
+  String get versionGateRetry;
 }
 
 class _AppLocalizationsDelegate

@@ -73,6 +73,12 @@ class CommonAction extends _$CommonAction {
       }
       if (totalTraffic != null) {
         ref.read(totalTrafficProvider.notifier).value = totalTraffic;
+        ref
+            .read(dailyTrafficProvider.notifier)
+            .recordTotalSample(
+              up: totalTraffic.up.toInt(),
+              down: totalTraffic.down.toInt(),
+            );
       }
     } finally {
       _isUpdatingTraffic = false;

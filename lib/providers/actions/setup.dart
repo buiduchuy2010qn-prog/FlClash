@@ -197,6 +197,9 @@ class SetupAction extends _$SetupAction {
     );
     _latestRunRequest = request;
     _resumeOnRestart = false;
+    if (!initialize && !resume && system.isAndroid) {
+      unawaited(app?.notifyManualVpnAction());
+    }
     _setLocalRunning(running);
     if (request.initialize) {
       globalState.needInitStatus = false;
@@ -266,6 +269,7 @@ class SetupAction extends _$SetupAction {
     resetCoreTraffic();
     ref.read(trafficsProvider.notifier).clear();
     ref.read(totalTrafficProvider.notifier).value = const Traffic();
+    ref.read(dailyTrafficProvider.notifier).resetSessionBaseline();
     // A silent Core is gone or hung; running again would proxy traffic to it.
     if (unanswered case (final error, final stackTrace)) {
       Error.throwWithStackTrace(error, stackTrace);
@@ -599,15 +603,18 @@ class SetupAction extends _$SetupAction {
       return (yaml: res.yaml, md5: res.md5, counts: res.counts, base: null);
     }
     final (:base, :path) = profileBase;
+    final overlayYaml = ref.read(optimize4gPresetProvider)
+        ? 'allow-quic: true\n${res.yaml}'
+        : res.yaml;
     return (
-      yaml: res.yaml,
-      md5: '${res.md5}${base.digest}'.toMd5(),
+      yaml: overlayYaml,
+      md5: '${overlayYaml.toMd5()}${base.digest}'.toMd5(),
       counts: (
         groups: res.counts.groups + base.proxyGroups,
         proxies: res.counts.proxies + base.proxies,
         rules: res.counts.rules + base.rules,
       ),
-      base: SetupBase(path: path, overlay: res.yaml),
+      base: SetupBase(path: path, overlay: overlayYaml),
     );
   }
 

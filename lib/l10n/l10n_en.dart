@@ -4011,4 +4011,128 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noAvailableProxyTip => 'No reachable node found';
+
+  @override
+  String get autoVpnSectionTitle => 'Auto-VPN & Boot';
+
+  @override
+  String get autoVpnOnCellular => 'Auto-connect on cellular (4G/5G)';
+
+  @override
+  String get autoVpnOnCellularDesc =>
+      'Connect VPN automatically when switching to mobile data';
+
+  @override
+  String get autoVpnOffWifi => 'Auto-disconnect on Wi-Fi';
+
+  @override
+  String get autoVpnOffWifiDesc =>
+      'Stop VPN automatically once Wi-Fi becomes available';
+
+  @override
+  String get autoStartOnBoot => 'Auto-start on device boot';
+
+  @override
+  String get autoStartOnBootDesc =>
+      'Start VPN automatically after the device restarts';
+
+  @override
+  String get autoVpnSectionDesc =>
+      'Uses ConnectivityManager transport events without Location permission. Manual toggles pause auto-switching for 45 seconds.';
+
+  @override
+  String get dailyTraffic => 'Daily traffic';
+
+  @override
+  String get dailyTrafficDesc =>
+      'Track daily upload and download usage with up to 400 days of local history';
+
+  @override
+  String get dailyTrafficToday => 'Today';
+
+  @override
+  String get dailyTraffic7Days => '7 days';
+
+  @override
+  String get dailyTraffic30Days => '30 days';
+
+  @override
+  String get dailyTrafficRecord => 'Record 400-day daily traffic';
+
+  @override
+  String get dailyTrafficRecordDesc =>
+      'Persist daily traffic totals locally for dashboard charts';
+
+  @override
+  String get clearDailyTraffic => 'Reset traffic history';
+
+  @override
+  String get clearDailyTrafficConfirm =>
+      'Clear all saved 400-day daily traffic records?';
+
+  @override
+  String get optimize4gTitle => '4G & Global Preset';
+
+  @override
+  String get optimize4gPreset => 'Optimize 4G (Global · TUN · QUIC · 1.1.1.1)';
+
+  @override
+  String get optimize4gPresetDesc =>
+      'Apply Global mode, TUN, plain 1.1.1.1 DNS, and QUIC pass-through in one tap';
+
+  @override
+  String get optimize4gPresetFooter =>
+      'Keeps plain 1.1.1.1 / 8.8.8.8 resolvers and strips UDP/443 QUIC reject rules when enabled.';
+
+  @override
+  String get optimize4gAppliedTip => '4G Global & QUIC preset applied';
+
+  @override
+  String get hotspotSectionTitle => 'Hotspot VPN Sharing';
+
+  @override
+  String get hotspotLanProxy => 'Share proxy over Wi-Fi hotspot (LAN)';
+
+  @override
+  String get hotspotLanProxyDesc =>
+      'Open local mixed proxy port so tethered devices can configure manual HTTP/SOCKS proxy';
+
+  @override
+  String get hotspotProxyAddress => 'Hotspot proxy address (tap to copy)';
+
+  @override
+  String hotspotCopiedTip(Object address) {
+    return 'Copied proxy address: $address';
+  }
+
+  @override
+  String get hotspotRootShare => 'Transparent hotspot VPN tunnel (Root)';
+
+  @override
+  String get hotspotRootShareDesc =>
+      'Forward tethered hotspot traffic directly through TUN using iptables and su';
+
+  @override
+  String get hotspotRootEnabledTip => 'Root transparent hotspot VPN enabled';
+
+  @override
+  String get hotspotRootFailed =>
+      'Failed to enable root hotspot tunnel. Ensure TUN is active and root (su) is granted.';
+
+  @override
+  String get hotspotSectionDesc =>
+      'Non-root sharing uses LAN HTTP/SOCKS proxy on tethered devices. Root mode routes hotspot traffic transparently through TUN.';
+
+  @override
+  String get versionGateTitle => 'Update Required';
+
+  @override
+  String get versionGateDefaultDesc =>
+      'This version is no longer supported. Please update FlClash to continue.';
+
+  @override
+  String get versionGateDownload => 'Download update';
+
+  @override
+  String get versionGateRetry => 'Check again';
 }

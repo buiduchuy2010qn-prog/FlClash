@@ -26,8 +26,8 @@ func handleDecodeShareLinks(params LinesParams) [][]map[string]any {
 	results := make([][]map[string]any, len(params.Lines))
 	for i, line := range params.Lines {
 		proxies, err := convert.ConvertsV2Ray([]byte(line))
-		if err != nil {
-			proxies = []map[string]any{}
+		if err != nil || len(proxies) == 0 {
+			proxies = decodeCompatShareLine(line)
 		}
 		results[i] = proxies
 	}

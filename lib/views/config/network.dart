@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:fl_clash/common/common.dart';
@@ -5,11 +6,13 @@ import 'package:fl_clash/common/mitm_network.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/features/form/form.dart';
 import 'package:fl_clash/models/models.dart';
-import 'package:fl_clash/providers/config.dart';
+import 'package:fl_clash/plugins/app.dart';
 import 'package:fl_clash/providers/mitm.dart';
+import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/views/config/override.dart';
 import 'package:fl_clash/views/config/tun.dart';
 import 'package:fl_clash/widgets/widgets.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' show dirname, join;
@@ -578,6 +581,145 @@ class NetworkOptionsSection extends ConsumerWidget {
   }
 }
 
+class Optimize4gPresetSection extends ConsumerWidget {
+  const Optimize4gPresetSection({super.key});
+
+  void _togglePreset(BuildContext context, WidgetRef ref, bool enable) {
+    final l = context.appLocalizations;
+    ref.read(optimize4gPresetProvider.notifier).value = enable;
+    if (enable) {
+      const plainDns = ['1.1.1.1', '8.8.8.8'];
+      ref.read(patchClashConfigProvider.notifier).update((state) {
+        return state.copyWith(
+          mode: Mode.global,
+          tun: system.isDesktop ? state.tun.copyWith(enable: true) : state.tun,
+          dns: state.dns.copyWith(
+            enable: true,
+            enhancedMode: DnsMode.fakeIp,
+            nameserver: plainDns,
+            defaultNameserver: plainDns,
+            proxyServerNameserver: plainDns,
+          ),
+          dnsOverrideKeys: {
+            ...state.dnsOverrideKeys,
+            DnsOverrideKey.enable,
+            DnsOverrideKey.enhancedMode,
+            DnsOverrideKey.nameserver,
+            DnsOverrideKey.defaultNameserver,
+            DnsOverrideKey.proxyServerNameserver,
+          },
+        );
+      });
+      if (system.isAndroid) {
+        ref
+            .read(vpnSettingProvider.notifier)
+            .update((state) => state.copyWith(enable: true));
+      }
+      ref
+          .read(networkSettingProvider.notifier)
+          .update((state) => state.copyWith(bypassPrivateRoute: true));
+      dialogs.showBanner(l.optimize4gAppliedTip);
+    }
+    ref.read(setupActionProvider.notifier).applyProfileDebounce(force: true);
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.appLocalizations;
+    final enabled = ref.watch(optimize4gPresetProvider);
+    return generateSection(
+      title: l.optimize4gTitle,
+      items: [
+        ListItem.toggle(
+          title: Text(l.optimize4gPreset),
+          subtitle: Text(l.optimize4gPresetDesc),
+          value: enabled,
+          onChanged: (value) => _togglePreset(context, ref, value),
+        ),
+      ],
+      footer: l.optimize4gPresetFooter,
+    );
+  }
+}
+
+class HotspotShareSection extends ConsumerWidget {
+  const HotspotShareSection({super.key});
+
+  Future<void> _toggleRootShare(
+    BuildContext context,
+    WidgetRef ref,
+    bool enable,
+  ) async {
+    final l = context.appLocalizations;
+    if (!enable) {
+      await app?.setRootHotspotShare(false);
+      if (context.mounted) {
+        ref.read(rootHotspotShareProvider.notifier).value = false;
+      }
+      return;
+    }
+    ref.read(rootHotspotShareProvider.notifier).value = true;
+    final ok = await app?.setRootHotspotShare(true) ?? false;
+    if (!context.mounted) return;
+    if (!ok) {
+      ref.read(rootHotspotShareProvider.notifier).value = false;
+      dialogs.showBanner(l.hotspotRootFailed, level: BannerLevel.error);
+    } else {
+      dialogs.showBanner(l.hotspotRootEnabledTip);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.appLocalizations;
+    final allowLan = ref.watch(
+      patchClashConfigProvider.select((state) => state.allowLan),
+    );
+    final mixedPort = ref.watch(
+      patchClashConfigProvider.select((state) => state.mixedPort),
+    );
+    final localIp = ref.watch(localIpProvider);
+    final rootShare = ref.watch(rootHotspotShareProvider);
+    final host = (localIp != null && localIp.isNotEmpty)
+        ? localIp
+        : '192.168.43.1';
+    final proxyAddress = '$host:$mixedPort';
+
+    return generateSection(
+      title: l.hotspotSectionTitle,
+      items: [
+        ListItem.toggle(
+          title: Text(l.hotspotLanProxy),
+          subtitle: Text(l.hotspotLanProxyDesc),
+          value: allowLan,
+          onChanged: (value) {
+            ref
+                .read(patchClashConfigProvider.notifier)
+                .update((state) => state.copyWith(allowLan: value));
+          },
+        ),
+        if (allowLan)
+          ListItem(
+            title: Text(l.hotspotProxyAddress),
+            subtitle: Text(proxyAddress),
+            onTap: () {
+              unawaited(Clipboard.setData(ClipboardData(text: proxyAddress)));
+              dialogs.showBanner(l.hotspotCopiedTip(proxyAddress));
+            },
+          ),
+        ListItem.toggle(
+          title: Text(l.hotspotRootShare),
+          subtitle: Text(l.hotspotRootShareDesc),
+          value: rootShare,
+          onChanged: (value) =>
+              unawaited(_toggleRootShare(context, ref, value)),
+        ),
+      ],
+      footer: l.hotspotSectionDesc,
+    );
+  }
+}
+
 class NetworkListView extends StatelessWidget {
   const NetworkListView({super.key});
 
@@ -590,6 +732,8 @@ class NetworkListView extends StatelessWidget {
       ),
       children: [
         if (system.isAndroid) const VpnSections(),
+        const Optimize4gPresetSection(),
+        if (system.isAndroid) const HotspotShareSection(),
         if (system.isDesktop) const SystemProxySection(),
         const NetworkOptionsSection(),
         TunSection(

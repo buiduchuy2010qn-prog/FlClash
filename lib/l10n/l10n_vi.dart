@@ -4002,4 +4002,130 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get noAvailableProxyTip => 'Không tìm thấy node nào phản hồi';
+
+  @override
+  String get autoVpnSectionTitle => 'Tự động VPN & Khởi động';
+
+  @override
+  String get autoVpnOnCellular => 'Tự bật VPN khi dùng 4G/5G';
+
+  @override
+  String get autoVpnOnCellularDesc =>
+      'Tự động kết nối VPN khi chuyển sang dữ liệu di động';
+
+  @override
+  String get autoVpnOffWifi => 'Tự tắt VPN khi có Wi-Fi';
+
+  @override
+  String get autoVpnOffWifiDesc =>
+      'Tự động ngắt VPN khi thiết bị kết nối vào Wi-Fi';
+
+  @override
+  String get autoStartOnBoot => 'Tự chạy khi bật máy';
+
+  @override
+  String get autoStartOnBootDesc =>
+      'Khởi động lại VPN tự động sau khi thiết bị khởi động xong';
+
+  @override
+  String get autoVpnSectionDesc =>
+      'Theo dõi mạng qua ConnectivityManager mà không cần quyền Vị trí. Bật/tắt thủ công sẽ tạm hoãn tự động trong 45 giây.';
+
+  @override
+  String get dailyTraffic => 'Thống kê lưu lượng ngày';
+
+  @override
+  String get dailyTrafficDesc =>
+      'Theo dõi dung lượng tải lên/tải xuống hằng ngày và lưu cục bộ tối đa 400 ngày';
+
+  @override
+  String get dailyTrafficToday => 'Hôm nay';
+
+  @override
+  String get dailyTraffic7Days => '7 ngày';
+
+  @override
+  String get dailyTraffic30Days => '30 ngày';
+
+  @override
+  String get dailyTrafficRecord => 'Lưu thống kê theo ngày (400 ngày)';
+
+  @override
+  String get dailyTrafficRecordDesc =>
+      'Lưu tổng dung lượng mỗi ngày để hiển thị trên thẻ Bảng điều khiển';
+
+  @override
+  String get clearDailyTraffic => 'Xóa lịch sử dung lượng';
+
+  @override
+  String get clearDailyTrafficConfirm =>
+      'Xóa toàn bộ dữ liệu thống kê lưu lượng 400 ngày đã lưu?';
+
+  @override
+  String get optimize4gTitle => 'Tối ưu 4G & Global';
+
+  @override
+  String get optimize4gPreset => 'Tối ưu 4G (Global · TUN · QUIC · 1.1.1.1)';
+
+  @override
+  String get optimize4gPresetDesc =>
+      'Bật nhanh chế độ Toàn cầu, TUN, DNS 1.1.1.1 thuần và thông QUIC UDP/443';
+
+  @override
+  String get optimize4gPresetFooter =>
+      'Dùng DNS 1.1.1.1 / 8.8.8.8 thuần cho 4G và loại bỏ rule chặn QUIC UDP/443 khi kích hoạt.';
+
+  @override
+  String get optimize4gAppliedTip =>
+      'Đã áp dụng cấu hình tối ưu 4G Global & QUIC';
+
+  @override
+  String get hotspotSectionTitle => 'Chia sẻ VPN qua Hotspot';
+
+  @override
+  String get hotspotLanProxy => 'Chia sẻ Proxy cho điểm phát Wi-Fi (LAN)';
+
+  @override
+  String get hotspotLanProxyDesc =>
+      'Mở cổng proxy nội bộ để máy kết nối Hotspot nhập IP:Port (không cần Root)';
+
+  @override
+  String get hotspotProxyAddress => 'Địa chỉ Proxy Hotspot (chạm để sao chép)';
+
+  @override
+  String hotspotCopiedTip(Object address) {
+    return 'Đã sao chép địa chỉ proxy: $address';
+  }
+
+  @override
+  String get hotspotRootShare => 'Chia sẻ xuyên suốt qua TUN (Root)';
+
+  @override
+  String get hotspotRootShareDesc =>
+      'Định tuyến toàn bộ lưu lượng Hotspot qua TUN bằng iptables và quyền su';
+
+  @override
+  String get hotspotRootEnabledTip =>
+      'Đã bật chia sẻ Hotspot xuyên suốt (Root)';
+
+  @override
+  String get hotspotRootFailed =>
+      'Không thể bật chia sẻ Root. Hãy đảm bảo TUN đang chạy và đã cấp quyền su.';
+
+  @override
+  String get hotspotSectionDesc =>
+      'Chế độ không Root chia sẻ qua Proxy LAN cho máy bắt Wi-Fi. Chế độ Root chia sẻ tự động toàn bộ kết nối qua TUN.';
+
+  @override
+  String get versionGateTitle => 'Cần cập nhật phiên bản';
+
+  @override
+  String get versionGateDefaultDesc =>
+      'Phiên bản hiện tại không còn được hỗ trợ. Vui lòng cập nhật FlClash để tiếp tục sử dụng.';
+
+  @override
+  String get versionGateDownload => 'Tải bản cập nhật';
+
+  @override
+  String get versionGateRetry => 'Kiểm tra lại';
 }

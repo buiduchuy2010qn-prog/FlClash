@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -135,6 +136,28 @@ extension ProfilesExt on List<Profile> {
   }
 }
 
+String? parseProfileTitleHeader(String? rawHeader) {
+  final trimmed = rawHeader?.trim();
+  if (trimmed == null || trimmed.isEmpty) {
+    return null;
+  }
+  if (trimmed.toLowerCase().startsWith('base64:')) {
+    final encoded = trimmed.substring(7).trim();
+    if (encoded.isEmpty) {
+      return null;
+    }
+    try {
+      final padded = encoded.padRight((encoded.length + 3) & ~3, '=');
+      final normalized = padded.replaceAll('-', '+').replaceAll('_', '/');
+      final decoded = utf8.decode(base64.decode(normalized)).trim();
+      return decoded.isEmpty ? null : decoded;
+    } catch (_) {
+      return null;
+    }
+  }
+  return trimmed;
+}
+
 extension ProfileExtension on Profile {
   bool get realAutoUpdate => type == ProfileType.url && autoUpdate;
 
@@ -185,9 +208,11 @@ extension ProfileExtension on Profile {
   Future<Profile> update({required ValidateConfig validate}) async {
     final response = await request.getFileResponseForUrl(url);
     final disposition = response.headers.value('content-disposition');
+    final profileTitle = response.headers.value('profile-title');
     final userinfo = response.headers.value('subscription-userinfo');
     return copyWith(
       label: label.takeFirstValid([
+        parseProfileTitleHeader(profileTitle),
         getFileNameForDisposition(disposition),
         defaultLabel,
       ]),

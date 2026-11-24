@@ -4053,4 +4053,128 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get noAvailableProxyTip => 'No se encontró ningún nodo disponible';
+
+  @override
+  String get autoVpnSectionTitle => 'VPN automática y arranque';
+
+  @override
+  String get autoVpnOnCellular => 'Conectar automáticamente en 4G/5G';
+
+  @override
+  String get autoVpnOnCellularDesc =>
+      'Conectar la VPN automáticamente al cambiar a datos móviles';
+
+  @override
+  String get autoVpnOffWifi => 'Desconectar automáticamente en Wi-Fi';
+
+  @override
+  String get autoVpnOffWifiDesc =>
+      'Detener la VPN cuando el Wi-Fi esté disponible';
+
+  @override
+  String get autoStartOnBoot => 'Iniciar automáticamente al arrancar';
+
+  @override
+  String get autoStartOnBootDesc =>
+      'Iniciar la VPN tras reiniciar el dispositivo';
+
+  @override
+  String get autoVpnSectionDesc =>
+      'Usa eventos de red sin permiso de ubicación. El cambio manual pausa el modo automático 45 segundos.';
+
+  @override
+  String get dailyTraffic => 'Tráfico diario';
+
+  @override
+  String get dailyTrafficDesc =>
+      'Registra el tráfico diario con historial local de hasta 400 días';
+
+  @override
+  String get dailyTrafficToday => 'Hoy';
+
+  @override
+  String get dailyTraffic7Days => '7 días';
+
+  @override
+  String get dailyTraffic30Days => '30 días';
+
+  @override
+  String get dailyTrafficRecord => 'Registrar tráfico diario (400 días)';
+
+  @override
+  String get dailyTrafficRecordDesc =>
+      'Guardar totales diarios para los gráficos del panel';
+
+  @override
+  String get clearDailyTraffic => 'Borrar historial de tráfico';
+
+  @override
+  String get clearDailyTrafficConfirm =>
+      '¿Borrar todos los registros diarios de tráfico guardados?';
+
+  @override
+  String get optimize4gTitle => 'Preajuste 4G y Global';
+
+  @override
+  String get optimize4gPreset => 'Optimizar 4G (Global · TUN · QUIC · 1.1.1.1)';
+
+  @override
+  String get optimize4gPresetDesc =>
+      'Aplica modo Global, TUN, DNS 1.1.1.1 plano y paso QUIC en un toque';
+
+  @override
+  String get optimize4gPresetFooter =>
+      'Usa DNS 1.1.1.1 / 8.8.8.8 planos y elimina bloqueos QUIC UDP/443 cuando está activo.';
+
+  @override
+  String get optimize4gAppliedTip => 'Preajuste 4G Global y QUIC aplicado';
+
+  @override
+  String get hotspotSectionTitle => 'Compartir VPN por Hotspot';
+
+  @override
+  String get hotspotLanProxy => 'Compartir proxy LAN en punto de acceso';
+
+  @override
+  String get hotspotLanProxyDesc =>
+      'Habilitar proxy local para dispositivos conectados al hotspot sin root';
+
+  @override
+  String get hotspotProxyAddress => 'Dirección del proxy (tocar para copiar)';
+
+  @override
+  String hotspotCopiedTip(Object address) {
+    return 'Dirección copiada: $address';
+  }
+
+  @override
+  String get hotspotRootShare => 'Túnel hotspot transparente (Root)';
+
+  @override
+  String get hotspotRootShareDesc =>
+      'Enrutar tráfico del hotspot directamente por TUN con iptables y su';
+
+  @override
+  String get hotspotRootEnabledTip => 'Túnel hotspot root activado';
+
+  @override
+  String get hotspotRootFailed =>
+      'No se pudo activar el túnel root. Verifica TUN y el permiso su.';
+
+  @override
+  String get hotspotSectionDesc =>
+      'El modo sin root comparte proxy HTTP/SOCKS por LAN. El modo root enruta todo el tráfico por TUN.';
+
+  @override
+  String get versionGateTitle => 'Actualización requerida';
+
+  @override
+  String get versionGateDefaultDesc =>
+      'Esta versión ya no es compatible. Actualiza FlClash para continuar.';
+
+  @override
+  String get versionGateDownload => 'Descargar actualización';
+
+  @override
+  String get versionGateRetry => 'Comprobar de nuevo';
 }

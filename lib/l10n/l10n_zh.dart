@@ -3779,4 +3779,116 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get noAvailableProxyTip => '未找到可用节点';
+
+  @override
+  String get autoVpnSectionTitle => '自动 VPN 与开机自启';
+
+  @override
+  String get autoVpnOnCellular => '使用 4G/5G 时自动连接';
+
+  @override
+  String get autoVpnOnCellularDesc => '切换至移动数据时自动连接 VPN';
+
+  @override
+  String get autoVpnOffWifi => '连接 Wi-Fi 时自动断开';
+
+  @override
+  String get autoVpnOffWifiDesc => '检测到 Wi-Fi 可用时自动停止 VPN';
+
+  @override
+  String get autoStartOnBoot => '开机自动启动';
+
+  @override
+  String get autoStartOnBootDesc => '设备重启完成后自动启动 VPN';
+
+  @override
+  String get autoVpnSectionDesc => '无需位置权限即可监听网络状态。手动开关后将暂停自动切换 45 秒。';
+
+  @override
+  String get dailyTraffic => '每日流量统计';
+
+  @override
+  String get dailyTrafficDesc => '本地记录每日上传和下载流量，最长保留 400 天';
+
+  @override
+  String get dailyTrafficToday => '今天';
+
+  @override
+  String get dailyTraffic7Days => '7 天';
+
+  @override
+  String get dailyTraffic30Days => '30 天';
+
+  @override
+  String get dailyTrafficRecord => '记录 400 天每日流量';
+
+  @override
+  String get dailyTrafficRecordDesc => '持久化每日流量数据以便在仪表盘展示';
+
+  @override
+  String get clearDailyTraffic => '清空流量记录';
+
+  @override
+  String get clearDailyTrafficConfirm => '确定清空已保存的 400 天每日流量数据吗？';
+
+  @override
+  String get optimize4gTitle => '4G 与全局优化预设';
+
+  @override
+  String get optimize4gPreset => '4G 优化 (Global · TUN · QUIC · 1.1.1.1)';
+
+  @override
+  String get optimize4gPresetDesc => '一键启用全局模式、TUN、纯 1.1.1.1 DNS 与 QUIC 放行';
+
+  @override
+  String get optimize4gPresetFooter =>
+      '启用后将使用 1.1.1.1 / 8.8.8.8 纯 DNS 并移除 UDP/443 QUIC 拦截规则。';
+
+  @override
+  String get optimize4gAppliedTip => '已应用 4G 全局与 QUIC 优化预设';
+
+  @override
+  String get hotspotSectionTitle => '热点 VPN 共享';
+
+  @override
+  String get hotspotLanProxy => '开启热点局域网代理共享';
+
+  @override
+  String get hotspotLanProxyDesc => '无需 Root，允许连接热点的设备配置 HTTP/SOCKS 代理上网';
+
+  @override
+  String get hotspotProxyAddress => '热点代理地址（点击复制）';
+
+  @override
+  String hotspotCopiedTip(Object address) {
+    return '已复制代理地址：$address';
+  }
+
+  @override
+  String get hotspotRootShare => '透明热点隧道共享 (Root)';
+
+  @override
+  String get hotspotRootShareDesc => '使用 su 与 iptables 将热点流量直接转发至 TUN 网卡';
+
+  @override
+  String get hotspotRootEnabledTip => '已开启 Root 透明热点共享';
+
+  @override
+  String get hotspotRootFailed => '开启 Root 共享失败，请确认 TUN 已启动并授予 su 权限。';
+
+  @override
+  String get hotspotSectionDesc =>
+      '非 Root 模式通过局域网代理共享；Root 模式通过 TUN 透明转发热点全部流量。';
+
+  @override
+  String get versionGateTitle => '需要更新版本';
+
+  @override
+  String get versionGateDefaultDesc => '当前版本已停止支持，请更新 FlClash 后继续使用。';
+
+  @override
+  String get versionGateDownload => '下载更新';
+
+  @override
+  String get versionGateRetry => '重新检查';
 }

@@ -349,6 +349,7 @@ class GeneralView extends ConsumerWidget {
         select: (state) => state.onlyStatisticsProxy,
         update: (state, value) => state.copyWith(onlyStatisticsProxy: value),
       ),
+      const _DailyTrafficEnabledItem(),
     ];
   }
 
@@ -448,6 +449,24 @@ class GeneralView extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _DailyTrafficEnabledItem extends ConsumerWidget {
+  const _DailyTrafficEnabledItem();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final enabled = ref.watch(dailyTrafficEnabledProvider);
+    final l = context.appLocalizations;
+    return ListItem.toggle(
+      title: Text(l.dailyTrafficRecord),
+      subtitle: Text(l.dailyTrafficRecordDesc),
+      value: enabled,
+      onChanged: (value) {
+        ref.read(dailyTrafficEnabledProvider.notifier).value = value;
+      },
     );
   }
 }

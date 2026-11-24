@@ -36,7 +36,9 @@ import androidx.core.net.toUri
 import androidx.core.view.OnApplyWindowInsetsListener
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.follow.clash.AutoVpnController
 import com.follow.clash.R
+import com.follow.clash.RootHotspotManager
 import com.follow.clash.SystemCaStore
 import com.follow.clash.UpdateStorageCleaner
 import com.follow.clash.common.Components
@@ -351,6 +353,34 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
                 } else {
                     installPackage(File(path)) { status -> result.success(status) }
                 }
+            }
+
+            "syncAutoVpnSettings" -> {
+                AutoVpnController.updateSettings(
+                    GlobalState.application,
+                    call.argument<Boolean>("onCellular") == true,
+                    call.argument<Boolean>("offWifi") == true,
+                    call.argument<Boolean>("startOnBoot") == true,
+                )
+                result.success(true)
+            }
+
+            "notifyManualVpnAction" -> {
+                AutoVpnController.notifyManualAction()
+                result.success(true)
+            }
+
+            "setRootHotspotShare" -> reply(result) {
+                if (call.argument<Boolean>("enabled") == true) {
+                    RootHotspotManager.enable(GlobalState.application)
+                } else {
+                    RootHotspotManager.disable()
+                    false
+                }
+            }
+
+            "getRootHotspotStatus" -> {
+                result.success(RootHotspotManager.isActive)
             }
 
             else -> {
