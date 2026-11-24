@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/metacubex/mihomo/adapter"
 	"github.com/metacubex/mihomo/adapter/inbound"
@@ -166,6 +167,7 @@ func applyConfig(params *SetupParams) error {
 
 	currentConfig = cfg
 	hub.ApplyConfig(cfg)
+	installResilientProxyHostResolver()
 	adapter.UnifiedDelay.Store(cfg.General.UnifiedDelay)
 	dialer.SetTcpConcurrent(cfg.General.TCPConcurrent)
 	patchSelectGroup(params.SelectedMap)
@@ -173,6 +175,7 @@ func applyConfig(params *SetupParams) error {
 	// After the listeners: a probe sent while the TUN is rebuilt carries the
 	// older epoch, and its failure goes with it.
 	bumpRouteEpoch()
+	schedulePrewarmProxyServerHosts(1500 * time.Millisecond)
 	reconcileGeoUpdater()
 	scheduleDeferredGeoDownloads()
 	scheduleLoadMemoryRelease()

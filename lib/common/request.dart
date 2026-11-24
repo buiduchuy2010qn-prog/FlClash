@@ -117,7 +117,14 @@ class Request {
         ? '${info.version}+${info.buildNumber}'
         : info.version;
     final hasUpdate = compareVersions(remoteVersion, localVersion) > 0;
-    return hasUpdate ? release : null;
+    if (!hasUpdate) {
+      return null;
+    }
+    final asset = selfUpdateAsset;
+    if (asset != null && !releaseHasAsset(release, asset)) {
+      return null;
+    }
+    return release;
   }
 
   /// The release page redirect still answers once the hourly API quota is spent.

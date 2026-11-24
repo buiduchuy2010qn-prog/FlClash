@@ -329,6 +329,8 @@ void main() {
 
       final clash = presetContainer.read(patchClashConfigProvider);
       expect(clash.mode, Mode.global);
+      expect(clash.ipv6, isFalse);
+      expect(clash.generalOverrideKeys, contains(GeneralOverrideKey.ipv6));
       expect(clash.tun.mtu, 1400);
       expect(clash.dns.ipv6, isFalse);
       expect(clash.dns.useHosts, isTrue);

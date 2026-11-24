@@ -157,6 +157,11 @@ class Optimize4gPresetNotifier extends _PersistedBoolNotifier {
     ref.read(patchClashConfigProvider.notifier).update((state) {
       return state.copyWith(
         mode: Mode.global,
+        ipv6: false,
+        generalOverrideKeys: {
+          ...state.generalOverrideKeys,
+          GeneralOverrideKey.ipv6,
+        },
         tun: state.tun.copyWith(
           enable: system.isDesktop ? true : state.tun.enable,
           mtu: 1400,

@@ -4,8 +4,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/metacubex/mihomo/adapter/outboundgroup"
 	"github.com/metacubex/mihomo/component/resolver"
 	"github.com/metacubex/mihomo/constant"
+	cp "github.com/metacubex/mihomo/constant/provider"
 	"github.com/metacubex/mihomo/dns"
 	"github.com/metacubex/mihomo/tunnel"
 	"github.com/metacubex/mihomo/tunnel/statistic"
@@ -90,7 +92,15 @@ func schedulePostResetHealthCheck() {
 			return
 		}
 		var wg sync.WaitGroup
-		for _, pd := range tunnel.ProvidersSnapshot() {
+		seen := make(map[cp.ProxyProvider]struct{})
+		checkProvider := func(pd cp.ProxyProvider) {
+			if pd == nil {
+				return
+			}
+			if _, ok := seen[pd]; ok {
+				return
+			}
+			seen[pd] = struct{}{}
 			wg.Add(1)
 			p := pd
 			safeGo("postResetHealthCheck", func() {
@@ -98,7 +108,18 @@ func schedulePostResetHealthCheck() {
 				p.HealthCheck()
 			})
 		}
+		for _, pd := range tunnel.ProvidersSnapshot() {
+			checkProvider(pd)
+		}
+		for _, proxy := range tunnel.AllProxies() {
+			if group, ok := adapterAs[outboundgroup.ProxyGroup](proxy); ok {
+				for _, pd := range group.Providers() {
+					checkProvider(pd)
+				}
+			}
+		}
 		wg.Wait()
+		schedulePrewarmProxyServerHosts(0)
 		if isRunning.Load() {
 			refreshRoute()
 		}
