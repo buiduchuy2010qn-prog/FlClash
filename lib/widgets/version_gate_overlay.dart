@@ -90,8 +90,9 @@ class VersionGateOverlay extends ConsumerWidget {
                                   .copyWith(color: colorScheme.primary),
                             ),
                           FilledButton(
-                            onPressed: () =>
-                                unawaited(_openDownload(policy?.downloadUrl ?? '')),
+                            onPressed: () => unawaited(
+                              _openDownload(policy?.downloadUrl ?? ''),
+                            ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               mainAxisAlignment: MainAxisAlignment.center,

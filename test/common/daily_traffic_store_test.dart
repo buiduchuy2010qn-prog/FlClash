@@ -46,8 +46,11 @@ void main() {
 
     test('encodes and decodes safely and handles corrupted JSON', () {
       final now = DateTime(2026, 11, 24);
-      final ledger = const DailyTrafficLedger()
-          .recordDelta(upDelta: 1024, downDelta: 2048, now: now);
+      final ledger = const DailyTrafficLedger().recordDelta(
+        upDelta: 1024,
+        downDelta: 2048,
+        now: now,
+      );
 
       final decoded = DailyTrafficLedger.decode(ledger.encode(), now: now);
       expect(decoded.today(now: now).total, 3072);

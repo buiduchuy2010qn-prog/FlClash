@@ -4058,4 +4058,128 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get noAvailableProxyTip => 'Aucun nœud joignable trouvé';
+
+  @override
+  String get autoVpnSectionTitle => 'VPN auto & démarrage';
+
+  @override
+  String get autoVpnOnCellular => 'Connexion auto sur données mobiles';
+
+  @override
+  String get autoVpnOnCellularDesc =>
+      'Connecter le VPN automatiquement sur réseau 4G/5G';
+
+  @override
+  String get autoVpnOffWifi => 'Déconnexion auto sur Wi-Fi';
+
+  @override
+  String get autoVpnOffWifiDesc =>
+      'Couper le VPN dès qu’un réseau Wi-Fi est disponible';
+
+  @override
+  String get autoStartOnBoot => 'Démarrage auto au boot';
+
+  @override
+  String get autoStartOnBootDesc =>
+      'Lancer le VPN automatiquement après le redémarrage';
+
+  @override
+  String get autoVpnSectionDesc =>
+      'Utilise les événements ConnectivityManager sans permission de localisation. Une action manuelle met en pause 45 s.';
+
+  @override
+  String get dailyTraffic => 'Trafic quotidien';
+
+  @override
+  String get dailyTrafficDesc =>
+      'Suivre le trafic quotidien avec 400 jours d’historique local';
+
+  @override
+  String get dailyTrafficToday => 'Aujourd’hui';
+
+  @override
+  String get dailyTraffic7Days => '7 jours';
+
+  @override
+  String get dailyTraffic30Days => '30 jours';
+
+  @override
+  String get dailyTrafficRecord => 'Enregistrer le trafic sur 400 jours';
+
+  @override
+  String get dailyTrafficRecordDesc =>
+      'Conserver les totaux quotidiens pour le tableau de bord';
+
+  @override
+  String get clearDailyTraffic => 'Effacer l’historique';
+
+  @override
+  String get clearDailyTrafficConfirm =>
+      'Effacer tout l’historique quotidien de trafic enregistré ?';
+
+  @override
+  String get optimize4gTitle => 'Préréglage 4G & Global';
+
+  @override
+  String get optimize4gPreset => 'Optimiser 4G (Global · TUN · QUIC · 1.1.1.1)';
+
+  @override
+  String get optimize4gPresetDesc =>
+      'Activer Global, TUN, DNS 1.1.1.1 simple et QUIC en un geste';
+
+  @override
+  String get optimize4gPresetFooter =>
+      'Utilise les DNS 1.1.1.1 / 8.8.8.8 simples et autorise QUIC UDP/443.';
+
+  @override
+  String get optimize4gAppliedTip => 'Préréglage 4G Global & QUIC appliqué';
+
+  @override
+  String get hotspotSectionTitle => 'Partage VPN Hotspot';
+
+  @override
+  String get hotspotLanProxy => 'Partager le proxy LAN sur hotspot';
+
+  @override
+  String get hotspotLanProxyDesc =>
+      'Ouvrir le proxy local aux appareils connectés sans accès root';
+
+  @override
+  String get hotspotProxyAddress => 'Adresse du proxy (appuyer pour copier)';
+
+  @override
+  String hotspotCopiedTip(Object address) {
+    return 'Adresse proxy copiée : $address';
+  }
+
+  @override
+  String get hotspotRootShare => 'Tunnel hotspot transparent (Root)';
+
+  @override
+  String get hotspotRootShareDesc =>
+      'Acheminer le trafic hotspot via TUN avec iptables et su';
+
+  @override
+  String get hotspotRootEnabledTip => 'Partage hotspot root activé';
+
+  @override
+  String get hotspotRootFailed =>
+      'Échec du partage root. Vérifiez TUN et l’accès su.';
+
+  @override
+  String get hotspotSectionDesc =>
+      'Sans root : proxy LAN HTTP/SOCKS. Avec root : routage transparent via TUN.';
+
+  @override
+  String get versionGateTitle => 'Mise à jour requise';
+
+  @override
+  String get versionGateDefaultDesc =>
+      'Cette version n’est plus prise en charge. Veuillez mettre à jour FlClash.';
+
+  @override
+  String get versionGateDownload => 'Télécharger la mise à jour';
+
+  @override
+  String get versionGateRetry => 'Vérifier à nouveau';
 }

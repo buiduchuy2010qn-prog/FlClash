@@ -592,9 +592,7 @@ class Optimize4gPresetSection extends ConsumerWidget {
       ref.read(patchClashConfigProvider.notifier).update((state) {
         return state.copyWith(
           mode: Mode.global,
-          tun: system.isDesktop
-              ? state.tun.copyWith(enable: true)
-              : state.tun,
+          tun: system.isDesktop ? state.tun.copyWith(enable: true) : state.tun,
           dns: state.dns.copyWith(
             enable: true,
             enhancedMode: DnsMode.fakeIp,
@@ -713,7 +711,8 @@ class HotspotShareSection extends ConsumerWidget {
           title: Text(l.hotspotRootShare),
           subtitle: Text(l.hotspotRootShareDesc),
           value: rootShare,
-          onChanged: (value) => unawaited(_toggleRootShare(context, ref, value)),
+          onChanged: (value) =>
+              unawaited(_toggleRootShare(context, ref, value)),
         ),
       ],
       footer: l.hotspotSectionDesc,

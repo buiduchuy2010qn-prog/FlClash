@@ -4005,4 +4005,130 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get noAvailableProxyTip => 'Доступные узлы не найдены';
+
+  @override
+  String get autoVpnSectionTitle => 'Авто-VPN и запуск';
+
+  @override
+  String get autoVpnOnCellular => 'Автоподключение в 4G/5G';
+
+  @override
+  String get autoVpnOnCellularDesc =>
+      'Автоматически включать VPN при переходе на мобильную сеть';
+
+  @override
+  String get autoVpnOffWifi => 'Автоотключение по Wi-Fi';
+
+  @override
+  String get autoVpnOffWifiDesc =>
+      'Отключать VPN при появлении подключения Wi-Fi';
+
+  @override
+  String get autoStartOnBoot => 'Запуск при включении';
+
+  @override
+  String get autoStartOnBootDesc =>
+      'Автоматически запускать VPN после перезагрузки устройства';
+
+  @override
+  String get autoVpnSectionDesc =>
+      'Использует ConnectivityManager без доступа к геолокации. Ручное переключение ставит паузу на 45 секунд.';
+
+  @override
+  String get dailyTraffic => 'Трафик по дням';
+
+  @override
+  String get dailyTrafficDesc =>
+      'Учёт суточного трафика с локальной историей до 400 дней';
+
+  @override
+  String get dailyTrafficToday => 'Сегодня';
+
+  @override
+  String get dailyTraffic7Days => '7 дней';
+
+  @override
+  String get dailyTraffic30Days => '30 дней';
+
+  @override
+  String get dailyTrafficRecord => 'Хранить историю за 400 дней';
+
+  @override
+  String get dailyTrafficRecordDesc =>
+      'Сохранять ежедневные итоги для графика на главной панели';
+
+  @override
+  String get clearDailyTraffic => 'Сбросить историю';
+
+  @override
+  String get clearDailyTrafficConfirm =>
+      'Очистить всю сохранённую историю трафика за 400 дней?';
+
+  @override
+  String get optimize4gTitle => 'Пресет 4G и Global';
+
+  @override
+  String get optimize4gPreset =>
+      'Оптимизация 4G (Global · TUN · QUIC · 1.1.1.1)';
+
+  @override
+  String get optimize4gPresetDesc =>
+      'Включает Global, TUN, обычный DNS 1.1.1.1 и пропуск QUIC в одно нажатие';
+
+  @override
+  String get optimize4gPresetFooter =>
+      'Использует открытые DNS 1.1.1.1 / 8.8.8.8 и убирает блокировку QUIC UDP/443.';
+
+  @override
+  String get optimize4gAppliedTip => 'Пресет 4G Global и QUIC применён';
+
+  @override
+  String get hotspotSectionTitle => 'Раздача VPN по Hotspot';
+
+  @override
+  String get hotspotLanProxy => 'Раздача LAN-прокси по точке доступа';
+
+  @override
+  String get hotspotLanProxyDesc =>
+      'Открыть локальный порт прокси для подключённых устройств без Root';
+
+  @override
+  String get hotspotProxyAddress => 'Адрес прокси (нажмите, чтобы скопировать)';
+
+  @override
+  String hotspotCopiedTip(Object address) {
+    return 'Адрес прокси скопирован: $address';
+  }
+
+  @override
+  String get hotspotRootShare => 'Прозрачный туннель Hotspot (Root)';
+
+  @override
+  String get hotspotRootShareDesc =>
+      'Перенаправлять трафик точки доступа через TUN с iptables и su';
+
+  @override
+  String get hotspotRootEnabledTip =>
+      'Прозрачная раздача Hotspot (Root) включена';
+
+  @override
+  String get hotspotRootFailed =>
+      'Не удалось включить Root-раздачу. Проверьте TUN и права su.';
+
+  @override
+  String get hotspotSectionDesc =>
+      'Без Root используется LAN HTTP/SOCKS-прокси. В режиме Root весь трафик идёт через TUN.';
+
+  @override
+  String get versionGateTitle => 'Требуется обновление';
+
+  @override
+  String get versionGateDefaultDesc =>
+      'Эта версия больше не поддерживается. Обновите FlClash для продолжения.';
+
+  @override
+  String get versionGateDownload => 'Скачать обновление';
+
+  @override
+  String get versionGateRetry => 'Проверить снова';
 }

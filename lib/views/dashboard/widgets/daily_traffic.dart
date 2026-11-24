@@ -206,9 +206,7 @@ class _DailyTrafficBarPainter extends CustomPainter {
     for (var i = 0; i < count; i++) {
       final value = days[i].total;
       final ratio = maxTotal > 0 ? value / maxTotal : 0.0;
-      final barHeight = value > 0
-          ? math.max(3.0, ratio * size.height)
-          : 2.0;
+      final barHeight = value > 0 ? math.max(3.0, ratio * size.height) : 2.0;
       final left = i * slotWidth + (slotWidth - barWidth) / 2;
       final top = size.height - barHeight;
       final isHighlighted = value > 0 && (!highlightLast || i == count - 1);

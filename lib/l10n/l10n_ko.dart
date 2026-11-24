@@ -3905,4 +3905,119 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get noAvailableProxyTip => '응답하는 노드를 찾을 수 없습니다';
+
+  @override
+  String get autoVpnSectionTitle => '자동 VPN 및 부팅';
+
+  @override
+  String get autoVpnOnCellular => '모바일 데이터(4G/5G) 자동 연결';
+
+  @override
+  String get autoVpnOnCellularDesc => '모바일 네트워크로 전환 시 자동으로 VPN을 연결합니다';
+
+  @override
+  String get autoVpnOffWifi => 'Wi-Fi 연결 시 자동 해제';
+
+  @override
+  String get autoVpnOffWifiDesc => 'Wi-Fi가 연결되면 자동으로 VPN을 중지합니다';
+
+  @override
+  String get autoStartOnBoot => '기기 부팅 시 자동 실행';
+
+  @override
+  String get autoStartOnBootDesc => '기기 재부팅 후 VPN을 자동으로 시작합니다';
+
+  @override
+  String get autoVpnSectionDesc =>
+      '위치 권한 없이 네트워크 상태를 감지합니다. 수동 전환 후 45초간 자동 전환이 일시 중지됩니다.';
+
+  @override
+  String get dailyTraffic => '일별 트래픽';
+
+  @override
+  String get dailyTrafficDesc => '최대 400일간 일일 업로드/다운로드 사용량을 로컬에 기록합니다';
+
+  @override
+  String get dailyTrafficToday => '오늘';
+
+  @override
+  String get dailyTraffic7Days => '7일';
+
+  @override
+  String get dailyTraffic30Days => '30일';
+
+  @override
+  String get dailyTrafficRecord => '400일 일별 트래픽 기록';
+
+  @override
+  String get dailyTrafficRecordDesc => '대시보드 차트 표시를 위해 일일 사용량을 저장합니다';
+
+  @override
+  String get clearDailyTraffic => '트래픽 기록 초기화';
+
+  @override
+  String get clearDailyTrafficConfirm => '저장된 400일 일별 트래픽 기록을 모두 삭제할까요?';
+
+  @override
+  String get optimize4gTitle => '4G 및 글로벌 프리셋';
+
+  @override
+  String get optimize4gPreset => '4G 최적화 (Global · TUN · QUIC · 1.1.1.1)';
+
+  @override
+  String get optimize4gPresetDesc =>
+      '글로벌 모드, TUN, 기본 1.1.1.1 DNS 및 QUIC 통과를 한 번에 적용';
+
+  @override
+  String get optimize4gPresetFooter =>
+      '활성화 시 1.1.1.1 / 8.8.8.8 DNS를 적용하고 UDP/443 QUIC 차단 규칙을 제거합니다.';
+
+  @override
+  String get optimize4gAppliedTip => '4G 글로벌 및 QUIC 프리셋이 적용되었습니다';
+
+  @override
+  String get hotspotSectionTitle => '핫스팟 VPN 공유';
+
+  @override
+  String get hotspotLanProxy => '핫스팟 LAN 프록시 공유';
+
+  @override
+  String get hotspotLanProxyDesc => '루팅 없이 연결된 기기에서 수동 프록시로 사용할 수 있도록 엽니다';
+
+  @override
+  String get hotspotProxyAddress => '핫스팟 프록시 주소 (탭하여 복사)';
+
+  @override
+  String hotspotCopiedTip(Object address) {
+    return '프록시 주소가 복사되었습니다: $address';
+  }
+
+  @override
+  String get hotspotRootShare => '투명 핫스팟 터널 (Root)';
+
+  @override
+  String get hotspotRootShareDesc => 'iptables 및 su 권한으로 핫스팟 트래픽을 TUN으로 전달합니다';
+
+  @override
+  String get hotspotRootEnabledTip => 'Root 투명 핫스팟 공유가 활성화되었습니다';
+
+  @override
+  String get hotspotRootFailed => 'Root 핫스팟 공유에 실패했습니다. TUN 상태와 su 권한을 확인하세요.';
+
+  @override
+  String get hotspotSectionDesc =>
+      '비루팅 모드는 LAN 프록시를 공유하며, 루팅 모드는 TUN으로 투명 라우팅합니다.';
+
+  @override
+  String get versionGateTitle => '업데이트 필요';
+
+  @override
+  String get versionGateDefaultDesc =>
+      '이 버전은 더 이상 지원되지 않습니다. 계속하려면 FlClash를 업데이트하세요.';
+
+  @override
+  String get versionGateDownload => '업데이트 다운로드';
+
+  @override
+  String get versionGateRetry => '다시 확인';
 }

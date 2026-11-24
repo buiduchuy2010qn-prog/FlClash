@@ -99,7 +99,9 @@ class VersionGateEvaluator {
     required int currentVersionCode,
     required VersionGatePolicy? policy,
   }) {
-    if (policy == null || policy.minVersionCode <= 0 || currentVersionCode <= 0) {
+    if (policy == null ||
+        policy.minVersionCode <= 0 ||
+        currentVersionCode <= 0) {
       return false;
     }
     return currentVersionCode < policy.minVersionCode;

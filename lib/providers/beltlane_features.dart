@@ -104,8 +104,7 @@ class RootHotspotShareNotifier extends _PersistedBoolNotifier {
   Future<bool> readValue() => preferences.getRootHotspotShare();
 
   @override
-  Future<void> writeValue(bool value) =>
-      preferences.setRootHotspotShare(value);
+  Future<void> writeValue(bool value) => preferences.setRootHotspotShare(value);
 }
 
 final rootHotspotShareProvider =
@@ -118,8 +117,7 @@ class Optimize4gPresetNotifier extends _PersistedBoolNotifier {
   Future<bool> readValue() => preferences.getOptimize4gPreset();
 
   @override
-  Future<void> writeValue(bool value) =>
-      preferences.setOptimize4gPreset(value);
+  Future<void> writeValue(bool value) => preferences.setOptimize4gPreset(value);
 }
 
 final optimize4gPresetProvider =

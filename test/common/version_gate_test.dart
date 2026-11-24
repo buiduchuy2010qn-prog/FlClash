@@ -55,36 +55,41 @@ void main() {
       );
     });
 
-    test('respects 6 hour cache TTL and fails open on network errors', () async {
-      final now = DateTime(2026, 11, 24, 12);
-      final fresh = VersionGatePolicy(
-        minVersionCode: 100,
-        latestVersion: '0.9.8',
-        downloadUrl: '',
-        message: '',
-        fetchedAt: now.subtract(const Duration(hours: 5, minutes: 59)),
-      );
-      final stale = VersionGatePolicy(
-        minVersionCode: 100,
-        latestVersion: '0.9.8',
-        downloadUrl: '',
-        message: '',
-        fetchedAt: now.subtract(const Duration(hours: 6)),
-      );
-      expect(fresh.isExpired(now: now), isFalse);
-      expect(stale.isExpired(now: now), isTrue);
+    test(
+      'respects 6 hour cache TTL and fails open on network errors',
+      () async {
+        final now = DateTime(2026, 11, 24, 12);
+        final fresh = VersionGatePolicy(
+          minVersionCode: 100,
+          latestVersion: '0.9.8',
+          downloadUrl: '',
+          message: '',
+          fetchedAt: now.subtract(const Duration(hours: 5, minutes: 59)),
+        );
+        final stale = VersionGatePolicy(
+          minVersionCode: 100,
+          latestVersion: '0.9.8',
+          downloadUrl: '',
+          message: '',
+          fetchedAt: now.subtract(const Duration(hours: 6)),
+        );
+        expect(fresh.isExpired(now: now), isFalse);
+        expect(stale.isExpired(now: now), isTrue);
 
-      final roundtrip = VersionGatePolicy.decodeCache(fresh.encodeCache());
-      expect(roundtrip?.minVersionCode, 100);
-      expect(roundtrip?.latestVersion, '0.9.8');
+        final roundtrip = VersionGatePolicy.decodeCache(fresh.encodeCache());
+        expect(roundtrip?.minVersionCode, 100);
+        expect(roundtrip?.latestVersion, '0.9.8');
 
-      final dio = Dio(BaseOptions(connectTimeout: const Duration(milliseconds: 50)));
-      final failed = await const VersionGateEvaluator().fetchPolicy(
-        client: dio,
-        url: 'http://127.0.0.1:1/nonexistent.json',
-      );
-      dio.close();
-      expect(failed, isNull);
-    });
+        final dio = Dio(
+          BaseOptions(connectTimeout: const Duration(milliseconds: 50)),
+        );
+        final failed = await const VersionGateEvaluator().fetchPolicy(
+          client: dio,
+          url: 'http://127.0.0.1:1/nonexistent.json',
+        );
+        dio.close();
+        expect(failed, isNull);
+      },
+    );
   });
 }
