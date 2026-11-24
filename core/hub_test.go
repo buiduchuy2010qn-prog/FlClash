@@ -575,20 +575,22 @@ func TestPatchSelectGroupSerialisesWithProxyChanges(t *testing.T) {
 	}
 }
 
-// The hoisted constant has to keep meaning what the call meant, so a change to
-// mihomo's parser cannot silently narrow which HTTP statuses a delay test
-// accepts.
-func TestAnyDelayTestStatusMatchesTheEmptyRange(t *testing.T) {
-	built, err := utils.NewUnsignedRanges[uint16]("")
+func TestDefaultExpectedDelayStatusRequires2xx(t *testing.T) {
+	built, err := utils.NewUnsignedRanges[uint16]("200-299")
 	if err != nil {
-		t.Fatalf("NewUnsignedRanges(\"\") error: %v", err)
+		t.Fatalf("NewUnsignedRanges(\"200-299\") error: %v", err)
 	}
-	if len(built) != len(anyDelayTestStatus) {
-		t.Fatalf("anyDelayTestStatus = %v, want %v", anyDelayTestStatus, built)
+	if len(built) != len(defaultExpectedDelayStatus) {
+		t.Fatalf("defaultExpectedDelayStatus = %v, want %v", defaultExpectedDelayStatus, built)
 	}
-	for _, status := range []uint16{0, 200, 204, 302, 404, 503} {
-		if !anyDelayTestStatus.Check(status) {
-			t.Errorf("status %d was rejected, so a reachable proxy reports as unreachable", status)
+	for _, status := range []uint16{200, 204, 299} {
+		if !defaultExpectedDelayStatus.Check(status) {
+			t.Errorf("status %d was rejected, want 2xx acceptance", status)
+		}
+	}
+	for _, status := range []uint16{0, 301, 302, 403, 404, 502, 503} {
+		if defaultExpectedDelayStatus.Check(status) {
+			t.Errorf("status %d was accepted, want captive portals and server errors rejected", status)
 		}
 	}
 }

@@ -39,11 +39,14 @@ func decodeCompatShareLine(rawLine string) []map[string]any {
 }
 
 func decodeShareLineAny(line string) []map[string]any {
-	proxies, err := convert.ConvertsV2Ray([]byte(line))
-	if err == nil && len(proxies) > 0 {
+	trimmed := strings.TrimSpace(line)
+	if trimmed == "" {
+		return []map[string]any{}
+	}
+	if proxies, ok := decodeSingleShareLine(trimmed); ok {
 		return proxies
 	}
-	return decodeCompatShareLine(line)
+	return decodeCompatShareLine(trimmed)
 }
 
 func decodeV2RayNWrapper(line string) []map[string]any {
@@ -816,6 +819,307 @@ func stringMapField(m map[string]any, key string) map[string]string {
 	return out
 }
 
+func decodeSingleShareLine(trimmed string) ([]map[string]any, bool) {
+	prepared := preprocessV2RayShareLine(trimmed)
+	proxies, err := convert.ConvertsV2Ray([]byte(prepared))
+	if err != nil || len(proxies) == 0 {
+		return nil, false
+	}
+	for _, proxy := range proxies {
+		patchV2RayShareLinkProxy(trimmed, proxy)
+	}
+	return proxies, true
+}
+
+func convertV2RayBytes(buf []byte) ([]map[string]any, error) {
+	raw := strings.TrimSpace(string(buf))
+	if raw == "" {
+		return convert.ConvertsV2Ray(buf)
+	}
+	if !strings.Contains(raw, "://") {
+		if decoded, ok := decodeCompatBase64(raw); ok && strings.Contains(string(decoded), "://") {
+			raw = strings.TrimSpace(string(decoded))
+		}
+	}
+	lines := strings.Split(strings.ReplaceAll(raw, "\r\n", "\n"), "\n")
+	proxies := make([]map[string]any, 0, len(lines))
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || !strings.Contains(trimmed, "://") {
+			continue
+		}
+		proxies = append(proxies, decodeShareLineAny(trimmed)...)
+	}
+	if len(proxies) > 0 {
+		return proxies, nil
+	}
+	return convert.ConvertsV2Ray(buf)
+}
+
+func preprocessV2RayShareLine(rawLine string) string {
+	u, err := url.Parse(normalizeRawShareAuthority(rawLine))
+	if err != nil || u.RawQuery == "" {
+		return rawLine
+	}
+	scheme := strings.ToLower(u.Scheme)
+	if scheme != "vless" && scheme != "vmess" && scheme != "trojan" {
+		return rawLine
+	}
+	query := u.Query()
+	changed := false
+	for k, vals := range query {
+		if strings.EqualFold(k, "type") && len(vals) > 0 && strings.EqualFold(strings.TrimSpace(vals[0]), "splithttp") {
+			query.Del(k)
+			query.Set("type", "xhttp")
+			changed = true
+			break
+		}
+	}
+	if !changed {
+		return rawLine
+	}
+	u.RawQuery = query.Encode()
+	return u.String()
+}
+
+func patchV2RayShareLinkProxy(rawLine string, proxy map[string]any) {
+	if len(proxy) == 0 {
+		return
+	}
+	if vmessObj, ok := decodeVMessJSONPayload(rawLine); ok {
+		if anyTruthy(vmessObj["allowInsecure"]) || anyTruthy(vmessObj["insecure"]) || anyTruthy(vmessObj["skip-cert-verify"]) {
+			proxy["skip-cert-verify"] = true
+		}
+		host := stringField(vmessObj, "host")
+		if boolField(proxy, "tls") && stringField(proxy, "servername") == "" {
+			if sni := stringField(vmessObj, "sni"); sni != "" {
+				proxy["servername"] = sni
+			} else if firstHost := firstCommaToken(host); firstHost != "" {
+				proxy["servername"] = firstHost
+			}
+		}
+		if strings.EqualFold(stringField(vmessObj, "net"), "tcp") && strings.EqualFold(stringField(vmessObj, "type"), "http") {
+			applyHTTPOptsFromValues(proxy, host, stringField(vmessObj, "path"))
+		}
+		normalizeProxyHostLists(proxy)
+		return
+	}
+
+	u, err := url.Parse(normalizeRawShareAuthority(rawLine))
+	if err != nil {
+		normalizeProxyHostLists(proxy)
+		return
+	}
+	query := u.Query()
+	if isTruthyFlag(firstQueryParam(query, "allowInsecure", "insecure", "skip-cert-verify")) {
+		proxy["skip-cert-verify"] = true
+	}
+	rawHost := firstQueryParam(query, "host")
+	firstHost := firstCommaToken(rawHost)
+	security := strings.ToLower(firstQueryParam(query, "security"))
+	scheme := strings.ToLower(u.Scheme)
+	tlsActive := boolField(proxy, "tls") || (scheme == "trojan" && security != "none") || security == "tls" || security == "reality"
+	if sniKey := proxySNIKey(proxy); sniKey != "" && stringField(proxy, sniKey) == "" {
+		if sni := firstQueryParam(query, "sni", "peer"); sni != "" {
+			proxy[sniKey] = sni
+		} else if tlsActive && firstHost != "" {
+			proxy[sniKey] = firstHost
+		}
+	}
+
+	netType := strings.ToLower(firstQueryParam(query, "type", "net"))
+	headerType := strings.ToLower(firstQueryParam(query, "headerType"))
+	switch {
+	case netType == "ws" || netType == "httpupgrade":
+		proxy["network"] = "ws"
+		wsOpts := ensureSubMap(proxy, "ws-opts")
+		if path := firstQueryParam(query, "path"); path != "" && stringField(wsOpts, "path") == "" {
+			wsOpts["path"] = path
+		}
+		if firstHost != "" {
+			headers := ensureStringSubMap(wsOpts, "headers")
+			if strings.TrimSpace(headers["Host"]) == "" {
+				headers["Host"] = firstHost
+			}
+		}
+		if netType == "httpupgrade" {
+			wsOpts["v2ray-http-upgrade"] = true
+		}
+	case (netType == "tcp" || netType == "") && headerType == "http":
+		applyHTTPOptsFromValues(proxy, rawHost, firstQueryParam(query, "path"))
+	}
+	normalizeProxyHostLists(proxy)
+}
+
+func decodeVMessJSONPayload(rawLine string) (map[string]any, bool) {
+	if !strings.HasPrefix(strings.ToLower(rawLine), "vmess://") {
+		return nil, false
+	}
+	body := rawLine[len("vmess://"):]
+	if idx := strings.IndexByte(body, '#'); idx >= 0 {
+		body = body[:idx]
+	}
+	if strings.ContainsAny(body, "@?") {
+		return nil, false
+	}
+	decoded, ok := decodeCompatBase64(body)
+	if !ok {
+		return nil, false
+	}
+	var obj map[string]any
+	if err := json.Unmarshal(decoded, &obj); err != nil {
+		return nil, false
+	}
+	return obj, true
+}
+
+func proxySNIKey(proxy map[string]any) string {
+	switch strings.ToLower(stringField(proxy, "type")) {
+	case "trojan", "hysteria", "hysteria2", "tuic", "anytls":
+		return "sni"
+	case "vless", "vmess":
+		return "servername"
+	default:
+		return ""
+	}
+}
+
+func applyHTTPOptsFromValues(proxy map[string]any, rawHost, rawPath string) {
+	proxy["network"] = "http"
+	httpOpts := ensureSubMap(proxy, "http-opts")
+	if stringField(httpOpts, "method") == "" {
+		httpOpts["method"] = "GET"
+	}
+	if _, exists := httpOpts["path"]; !exists {
+		if paths := splitCommaTrimmed(rawPath); len(paths) > 0 {
+			httpOpts["path"] = paths
+		} else {
+			httpOpts["path"] = []string{"/"}
+		}
+	}
+	if hosts := splitCommaTrimmed(rawHost); len(hosts) > 0 {
+		headers := ensureSubMap(httpOpts, "headers")
+		headers["Host"] = hosts
+	}
+}
+
+func normalizeProxyHostLists(proxy map[string]any) {
+	if httpOpts, ok := proxy["http-opts"].(map[string]any); ok {
+		if headers, ok := httpOpts["headers"].(map[string]any); ok {
+			if rawHost, exists := headers["Host"]; exists {
+				if normalized := normalizeCommaStringSlice(rawHost); len(normalized) > 0 {
+					headers["Host"] = normalized
+				}
+			}
+		}
+		if _, exists := httpOpts["method"]; !exists {
+			httpOpts["method"] = "GET"
+		}
+		if _, exists := httpOpts["path"]; !exists {
+			httpOpts["path"] = []string{"/"}
+		}
+	}
+	if h2Opts, ok := proxy["h2-opts"].(map[string]any); ok {
+		if rawHost, exists := h2Opts["host"]; exists {
+			if normalized := normalizeCommaStringSlice(rawHost); len(normalized) > 0 {
+				h2Opts["host"] = normalized
+			}
+		}
+	}
+}
+
+func ensureSubMap(parent map[string]any, key string) map[string]any {
+	if existing, ok := parent[key].(map[string]any); ok && existing != nil {
+		return existing
+	}
+	sub := map[string]any{}
+	if existingStr, ok := parent[key].(map[string]string); ok {
+		for k, v := range existingStr {
+			sub[k] = v
+		}
+	}
+	parent[key] = sub
+	return sub
+}
+
+func ensureStringSubMap(parent map[string]any, key string) map[string]string {
+	if existing, ok := parent[key].(map[string]string); ok && existing != nil {
+		return existing
+	}
+	sub := map[string]string{}
+	if existingAny, ok := parent[key].(map[string]any); ok {
+		for k, v := range existingAny {
+			if s, ok := v.(string); ok {
+				sub[k] = s
+			}
+		}
+	}
+	parent[key] = sub
+	return sub
+}
+
+func normalizeCommaStringSlice(val any) []string {
+	var out []string
+	switch v := val.(type) {
+	case string:
+		out = append(out, splitCommaTrimmed(v)...)
+	case []string:
+		for _, item := range v {
+			out = append(out, splitCommaTrimmed(item)...)
+		}
+	case []any:
+		for _, item := range v {
+			if s, ok := item.(string); ok {
+				out = append(out, splitCommaTrimmed(s)...)
+			}
+		}
+	}
+	return out
+}
+
+func splitCommaTrimmed(raw string) []string {
+	parts := strings.Split(raw, ",")
+	out := make([]string, 0, len(parts))
+	for _, part := range parts {
+		if trimmed := strings.TrimSpace(part); trimmed != "" {
+			out = append(out, trimmed)
+		}
+	}
+	return out
+}
+
+func firstCommaToken(raw string) string {
+	tokens := splitCommaTrimmed(raw)
+	if len(tokens) == 0 {
+		return ""
+	}
+	return tokens[0]
+}
+
+func isTruthyFlag(val string) bool {
+	switch strings.ToLower(strings.TrimSpace(val)) {
+	case "1", "true", "yes":
+		return true
+	default:
+		return false
+	}
+}
+
+func anyTruthy(val any) bool {
+	switch v := val.(type) {
+	case bool:
+		return v
+	case float64:
+		return v != 0
+	case int:
+		return v != 0
+	case string:
+		return isTruthyFlag(v)
+	default:
+		return false
+	}
+}
+
 func buildClashConfigFromProxies(proxies []map[string]any) ([]byte, bool) {
 	if len(proxies) == 0 {
 		return nil, false
@@ -843,8 +1147,8 @@ func buildClashConfigFromProxies(proxies []map[string]any) ([]byte, bool) {
 		proxy["name"] = name
 		names = append(names, name)
 	}
-	selectList := make([]string, 0, len(names)+1)
-	selectList = append(selectList, "Auto")
+	selectList := make([]string, 0, len(names)+2)
+	selectList = append(selectList, "Auto", "Fallback")
 	selectList = append(selectList, names...)
 	doc := map[string]any{
 		"proxies": proxies,
@@ -855,12 +1159,21 @@ func buildClashConfigFromProxies(proxies []map[string]any) ([]byte, bool) {
 				"proxies": selectList,
 			},
 			{
-				"name":      "Auto",
-				"type":      "url-test",
-				"url":       "https://www.gstatic.com/generate_204",
-				"interval":  300,
-				"tolerance": 50,
-				"proxies":   names,
+				"name":            "Auto",
+				"type":            "url-test",
+				"url":             "https://www.gstatic.com/generate_204",
+				"interval":        180,
+				"tolerance":       50,
+				"expected-status": "200-299",
+				"proxies":         names,
+			},
+			{
+				"name":            "Fallback",
+				"type":            "fallback",
+				"url":             "https://www.gstatic.com/generate_204",
+				"interval":        180,
+				"expected-status": "200-299",
+				"proxies":         names,
 			},
 		},
 		"rules": []string{"MATCH,Proxy"},

@@ -528,6 +528,21 @@ class SetupAction extends _$SetupAction {
         base: null,
       );
     }
+    final optimize4g = await ref
+        .read(optimize4gPresetProvider.notifier)
+        .ensureHydrated();
+    final effectivePatchConfig = optimize4g
+        ? ref.read(patchClashConfigProvider)
+        : patchConfig;
+    final effectiveOverrides = optimize4g
+        ? setupState.overrides.copyWith(
+            sniffer: setupState.overrides.sniffer.copyWith(enable: true),
+            snifferOverrideKeys: {
+              ...setupState.overrides.snifferOverrideKeys,
+              SnifferOverrideKey.enable,
+            },
+          )
+        : setupState.overrides;
     final defaultUA = globalState.packageInfo.ua;
     final networkSetting = ref.read(
       networkSettingProvider.select(
@@ -577,8 +592,8 @@ class SetupAction extends _$SetupAction {
         profilesPath: directory,
         profileId: profileId,
         rawConfig: rawConfig,
-        realPatchConfig: patchConfig,
-        overrides: setupState.overrides,
+        realPatchConfig: effectivePatchConfig,
+        overrides: effectiveOverrides,
         bypassPrivateRoute: networkSetting.bypassPrivateRoute,
         appendSystemDns: appendSystemDns,
         // sing-tun points the system resolver at the TUN by default with
@@ -603,9 +618,7 @@ class SetupAction extends _$SetupAction {
       return (yaml: res.yaml, md5: res.md5, counts: res.counts, base: null);
     }
     final (:base, :path) = profileBase;
-    final overlayYaml = ref.read(optimize4gPresetProvider)
-        ? 'allow-quic: true\n${res.yaml}'
-        : res.yaml;
+    final overlayYaml = optimize4g ? 'allow-quic: true\n${res.yaml}' : res.yaml;
     return (
       yaml: overlayYaml,
       md5: '${overlayYaml.toMd5()}${base.digest}'.toMd5(),

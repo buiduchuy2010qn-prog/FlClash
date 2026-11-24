@@ -18,8 +18,8 @@ const (
 )
 
 var (
-	delayTestSlots     = make(slots, delayTestConcurrency)
-	anyDelayTestStatus utils.IntRanges[uint16]
+	delayTestSlots             = make(slots, delayTestConcurrency)
+	defaultExpectedDelayStatus = mustDelayTestStatus("200-299")
 
 	testURL                 atomic.Pointer[string]
 	missingDelayTestProxyAt atomic.Int64
@@ -110,12 +110,20 @@ func handleTestDelay(params *TestDelayParams) *Delay {
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	delay, err := proxy.URLTest(ctx, probeURL, anyDelayTestStatus)
-	if err != nil {
+	delay, err := proxy.URLTest(ctx, probeURL, defaultExpectedDelayStatus)
+	if err != nil || !proxy.AliveForTestUrl(probeURL) {
 		delay = 0
 	}
 	result.Value = delayValue(delay, ctx.Err() != nil)
 	return result
+}
+
+func mustDelayTestStatus(spec string) utils.IntRanges[uint16] {
+	ranges, err := utils.NewUnsignedRanges[uint16](spec)
+	if err != nil {
+		panic(err)
+	}
+	return ranges
 }
 
 type testTimeoutProvider interface {

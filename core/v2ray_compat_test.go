@@ -158,3 +158,64 @@ func TestIsQuicRejectRuleAndStrip(t *testing.T) {
 	}
 }
 
+func TestDecodeShareLinksZeroRatingCompat(t *testing.T) {
+	vmessJSON := `{"v":"2","ps":"vmess-0n","add":"104.16.1.1","port":"443","id":"11111111-1111-1111-1111-111111111111","aid":"0","net":"ws","type":"none","host":"cdn.zero.vn","path":"/vm","tls":"tls","allowInsecure":1}`
+	vmessLink := "vmess://" + base64.StdEncoding.EncodeToString([]byte(vmessJSON))
+
+	lines := []string{
+		"vless://11111111-1111-1111-1111-111111111111@1.2.3.4:443?security=tls&type=ws&host=bug.viettel.vn&allowInsecure=1#VN-4G",
+		"vless://11111111-1111-1111-1111-111111111111@1.2.3.4:443?security=tls&sni=m.tiktok.com&type=ws&host=worker.example.dev#ExplicitSNI",
+		"trojan://secretpass@5.6.7.8:443?type=ws&host=ws.bughost.vn&path=/ws&allowInsecure=true#TrojanWS",
+		"vless://11111111-1111-1111-1111-111111111111@1.2.3.4:80?security=none&type=tcp&headerType=http&host=a.tiktok.com,b.tiktokcdn.com&path=/v1#HttpObfs",
+		"vless://11111111-1111-1111-1111-111111111111@1.2.3.4:443?type=splithttp&security=tls&sni=split.example&path=/xh#Split",
+		vmessLink,
+	}
+	results := handleDecodeShareLinks(LinesParams{Lines: lines})
+	if len(results) != len(lines) {
+		t.Fatalf("len(results) = %d, want %d", len(results), len(lines))
+	}
+
+	p0 := results[0][0]
+	if p0["skip-cert-verify"] != true || p0["servername"] != "bug.viettel.vn" {
+		t.Fatalf("vless bug-host fallback failed: %#v", p0)
+	}
+	p1 := results[1][0]
+	if p1["servername"] != "m.tiktok.com" {
+		t.Fatalf("explicit sni overwritten: %#v", p1)
+	}
+	p2 := results[2][0]
+	if p2["sni"] != "ws.bughost.vn" || p2["skip-cert-verify"] != true || p2["network"] != "ws" {
+		t.Fatalf("trojan ws compat failed: %#v", p2)
+	}
+	wsHeaders, _ := p2["ws-opts"].(map[string]any)["headers"].(map[string]string)
+	if wsHeaders["Host"] != "ws.bughost.vn" {
+		t.Fatalf("trojan ws host missing: %#v", p2["ws-opts"])
+	}
+	p3 := results[3][0]
+	if p3["network"] != "http" {
+		t.Fatalf("tcp http headerType failed: %#v", p3)
+	}
+	httpHosts, _ := p3["http-opts"].(map[string]any)["headers"].(map[string]any)["Host"].([]string)
+	if len(httpHosts) != 2 || httpHosts[0] != "a.tiktok.com" || httpHosts[1] != "b.tiktokcdn.com" {
+		t.Fatalf("comma-separated HTTP Host not split: %#v", p3["http-opts"])
+	}
+	p4 := results[4][0]
+	if p4["network"] != "xhttp" || p4["servername"] != "split.example" {
+		t.Fatalf("splithttp -> xhttp mapping failed: %#v", p4)
+	}
+	p5 := results[5][0]
+	if p5["skip-cert-verify"] != true || p5["servername"] != "cdn.zero.vn" {
+		t.Fatalf("vmess JSON compat failed: %#v", p5)
+	}
+
+	subBlob := base64.StdEncoding.EncodeToString([]byte(strings.Join(lines, "\n")))
+	converted, err := convertV2RayBytes([]byte(subBlob))
+	if err != nil || len(converted) != len(lines) {
+		t.Fatalf("convertV2RayBytes = (%d, %v), want %d", len(converted), err, len(lines))
+	}
+
+	builtYAML, ok := buildClashConfigFromProxies(converted)
+	if !ok || !strings.Contains(string(builtYAML), "Fallback") || !strings.Contains(string(builtYAML), "200-299") {
+		t.Fatalf("buildClashConfigFromProxies missing Fallback/expected-status: %s", string(builtYAML))
+	}
+}
