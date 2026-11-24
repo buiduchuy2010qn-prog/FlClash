@@ -330,6 +330,7 @@ func mergeProfileDocuments(base *SetupBase) (*yaml.Node, *yaml.Node, error) {
 	if buf, err = age.DecryptBytes(buf); err != nil {
 		return nil, nil, fmt.Errorf("decrypt config error: %w", err)
 	}
+	buf = normalizeProfileBytes(buf)
 	retag := bytes.Contains(buf, []byte("short-id"))
 	var profileDocument, overlayDocument yaml.Node
 	if err := yaml.Unmarshal(buf, &profileDocument); err != nil {
@@ -346,6 +347,8 @@ func mergeProfileDocuments(base *SetupBase) (*yaml.Node, *yaml.Node, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+	allowQuic := isExplicitBool(mappingValue(root, "allow-quic"), true)
+	deleteMappingKey(root, "allow-quic")
 	for _, key := range profileBaseSections {
 		if value := mappingValue(profile, key); value != nil {
 			setMappingValue(root, key, value)
@@ -356,6 +359,9 @@ func mergeProfileDocuments(base *SetupBase) (*yaml.Node, *yaml.Node, error) {
 		return nil, nil, err
 	}
 	if rules != nil {
+		if allowQuic {
+			stripQuicRejectRules(rules)
+		}
 		setMappingValue(root, "rules", rules)
 	}
 	if retag {
@@ -421,6 +427,84 @@ func setMappingValue(mapping *yaml.Node, key string, value *yaml.Node) {
 		&yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: key},
 		value,
 	)
+}
+
+func deleteMappingKey(mapping *yaml.Node, key string) {
+	if mapping == nil || mapping.Kind != yaml.MappingNode {
+		return
+	}
+	for i := 0; i+1 < len(mapping.Content); i += 2 {
+		if name := mapping.Content[i]; name.Kind == yaml.ScalarNode && name.Value == key {
+			mapping.Content = append(mapping.Content[:i], mapping.Content[i+2:]...)
+			return
+		}
+	}
+}
+
+func isQuicRejectRule(rule string) bool {
+	trimmed := strings.TrimSpace(rule)
+	if trimmed == "" {
+		return false
+	}
+	depth := 0
+	var parts []string
+	start := 0
+	for i := 0; i < len(trimmed); i++ {
+		switch trimmed[i] {
+		case '(':
+			depth++
+		case ')':
+			if depth > 0 {
+				depth--
+			}
+		case ',':
+			if depth == 0 {
+				parts = append(parts, strings.TrimSpace(trimmed[start:i]))
+				start = i + 1
+			}
+		}
+	}
+	parts = append(parts, strings.TrimSpace(trimmed[start:]))
+	hasReject := false
+	for i := len(parts) - 1; i >= 0; i-- {
+		upper := strings.ToUpper(parts[i])
+		if upper == "NO-RESOLVE" {
+			continue
+		}
+		if upper == "REJECT" || upper == "REJECT-DROP" {
+			hasReject = true
+		}
+		break
+	}
+	if !hasReject {
+		return false
+	}
+	hasUDP := false
+	hasPort443 := false
+	visitRuleParts(trimmed, func(kind, payload string) bool {
+		if kind == "NETWORK" && strings.EqualFold(payload, "UDP") {
+			hasUDP = true
+		} else if kind == "DST-PORT" && payload == "443" {
+			hasPort443 = true
+		}
+		return hasUDP && hasPort443
+	})
+	return hasUDP && hasPort443
+}
+
+func stripQuicRejectRules(seq *yaml.Node) {
+	if seq == nil || seq.Kind != yaml.SequenceNode {
+		return
+	}
+	kept := make([]*yaml.Node, 0, len(seq.Content))
+	for _, item := range seq.Content {
+		resolved := resolveAlias(item)
+		if resolved != nil && resolved.Kind == yaml.ScalarNode && isQuicRejectRule(resolved.Value) {
+			continue
+		}
+		kept = append(kept, item)
+	}
+	seq.Content = kept
 }
 
 // The overlay's rules are the ones the host adds in front of the profile's.

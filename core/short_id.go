@@ -10,6 +10,7 @@ import (
 // mihomo decodes an unquoted REALITY short-id as a YAML number (0123 is 83, 00
 // is 0); the scalar keeps its literal text, so retagging it restores the id.
 func unmarshalRawConfig(buf []byte) (*config.RawConfig, error) {
+	buf = normalizeProfileBytes(buf)
 	if !bytes.Contains(buf, []byte("short-id")) {
 		return config.UnmarshalRawConfig(buf)
 	}

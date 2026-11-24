@@ -57,16 +57,84 @@ class Preferences {
   }
 
   static const _autoFailoverKey = 'smart_auto_failover';
+  static const _autoVpnOnCellularKey = 'auto_vpn_on_cellular';
+  static const _autoVpnOffWifiKey = 'auto_vpn_off_wifi';
+  static const _autoStartOnBootKey = 'auto_start_on_boot';
+  static const _rootHotspotShareKey = 'root_hotspot_share';
+  static const _optimize4gPresetKey = 'optimize_4g_preset';
+  static const _dailyTrafficEnabledKey = 'daily_traffic_enabled';
+  static const _dailyTrafficHistoryKey = 'daily_traffic_history_v1';
+  static const _versionGateCacheKey = 'version_gate_cache_v1';
 
-  Future<bool> getAutoFailover() async {
+  Future<bool> _getBool(String key, bool fallback) async {
     final preferences = await _store.value;
-    return preferences?.getBool(_autoFailoverKey) ?? true;
+    return preferences?.getBool(key) ?? fallback;
   }
 
-  Future<void> setAutoFailover(bool value) async {
+  Future<void> _setBool(String key, bool value) async {
     final preferences = await _store.value;
-    await preferences?.setBool(_autoFailoverKey, value);
+    await preferences?.setBool(key, value);
   }
+
+  Future<String?> _getString(String key) async {
+    final preferences = await _store.value;
+    return preferences?.getString(key);
+  }
+
+  Future<void> _setString(String key, String? value) async {
+    final preferences = await _store.value;
+    if (value == null) {
+      await preferences?.remove(key);
+    } else {
+      await preferences?.setString(key, value);
+    }
+  }
+
+  Future<bool> getAutoFailover() => _getBool(_autoFailoverKey, true);
+
+  Future<void> setAutoFailover(bool value) => _setBool(_autoFailoverKey, value);
+
+  Future<bool> getAutoVpnOnCellular() => _getBool(_autoVpnOnCellularKey, false);
+
+  Future<void> setAutoVpnOnCellular(bool value) =>
+      _setBool(_autoVpnOnCellularKey, value);
+
+  Future<bool> getAutoVpnOffWifi() => _getBool(_autoVpnOffWifiKey, false);
+
+  Future<void> setAutoVpnOffWifi(bool value) =>
+      _setBool(_autoVpnOffWifiKey, value);
+
+  Future<bool> getAutoStartOnBoot() => _getBool(_autoStartOnBootKey, false);
+
+  Future<void> setAutoStartOnBoot(bool value) =>
+      _setBool(_autoStartOnBootKey, value);
+
+  Future<bool> getRootHotspotShare() => _getBool(_rootHotspotShareKey, false);
+
+  Future<void> setRootHotspotShare(bool value) =>
+      _setBool(_rootHotspotShareKey, value);
+
+  Future<bool> getOptimize4gPreset() => _getBool(_optimize4gPresetKey, false);
+
+  Future<void> setOptimize4gPreset(bool value) =>
+      _setBool(_optimize4gPresetKey, value);
+
+  Future<bool> getDailyTrafficEnabled() =>
+      _getBool(_dailyTrafficEnabledKey, true);
+
+  Future<void> setDailyTrafficEnabled(bool value) =>
+      _setBool(_dailyTrafficEnabledKey, value);
+
+  Future<String?> getDailyTrafficHistory() =>
+      _getString(_dailyTrafficHistoryKey);
+
+  Future<void> setDailyTrafficHistory(String? value) =>
+      _setString(_dailyTrafficHistoryKey, value);
+
+  Future<String?> getVersionGateCache() => _getString(_versionGateCacheKey);
+
+  Future<void> setVersionGateCache(String? value) =>
+      _setString(_versionGateCacheKey, value);
 
   Future<void> saveShareState(SharedState shareState) async {
     final preferences = await _store.value;

@@ -152,8 +152,13 @@ const shareLinkSchemes = {
   'ss',
   'ssr',
   'socks',
+  'socks4',
+  'socks4a',
   'socks5',
   'socks5h',
+  'wireguard',
+  'wg',
+  'v2rayn',
   'anytls',
   'mierus',
 };

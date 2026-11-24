@@ -1285,5 +1285,46 @@
       "delay": {}
     }
   },
-  "noAvailableProxyTip": "No reachable node found"
+  "noAvailableProxyTip": "No reachable node found",
+  "autoVpnSectionTitle": "Auto-VPN & Boot",
+  "autoVpnOnCellular": "Auto-connect on cellular (4G/5G)",
+  "autoVpnOnCellularDesc": "Connect VPN automatically when switching to mobile data",
+  "autoVpnOffWifi": "Auto-disconnect on Wi-Fi",
+  "autoVpnOffWifiDesc": "Stop VPN automatically once Wi-Fi becomes available",
+  "autoStartOnBoot": "Auto-start on device boot",
+  "autoStartOnBootDesc": "Start VPN automatically after the device restarts",
+  "autoVpnSectionDesc": "Uses ConnectivityManager transport events without Location permission. Manual toggles pause auto-switching for 45 seconds.",
+  "dailyTraffic": "Daily traffic",
+  "dailyTrafficDesc": "Track daily upload and download usage with up to 400 days of local history",
+  "dailyTrafficToday": "Today",
+  "dailyTraffic7Days": "7 days",
+  "dailyTraffic30Days": "30 days",
+  "dailyTrafficRecord": "Record 400-day daily traffic",
+  "dailyTrafficRecordDesc": "Persist daily traffic totals locally for dashboard charts",
+  "clearDailyTraffic": "Reset traffic history",
+  "clearDailyTrafficConfirm": "Clear all saved 400-day daily traffic records?",
+  "optimize4gTitle": "4G & Global Preset",
+  "optimize4gPreset": "Optimize 4G (Global · TUN · QUIC · 1.1.1.1)",
+  "optimize4gPresetDesc": "Apply Global mode, TUN, plain 1.1.1.1 DNS, and QUIC pass-through in one tap",
+  "optimize4gPresetFooter": "Keeps plain 1.1.1.1 / 8.8.8.8 resolvers and strips UDP/443 QUIC reject rules when enabled.",
+  "optimize4gAppliedTip": "4G Global & QUIC preset applied",
+  "hotspotSectionTitle": "Hotspot VPN Sharing",
+  "hotspotLanProxy": "Share proxy over Wi-Fi hotspot (LAN)",
+  "hotspotLanProxyDesc": "Open local mixed proxy port so tethered devices can configure manual HTTP/SOCKS proxy",
+  "hotspotProxyAddress": "Hotspot proxy address (tap to copy)",
+  "hotspotCopiedTip": "Copied proxy address: {address}",
+  "hotspotRootShare": "Transparent hotspot VPN tunnel (Root)",
+  "hotspotRootShareDesc": "Forward tethered hotspot traffic directly through TUN using iptables and su",
+  "hotspotRootEnabledTip": "Root transparent hotspot VPN enabled",
+  "hotspotRootFailed": "Failed to enable root hotspot tunnel. Ensure TUN is active and root (su) is granted.",
+  "hotspotSectionDesc": "Non-root sharing uses LAN HTTP/SOCKS proxy on tethered devices. Root mode routes hotspot traffic transparently through TUN.",
+  "versionGateTitle": "Update Required",
+  "versionGateDefaultDesc": "This version is no longer supported. Please update FlClash to continue.",
+  "versionGateDownload": "Download update",
+  "versionGateRetry": "Check again",
+  "@hotspotCopiedTip": {
+    "placeholders": {
+      "address": {}
+    }
+  }
 }

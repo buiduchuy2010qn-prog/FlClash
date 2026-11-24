@@ -380,6 +380,50 @@ class App {
       return null;
     }
   }
+
+  Future<void> syncAutoVpnSettings({
+    required bool onCellular,
+    required bool offWifi,
+    required bool startOnBoot,
+  }) async {
+    if (!Platform.isAndroid) return;
+    try {
+      await methodChannel.invokeMethod<bool>('syncAutoVpnSettings', {
+        'onCellular': onCellular,
+        'offWifi': offWifi,
+        'startOnBoot': startOnBoot,
+      });
+    } catch (_) {}
+  }
+
+  Future<void> notifyManualVpnAction() async {
+    if (!Platform.isAndroid) return;
+    try {
+      await methodChannel.invokeMethod<bool>('notifyManualVpnAction');
+    } catch (_) {}
+  }
+
+  Future<bool> setRootHotspotShare(bool enabled) async {
+    if (!Platform.isAndroid) return false;
+    try {
+      return await methodChannel.invokeMethod<bool>('setRootHotspotShare', {
+            'enabled': enabled,
+          }) ??
+          false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> getRootHotspotStatus() async {
+    if (!Platform.isAndroid) return false;
+    try {
+      return await methodChannel.invokeMethod<bool>('getRootHotspotStatus') ??
+          false;
+    } catch (_) {
+      return false;
+    }
+  }
 }
 
 final app = system.isAndroid ? App() : null;

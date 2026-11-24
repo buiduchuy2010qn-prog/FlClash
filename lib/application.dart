@@ -12,6 +12,7 @@ import 'package:fl_clash/plugins/app.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/ui/ui.dart';
+import 'package:fl_clash/widgets/version_gate_overlay.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
@@ -195,7 +196,7 @@ class ApplicationState extends ConsumerState<Application> {
           ),
         );
       },
-      child: const HomePage(),
+      child: const VersionGateOverlay(child: HomePage()),
     );
   }
 

@@ -115,6 +115,7 @@ object ServiceController {
     }
 
     suspend fun stop() = lock.withLock {
+        RootHotspotManager.disableIfActive()
         tearDownServices()
         release()
     }

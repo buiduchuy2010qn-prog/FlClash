@@ -454,6 +454,7 @@ enum FunctionTag {
 enum DashboardWidget {
   currentOutbound,
   networkSpeed,
+  dailyTraffic,
   outboundMode,
   vpnButton(platforms: [SupportPlatform.Android]),
   networkTakeover(platforms: desktopPlatforms),

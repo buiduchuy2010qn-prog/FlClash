@@ -32,7 +32,7 @@ String? profileUrlFromQrCodes(Iterable<String?> values) {
 }
 
 String? _installConfigUrl(Uri uri) {
-  if (uri.host != 'install-config') {
+  if (uri.host != 'install-config' && uri.host != 'install-sub') {
     return null;
   }
   final url = uri.queryParameters['url']?.trim();
