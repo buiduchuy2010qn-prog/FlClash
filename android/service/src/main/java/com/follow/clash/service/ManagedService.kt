@@ -11,6 +11,10 @@ interface ManagedService {
     fun start()
 
     fun stop()
+
+    companion object {
+        const val ACTION_INTERNAL_START = "com.follow.clash.service.INTERNAL_START"
+    }
 }
 
 internal fun Service.notifyVpnStartRequested() {

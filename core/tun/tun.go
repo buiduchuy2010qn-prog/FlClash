@@ -19,6 +19,7 @@ import (
 type startOptions struct {
 	MTU                  uint32 `json:"mtu"`
 	CongestionController string `json:"congestion-controller"`
+	AllowQuic            bool   `json:"allow-quic"`
 }
 
 // Start takes ownership of fd. dupFd is handed to sing_tun.New, which only
@@ -96,7 +97,7 @@ func Start(fd int, stack, address, dns, rawOptions string) *sing_tun.Listener {
 		FileDescriptor:       dupFd,
 	}
 
-	listener, err := sing_tun.New(options, tunnel.Tunnel)
+	listener, err := sing_tun.New(options, newQuicBlockingTunnel(tunnel.Tunnel, !settings.AllowQuic))
 
 	if err != nil {
 		log.Errorln("TUN: %v", err)

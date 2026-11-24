@@ -299,11 +299,48 @@ var androidFakeIPBypass = []string{
 	"dns.nextdns.io",
 	"*.dns.nextdns.io",
 	"connectivitycheck.gstatic.com",
+	"connectivitycheck.android.com",
 	"www.gstatic.com",
 	"captive.apple.com",
 	"connectivitycheck.platform.hicloud.com",
+	"clients1.google.com",
+	"clients3.google.com",
+	"android.clients.google.com",
+	"mtalk.google.com",
+	"mtalk4.google.com",
+	"mtalk-staging.google.com",
+	"mtalk-dev.google.com",
+	"*.mtalk.google.com",
+	"alt1-mtalk.google.com",
+	"alt2-mtalk.google.com",
+	"alt3-mtalk.google.com",
+	"alt4-mtalk.google.com",
+	"alt5-mtalk.google.com",
+	"alt6-mtalk.google.com",
+	"alt7-mtalk.google.com",
+	"alt8-mtalk.google.com",
 	"*.ntp.org",
 	"time.*.com",
+	"time.android.com",
+	"time.google.com",
+}
+
+var androidTCPDNSResolvers = []string{
+	"https://1.1.1.1/dns-query",
+	"https://8.8.8.8/dns-query",
+	"tcp://1.1.1.1:53",
+	"tcp://8.8.8.8:53",
+}
+
+func isLegacyAndroidNameserver(raw string) bool {
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case "system", "system://",
+		"1.1.1.1", "1.1.1.1:53", "udp://1.1.1.1", "udp://1.1.1.1:53",
+		"8.8.8.8", "8.8.8.8:53", "udp://8.8.8.8", "udp://8.8.8.8:53":
+		return true
+	default:
+		return false
+	}
 }
 
 func optimizeConfigDocument(document, profile *yaml.Node) {
@@ -434,9 +471,9 @@ func ensureAndroidSniffer(root *yaml.Node) {
 	}
 	if tlsNode := ensureChildMapping(sniffMap, mappingKeyIgnoreCase(sniffMap, "TLS")); tlsNode != nil {
 		if existing := resolveAlias(mappingValue(tlsNode, "ports")); existing == nil || isNull(existing) {
-			ensureSequenceStrings(tlsNode, "ports", "443", "853", "8443")
+			ensureSequenceStrings(tlsNode, "ports", "443", "853", "5228", "5229", "5230", "8443")
 		} else {
-			ensureSequenceStrings(tlsNode, "ports", "853")
+			ensureSequenceStrings(tlsNode, "ports", "853", "5228", "5229", "5230")
 		}
 	}
 	if quicNode := ensureChildMapping(sniffMap, mappingKeyIgnoreCase(sniffMap, "QUIC")); quicNode != nil {
@@ -453,21 +490,21 @@ func ensureAndroidDNSDefaults(dnsNode *yaml.Node) {
 	ensureSystemDNSNode(dnsNode, "default-nameserver")
 	ensureSystemDNSNode(dnsNode, "proxy-server-nameserver")
 	ensureSystemDNSNode(dnsNode, "direct-nameserver")
-	ensureSequenceStrings(dnsNode, "nameserver", "1.1.1.1", "8.8.8.8")
 	if nsSeq := resolveAlias(mappingValue(dnsNode, "nameserver")); nsSeq != nil && nsSeq.Kind == yaml.SequenceNode {
-		var nonSystem []*yaml.Node
+		var kept []*yaml.Node
 		for _, item := range nsSeq.Content {
 			if resolved := resolveAlias(item); resolved != nil && resolved.Kind == yaml.ScalarNode {
-				val := strings.TrimSpace(resolved.Value)
-				if val == "system" || val == "system://" {
+				if isLegacyAndroidNameserver(resolved.Value) {
 					continue
 				}
 			}
-			nonSystem = append(nonSystem, item)
+			kept = append(kept, item)
 		}
-		if len(nonSystem) > 0 {
-			nsSeq.Content = nonSystem
-		}
+		nsSeq.Content = kept
+	}
+	ensureSequenceStrings(dnsNode, "nameserver", androidTCPDNSResolvers...)
+	if node := resolveAlias(mappingValue(dnsNode, "prefer-h3")); node == nil || isNull(node) {
+		setMappingValue(dnsNode, "prefer-h3", boolNode(false))
 	}
 	if node := resolveAlias(mappingValue(dnsNode, "respect-rules")); node == nil || isNull(node) {
 		setMappingValue(dnsNode, "respect-rules", boolNode(true))
@@ -476,7 +513,7 @@ func ensureAndroidDNSDefaults(dnsNode *yaml.Node) {
 		setMappingValue(dnsNode, "use-hosts", boolNode(true))
 	}
 	modeNode := resolveAlias(mappingValue(dnsNode, "fake-ip-filter-mode"))
-	if modeNode == nil || !strings.EqualFold(modeNode.Value, "whitelist") {
+	if modeNode == nil || (!strings.EqualFold(modeNode.Value, "whitelist") && !strings.EqualFold(modeNode.Value, "rule")) {
 		ensureSequenceStrings(dnsNode, "fake-ip-filter", androidFakeIPBypass...)
 	}
 }

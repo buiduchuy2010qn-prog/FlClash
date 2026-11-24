@@ -123,6 +123,7 @@ func init() {
 			return errBlocked
 		}
 		socketProtection.guard(conn)
+		applyAndroidTCPKeepAlive(network, conn)
 		return nil
 	}
 }

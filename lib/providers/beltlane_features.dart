@@ -152,7 +152,12 @@ class Optimize4gPresetNotifier extends _PersistedBoolNotifier {
 
   void applyZeroRatingPreset() {
     if (_disposed) return;
-    const dnsResolvers = ['1.1.1.1', '8.8.8.8'];
+    const dnsResolvers = [
+      'https://1.1.1.1/dns-query',
+      'https://8.8.8.8/dns-query',
+      'tcp://1.1.1.1:53',
+      'tcp://8.8.8.8:53',
+    ];
     const systemBootstrap = ['system'];
     ref.read(patchClashConfigProvider.notifier).update((state) {
       return state.copyWith(
@@ -169,6 +174,7 @@ class Optimize4gPresetNotifier extends _PersistedBoolNotifier {
         dns: state.dns.copyWith(
           enable: true,
           ipv6: false,
+          preferH3: false,
           useHosts: true,
           respectRules: true,
           enhancedMode: DnsMode.fakeIp,
@@ -181,6 +187,7 @@ class Optimize4gPresetNotifier extends _PersistedBoolNotifier {
           ...state.dnsOverrideKeys,
           DnsOverrideKey.enable,
           DnsOverrideKey.ipv6,
+          DnsOverrideKey.preferH3,
           DnsOverrideKey.useHosts,
           DnsOverrideKey.respectRules,
           DnsOverrideKey.enhancedMode,
@@ -195,8 +202,13 @@ class Optimize4gPresetNotifier extends _PersistedBoolNotifier {
       ref
           .read(vpnSettingProvider.notifier)
           .update(
-            (state) =>
-                state.copyWith(enable: true, systemProxy: false, ipv6: false),
+            (state) => state.copyWith(
+              enable: true,
+              systemProxy: false,
+              ipv6: false,
+              dnsHijacking: true,
+              allowBypass: false,
+            ),
           );
     }
     ref

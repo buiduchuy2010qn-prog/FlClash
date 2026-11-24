@@ -76,8 +76,8 @@ class VpnService : SystemVpnService(), ManagedService {
 
     private val VpnOptions.tunDns
         get(): String {
-            if (dnsHijacking) {
-                return NET_ANY
+            if (dnsHijacking || NetworkObserver.isActiveNetworkUnvalidatedCellular()) {
+                return if (ipv6) "$NET_ANY,$NET_ANY6" else NET_ANY
             }
             return buildString {
                 append(DNS)
@@ -111,6 +111,9 @@ class VpnService : SystemVpnService(), ManagedService {
         }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent?.action == ManagedService.ACTION_INTERNAL_START) {
+            return START_STICKY
+        }
         // Android starts always-on VPN through this callback instead of FlClash's bound-service
         // path. Notify the app layer so it can restore Core and fully initialize the VPN service.
         notifyVpnStartRequested()
@@ -133,7 +136,7 @@ class VpnService : SystemVpnService(), ManagedService {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 setMetered(false)
             }
-            if (options.allowBypass) {
+            if (options.allowBypass && !NetworkObserver.isActiveNetworkUnvalidatedCellular()) {
                 allowBypass()
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && options.systemProxy) {

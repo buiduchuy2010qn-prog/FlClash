@@ -1,6 +1,7 @@
 package com.follow.clash.service.modules
 
 import android.app.Notification.FOREGROUND_SERVICE_IMMEDIATE
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.app.Service.STOP_FOREGROUND_REMOVE
@@ -52,6 +53,13 @@ internal class NotificationModule(
     private val service: Service,
     private val scope: CoroutineScope,
 ) : ServiceModule {
+    @Volatile
+    private var foregroundStarted = false
+
+    private val notificationManager by lazy {
+        service.getSystemService<NotificationManager>()
+    }
+
     override fun start() {
         service.ensureNotificationChannel()
         update(ServiceConfig.notificationParams.value.extended)
@@ -72,6 +80,7 @@ internal class NotificationModule(
                 if (!screenOn) return@collectLatest
                 combine(
                     flow {
+                        emit(Unit)
                         while (true) {
                             delay(2_500)
                             emit(Unit)
@@ -122,26 +131,33 @@ internal class NotificationModule(
     }
 
     private fun update(params: ExtendedNotificationParams) {
-        service.startForeground(
-            with(notificationBuilder) {
-                setContentTitle(params.title)
-                setContentText(params.contentText)
-                clearActions()
-                addAction(
-                    0,
-                    service.getString(CommonR.string.notification_switch_fastest),
-                    switchFastestIntent,
-                )
-                if (params.showStopAction) {
-                    addAction(0, params.stopText, stopIntent)
-                }
-                build()
-            },
-        )
+        val notification = with(notificationBuilder) {
+            setContentTitle(params.title)
+            setContentText(params.contentText)
+            clearActions()
+            addAction(
+                0,
+                service.getString(CommonR.string.notification_switch_fastest),
+                switchFastestIntent,
+            )
+            if (params.showStopAction) {
+                addAction(0, params.stopText, stopIntent)
+            }
+            build()
+        }
+        if (!foregroundStarted) {
+            service.startForeground(notification)
+            foregroundStarted = true
+        } else {
+            runCatching {
+                notificationManager?.notify(GlobalState.NOTIFICATION_ID, notification)
+            }
+        }
     }
 
     @Suppress("DEPRECATION")
     override fun stop() {
+        foregroundStarted = false
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             service.stopForeground(STOP_FOREGROUND_REMOVE)
         } else {
