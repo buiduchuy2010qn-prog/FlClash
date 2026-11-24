@@ -6,7 +6,7 @@
 
 A multi-platform proxy client based on ClashMeta. Simple to use, open source and ad-free.
 
-> **License, Attribution & Acceptable Use:** This repository is a GNU GPL-3.0 modified fork of [chen08209/FlClash](https://github.com/chen08209/FlClash), built on the [MetaCubeX/mihomo](https://github.com/MetaCubeX/mihomo) core and Flutter. Provided **AS IS** under [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md) solely as a general-purpose open-source network client for lawful user-configured endpoints; it includes no proxy servers or subscriptions. See [SECURITY.md](SECURITY.md) for reporting guidelines.
+> **License, Attribution & Acceptable Use:** This repository is an independent GNU GPL-3.0 modified fork of [chen08209/FlClash](https://github.com/chen08209/FlClash), built on the [MetaCubeX/mihomo](https://github.com/MetaCubeX/mihomo) core and Flutter. Provided **AS IS** under [LICENSE](LICENSE), [NOTICE.md](NOTICE.md), and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) solely as a general-purpose open-source network client for lawful user-configured endpoints; it includes no proxy servers or subscriptions. See [CHANGELOG.md](CHANGELOG.md) for fork modifications and [SECURITY.md](SECURITY.md) for security or rights-holder inquiries.
 
 **English** · [简体中文](README_zh_CN.md)
 
@@ -137,4 +137,7 @@ Starring the repository is the easiest way to support the project. Questions and
 
 ## License
 
-FlClash is released under the [GPL-3.0 license](LICENSE).
+FlClash and this modified fork are released under the [GNU General Public License v3.0 (GPL-3.0)](LICENSE).
+
+- **Compliance (GPL-3.0 Sections 4, 5 & 6):** All original copyright notices ([chen08209/FlClash](https://github.com/chen08209/FlClash), [MetaCubeX/mihomo](https://github.com/MetaCubeX/mihomo)) are preserved; fork modifications are documented in [NOTICE.md](NOTICE.md) and [CHANGELOG.md](CHANGELOG.md), and third-party component notices are detailed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Full corresponding source code is published alongside every release.
+- **No Warranty & Acceptable Use (GPL-3.0 Sections 15 & 16):** Distributed **AS IS**, without warranty of any kind, solely as a general-purpose network client for lawful user-configured endpoints. For security or rights-holder inquiries, see [SECURITY.md](SECURITY.md).

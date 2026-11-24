@@ -6,6 +6,8 @@
 
 基于 ClashMeta 的多平台代理客户端，简单易用，开源无广告。
 
+> **开源协议、版权归属与合规声明：** 本仓库为基于 [chen08209/FlClash](https://github.com/chen08209/FlClash) 的独立 GNU GPL-3.0 修改分支，采用 [MetaCubeX/mihomo](https://github.com/MetaCubeX/mihomo) 内核与 Flutter 构建。本软件按 **"AS IS"（现状）** 依据 [LICENSE](LICENSE)、[NOTICE.md](NOTICE.md) 与 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) 发布，仅作为通用开源网络客户端供用户连接合法授权的自配节点；仓库不包含任何代理服务器、订阅或账号凭据。分支修改记录见 [CHANGELOG.md](CHANGELOG.md)，安全与版权联系见 [SECURITY.md](SECURITY.md)。
+
 [English](README.md) · **简体中文**
 
 [![Release](https://img.shields.io/github/v/release/chen08209/FlClash?style=flat-square&label=release)](https://github.com/chen08209/FlClash/releases/latest)
@@ -127,4 +129,7 @@ Bug 与功能建议请提交到 [GitHub Issues](https://github.com/chen08209/FlC
 
 ## 许可证
 
-FlClash 以 [GPL-3.0 协议](LICENSE)发布。
+FlClash 及本修改分支均以 [GNU General Public License v3.0 (GPL-3.0)](LICENSE) 协议开源发布。
+
+- **协议合规（GPL-3.0 第 4、5、6 条）：** 完整保留原作者（[chen08209/FlClash](https://github.com/chen08209/FlClash)、[MetaCubeX/mihomo](https://github.com/MetaCubeX/mihomo)）版权声明；分支修改说明见 [NOTICE.md](NOTICE.md) 与 [CHANGELOG.md](CHANGELOG.md)，第三方组件许可清单见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)，全部对应源码随每次发布同步公开。
+- **免责声明与合法用途（GPL-3.0 第 15、16 条）：** 本软件按 **"AS IS"（现状）** 提供、不附带任何担保，仅作为通用开源网络客户端供合法自配节点使用。安全或版权事务请联系见 [SECURITY.md](SECURITY.md)。

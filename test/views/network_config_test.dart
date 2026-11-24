@@ -2,7 +2,7 @@ import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/app.dart';
-import 'package:fl_clash/providers/beltlane_features.dart';
+import 'package:fl_clash/providers/mobile_features.dart';
 import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/providers/database.dart';
 import 'package:fl_clash/state.dart';
@@ -314,7 +314,7 @@ void main() {
   });
 
   group('optimize 4G preset', () {
-    test('hydrates saved toggle and migrates zero-rated DNS and MTU', () async {
+    test('hydrates saved toggle and migrates mobile DNS and MTU', () async {
       final presetContainer = ProviderContainer(
         overrides: [
           profilesProvider.overrideWith(TestProfiles.new),
