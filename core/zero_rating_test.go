@@ -133,17 +133,17 @@ dns:
 	}
 }
 
-func TestOptimizeProxyGroupsBetltone(t *testing.T) {
+func TestOptimizeProxyGroupsFallbackAndAuto(t *testing.T) {
 	previousAndroid := isAndroidRuntime
 	isAndroidRuntime = false
 	t.Cleanup(func() { isAndroidRuntime = previousAndroid })
 
 	const input = `proxies:
-  - {name: node1, type: vless, server: link.e.tiktok.com, port: 80, uuid: 11111111-1111-1111-1111-111111111111}
-  - {name: node2, type: vless, server: docquyengamezhaolusidep.betltone.com, port: 443, uuid: 11111111-1111-1111-1111-111111111111, tls: true}
+  - {name: node1, type: vless, server: node1.example.com, port: 80, uuid: 11111111-1111-1111-1111-111111111111}
+  - {name: node2, type: vless, server: node2.example.net, port: 443, uuid: 11111111-1111-1111-1111-111111111111, tls: true}
 proxy-groups:
-  - {name: BETLTONE.COM, type: select, proxies: [ZicBoard, node1, node2]}
-  - {name: ZicBoard, type: fallback, proxies: [node1, node2], url: 'http://cp.cloudflare.com/', interval: 7200}
+  - {name: ProxyMain, type: select, proxies: [AutoFallback, node1, node2]}
+  - {name: AutoFallback, type: fallback, proxies: [node1, node2], url: 'http://cp.cloudflare.com/', interval: 7200}
 `
 	var doc yaml.Node
 	if err := yaml.Unmarshal([]byte(input), &doc); err != nil {
@@ -161,6 +161,8 @@ proxy-groups:
 			Type           string   `yaml:"type"`
 			URL            string   `yaml:"url"`
 			Interval       int      `yaml:"interval"`
+			Timeout        int      `yaml:"timeout"`
+			Lazy           bool     `yaml:"lazy"`
 			Tolerance      int      `yaml:"tolerance"`
 			ExpectedStatus string   `yaml:"expected-status"`
 			MaxFailedTimes int      `yaml:"max-failed-times"`
@@ -174,15 +176,15 @@ proxy-groups:
 		t.Fatalf("proxy-groups len = %d, want 3 (select + fallback + Auto): %+v", len(parsed.ProxyGroups), parsed.ProxyGroups)
 	}
 	sel := parsed.ProxyGroups[0]
-	if len(sel.Proxies) < 2 || sel.Proxies[0] != "Auto" || sel.Proxies[1] != "ZicBoard" {
-		t.Errorf("BETLTONE.COM proxies = %v, want [Auto ZicBoard ...]", sel.Proxies)
+	if len(sel.Proxies) < 2 || sel.Proxies[0] != "Auto" || sel.Proxies[1] != "AutoFallback" {
+		t.Errorf("ProxyMain proxies = %v, want [Auto AutoFallback ...]", sel.Proxies)
 	}
 	fb := parsed.ProxyGroups[1]
-	if fb.Interval != 90 || fb.ExpectedStatus != "200-299" || fb.MaxFailedTimes != 2 || fb.URL != "https://www.gstatic.com/generate_204" {
-		t.Errorf("ZicBoard not optimized: %+v", fb)
+	if fb.Interval != 180 || fb.Timeout != 5000 || !fb.Lazy || fb.ExpectedStatus != "200-299" || fb.MaxFailedTimes != 2 || fb.URL != "https://www.gstatic.com/generate_204" {
+		t.Errorf("AutoFallback not optimized: %+v", fb)
 	}
 	auto := parsed.ProxyGroups[2]
-	if auto.Name != "Auto" || auto.Type != "url-test" || auto.Interval != 90 || auto.Tolerance != 50 || auto.ExpectedStatus != "200-299" || auto.MaxFailedTimes != 2 {
+	if auto.Name != "Auto" || auto.Type != "url-test" || auto.Interval != 180 || auto.Timeout != 5000 || !auto.Lazy || auto.Tolerance != 100 || auto.ExpectedStatus != "200-299" || auto.MaxFailedTimes != 2 {
 		t.Errorf("Auto group not built properly: %+v", auto)
 	}
 }
@@ -276,7 +278,7 @@ func TestResilientProxyHostResolverCacheAndCaptiveFilter(t *testing.T) {
 		netip.MustParseAddr("127.0.0.1"),
 		netip.MustParseAddr("172.67.168.158"),
 	}
-	usable := usableProxyIPv4s("docquyengamezhaolusidep.betltone.com", bogons)
+	usable := usableProxyIPv4s("node2.example.net", bogons)
 	if len(usable) != 1 || usable[0] != netip.MustParseAddr("172.67.168.158") {
 		t.Fatalf("usableProxyIPv4s = %v, want only 172.67.168.158", usable)
 	}
@@ -288,7 +290,7 @@ func TestResilientProxyHostResolverCacheAndCaptiveFilter(t *testing.T) {
 		return nil, errors.New("offline")
 	}
 
-	got, err := r.LookupIPv4(context.Background(), "docquyengamezhaolusidep.betltone.com")
+	got, err := r.LookupIPv4(context.Background(), "node2.example.net")
 	if err != nil || len(got) != 1 || got[0] != netip.MustParseAddr("172.67.168.158") {
 		t.Fatalf("initial LookupIPv4 = (%v, %v), want 172.67.168.158", got, err)
 	}
@@ -305,14 +307,61 @@ func TestResilientProxyHostResolverCacheAndCaptiveFilter(t *testing.T) {
 	r2.dohQuery = func(_ context.Context, _ string) ([]netip.Addr, error) {
 		return nil, errors.New("carrier blocked doh")
 	}
-	fallback, err := r2.LookupIPv4(context.Background(), "docquyengamezhaolusidep.betltone.com")
+	fallback, err := r2.LookupIPv4(context.Background(), "node2.example.net")
 	if err != nil || len(fallback) != 1 || fallback[0] != netip.MustParseAddr("172.67.168.158") {
 		t.Fatalf("disk-cached fallback = (%v, %v), want 172.67.168.158", fallback, err)
 	}
 
 	r2.ClearCache()
-	stillCached, err := r2.LookupIPv4(context.Background(), "docquyengamezhaolusidep.betltone.com")
+	stillCached, err := r2.LookupIPv4(context.Background(), "node2.example.net")
 	if err != nil || len(stillCached) != 1 {
 		t.Fatalf("ClearCache wiped proxy host cache: (%v, %v)", stillCached, err)
+	}
+}
+
+func TestSetTelemetryPausedClearsTrafficAndGatesTelemetry(t *testing.T) {
+	t.Cleanup(func() {
+		SetTelemetryPaused(false)
+		currentRequestTraffic.clear()
+	})
+
+	currentRequestTraffic.clear()
+	SetTelemetryPaused(false)
+	if isTelemetryPaused() {
+		t.Fatal("expected telemetry to start unpaused")
+	}
+	tracker := newPipeTracker(t)
+	watchRequestTraffic(tracker)
+	currentRequestTraffic.mu.Lock()
+	countBeforePause := len(currentRequestTraffic.requests)
+	_, hasBeforePause := currentRequestTraffic.requests[tracker.ID()]
+	currentRequestTraffic.mu.Unlock()
+	if countBeforePause != 1 || !hasBeforePause {
+		t.Fatalf("tracked requests = %d (has tracker=%t), want 1 (true)", countBeforePause, hasBeforePause)
+	}
+
+	SetTelemetryPaused(true)
+	if !isTelemetryPaused() {
+		t.Fatal("expected isTelemetryPaused() == true after SetTelemetryPaused(true)")
+	}
+	currentRequestTraffic.mu.Lock()
+	countAfterPause := len(currentRequestTraffic.requests)
+	runningAfterPause := currentRequestTraffic.running
+	currentRequestTraffic.mu.Unlock()
+	if countAfterPause != 0 || runningAfterPause {
+		t.Fatalf("expected cleared traffic watch after pause, got count=%d running=%t", countAfterPause, runningAfterPause)
+	}
+
+	watchRequestTraffic(tracker)
+	currentRequestTraffic.mu.Lock()
+	countWhilePaused := len(currentRequestTraffic.requests)
+	currentRequestTraffic.mu.Unlock()
+	if countWhilePaused != 0 {
+		t.Fatalf("watchRequestTraffic added request while paused: %d", countWhilePaused)
+	}
+
+	SetTelemetryPaused(false)
+	if isTelemetryPaused() {
+		t.Fatal("expected isTelemetryPaused() == false after SetTelemetryPaused(false)")
 	}
 }

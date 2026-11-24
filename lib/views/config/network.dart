@@ -584,12 +584,26 @@ class NetworkOptionsSection extends ConsumerWidget {
 class Optimize4gPresetSection extends ConsumerWidget {
   const Optimize4gPresetSection({super.key});
 
+  Future<void> _ensureBatteryExemption(WidgetRef ref) async {
+    try {
+      final ignored = await ref
+          .read(batteryOptimizationIgnoredProvider.future)
+          .timeout(const Duration(seconds: 2));
+      if (!ignored) {
+        await ref.read(batteryOptimizationIgnoredProvider.notifier).request();
+      }
+    } catch (_) {}
+  }
+
   void _togglePreset(BuildContext context, WidgetRef ref, bool enable) {
     final l = context.appLocalizations;
     final notifier = ref.read(optimize4gPresetProvider.notifier);
     notifier.value = enable;
     if (enable) {
       notifier.applyZeroRatingPreset();
+      if (system.isAndroid) {
+        unawaited(_ensureBatteryExemption(ref));
+      }
       dialogs.showBanner(l.optimize4gAppliedTip);
     }
     ref.read(setupActionProvider.notifier).applyProfileDebounce(force: true);

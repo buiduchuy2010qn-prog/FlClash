@@ -52,6 +52,7 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
         channel.setMethodCallHandler(null)
         coreChannel.setMethodCallHandler(null)
         scope.cancel()
+        ServiceController.setTelemetryPaused(true)
         ServiceController.setEventListener(null)
     }
 
@@ -61,6 +62,7 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
             "shutdown" -> shutdown(result)
             "getRunTime" -> getRunTime(result)
             "syncState" -> syncState(call, result)
+            "setTelemetryPaused" -> setTelemetryPaused(call, result)
             "start" -> start(call, result)
             "stop" -> stop(call, result)
             else -> result.notImplemented()
@@ -76,14 +78,29 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
 
     private fun initialize(result: MethodChannel.Result) {
         NetworkObserver.start()
+        ServiceController.setTelemetryPaused(false)
         ServiceController.setEventListener(::sendEvent)
             .onSuccess { result.success("") }
             .onFailure { error -> result.success(error.message.orEmpty()) }
     }
 
     private fun shutdown(result: MethodChannel.Result) {
+        ServiceController.setTelemetryPaused(true)
         ServiceController.setEventListener(null)
         result.success(true)
+    }
+
+    private fun setTelemetryPaused(call: MethodCall, result: MethodChannel.Result) {
+        val paused = call.arguments as? Boolean ?: false
+        scope.launch {
+            runCatching { Core.load() }
+            val outcome = ServiceController.setTelemetryPaused(paused)
+            scope.launch(Dispatchers.Main) {
+                outcome
+                    .onSuccess { result.success(true) }
+                    .onFailure { error -> result.error("CORE_ERROR", error.message, null) }
+            }
+        }
     }
 
     private fun invokeMethod(call: MethodCall, result: MethodChannel.Result) {

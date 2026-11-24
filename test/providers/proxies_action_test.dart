@@ -1228,5 +1228,83 @@ void main() {
       ).called(1);
       debouncer.cancel(FunctionTag.updateGroups);
     });
+
+    testWidgets(
+      'auto-failover applies hysteresis and confirmation against transient blips',
+      (tester) async {
+        addTearDown(() => debouncer.cancel(FunctionTag.updateGroups));
+        when(
+          () => core.changeProxy(any()),
+        ).thenAnswer((_) async => const ChangeProxyResult(changed: true));
+        when(core.closeConnections).thenAnswer((_) async => true);
+        when(core.getProxies).thenAnswer(
+          (_) async => ProxiesData(
+            all: const ['Proxy'],
+            proxies: Map<String, dynamic>.from({
+              'Proxy': Map<String, dynamic>.from({
+                'name': 'Proxy',
+                'type': 'Selector',
+                'now': 'HK-Slow',
+                'all': ['HK-Slow', 'SG-Fast'],
+              }),
+              'HK-Slow': Map<String, dynamic>.from({
+                'name': 'HK-Slow',
+                'type': 'ss',
+              }),
+              'SG-Fast': Map<String, dynamic>.from({
+                'name': 'SG-Fast',
+                'type': 'ss',
+              }),
+            }),
+          ),
+        );
+        var hkProbe = 0;
+        when(() => core.testDelay(_delayTest(_testUrl))).thenAnswer((
+          invocation,
+        ) async {
+          final name =
+              (invocation.positionalArguments[0] as TestDelayParams).proxyName;
+          if (name == 'HK-Slow') {
+            hkProbe++;
+            return Delay(
+              name: name,
+              url: _testUrl,
+              value: hkProbe == 1 ? -1 : 140,
+            );
+          }
+          return Delay(name: name, url: _testUrl, value: 80);
+        });
+        final container = _delayContainer(
+          () => buildContainer(profile: _selectedProfile('HK-Slow')),
+        );
+        container.listen(patchClashConfigProvider, (_, _) {});
+        container.read(coreStatusProvider.notifier).value =
+            CoreStatus.connected;
+        container.read(groupsProvider.notifier).value = [
+          _group('Proxy', const [
+            Proxy(name: 'HK-Slow', type: 'ss'),
+            Proxy(name: 'SG-Fast', type: 'ss'),
+          ]).copyWith(hidden: false),
+        ];
+        actionOf(container);
+
+        container.read(runTimeProvider.notifier).value = 1;
+        await tester.pump(const Duration(milliseconds: 650));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        verifyNever(() => core.changeProxy(any()));
+
+        await actionOf(container).selectFastestProxy('Proxy', automatic: true);
+        verifyNever(() => core.changeProxy(any()));
+
+        await actionOf(container).selectFastestProxy('Proxy');
+        verify(
+          () => core.changeProxy(
+            const ChangeProxyParams(groupName: 'Proxy', proxyName: 'SG-Fast'),
+          ),
+        ).called(1);
+        debouncer.cancel(FunctionTag.updateGroups);
+      },
+    );
   });
 }

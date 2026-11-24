@@ -7,6 +7,7 @@ import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/ui/ui.dart';
+import 'package:fl_clash/views/disclaimer.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -99,11 +100,11 @@ class AboutView extends ConsumerWidget {
           generateSection(
             title: appLocalizations.more,
             items: [
-              _buildLinkItem(
-                glyph: AppGlyphs.code,
-                title: appLocalizations.project,
-                url: 'https://github.com/$repository',
-                label: 'github.com/$repository',
+              ListItem.open(
+                leading: const _LinkBadge(glyph: AppGlyphs.gavel),
+                title: Text(appLocalizations.disclaimerLicenseTitle),
+                subtitle: const Text('GNU GPL-3.0'),
+                widget: const DisclaimerView(),
               ),
               _buildLinkItem(
                 glyph: AppGlyphs.cpu,

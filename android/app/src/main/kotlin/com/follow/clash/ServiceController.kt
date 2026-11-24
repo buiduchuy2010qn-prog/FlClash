@@ -70,6 +70,10 @@ object ServiceController {
         Core.updateEventListener(callback)
     }
 
+    fun setTelemetryPaused(paused: Boolean): Result<Unit> = runCatching {
+        Core.setTelemetryPaused(paused)
+    }
+
     suspend fun start(options: VpnOptions): Boolean = lock.withLock {
         ServiceConfig.updateVpnOptions(options)
         val nextIntent = if (options.enable) {

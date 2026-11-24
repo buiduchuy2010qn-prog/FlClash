@@ -149,6 +149,12 @@ class Service {
         '';
   }
 
+  Future<void> setTelemetryPaused(bool paused) async {
+    try {
+      await methodChannel.invokeMethod<bool>('setTelemetryPaused', paused);
+    } catch (_) {}
+  }
+
   Future<bool> shutdown() async {
     return await methodChannel.invokeMethod<bool>('shutdown') ?? true;
   }

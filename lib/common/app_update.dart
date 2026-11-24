@@ -9,7 +9,7 @@ import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/plugins/app.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart' show PlatformException;
-import 'package:path/path.dart';
+import 'package:path/path.dart' hide windows;
 import 'package:url_launcher/url_launcher.dart';
 
 sealed class UpdateDownload {
@@ -75,6 +75,9 @@ bool releaseHasAsset(Map<String, dynamic> release, SelfUpdateAsset asset) {
 
 @visibleForTesting
 Future<bool> Function(Uri uri) launchReleasePage = launchUrl;
+
+bool? Function(String path, String arguments) runWindowsUpdateInstaller =
+    (path, arguments) => windows?.runas(path, arguments);
 
 Future<bool> openReleasePage() {
   return launchReleasePage(

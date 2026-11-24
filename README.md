@@ -6,6 +6,8 @@
 
 A multi-platform proxy client based on ClashMeta. Simple to use, open source and ad-free.
 
+> **License, Attribution & Acceptable Use:** This repository is a GNU GPL-3.0 modified fork of [chen08209/FlClash](https://github.com/chen08209/FlClash), built on the [MetaCubeX/mihomo](https://github.com/MetaCubeX/mihomo) core and Flutter. Provided **AS IS** under [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md) solely as a general-purpose open-source network client for lawful user-configured endpoints; it includes no proxy servers or subscriptions. See [SECURITY.md](SECURITY.md) for reporting guidelines.
+
 **English** · [简体中文](README_zh_CN.md)
 
 [![Release](https://img.shields.io/github/v/release/chen08209/FlClash?style=flat-square&label=release)](https://github.com/chen08209/FlClash/releases/latest)

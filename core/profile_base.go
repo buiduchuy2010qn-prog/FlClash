@@ -549,8 +549,14 @@ func optimizeProxyGroups(root *yaml.Node) {
 			}
 		}
 		if groupType == "fallback" || groupType == "url-test" || groupType == "load-balance" {
-			if interval, ok := scalarInt(group, "interval"); !ok || interval <= 0 || interval > 180 {
-				setMappingValue(group, "interval", intNode(90))
+			if interval, ok := scalarInt(group, "interval"); !ok || interval <= 0 || interval > 300 {
+				setMappingValue(group, "interval", intNode(180))
+			}
+			if lazyNode := resolveAlias(mappingValue(group, "lazy")); lazyNode == nil || isNull(lazyNode) {
+				setMappingValue(group, "lazy", boolNode(true))
+			}
+			if timeoutVal, ok := scalarInt(group, "timeout"); !ok || timeoutVal <= 0 || timeoutVal > 10000 {
+				setMappingValue(group, "timeout", intNode(5000))
 			}
 			if scalarString(group, "expected-status") == "" {
 				setMappingValue(group, "expected-status", strNode("200-299"))
@@ -564,7 +570,7 @@ func optimizeProxyGroups(root *yaml.Node) {
 			}
 			if groupType == "url-test" {
 				if tol := resolveAlias(mappingValue(group, "tolerance")); tol == nil || isNull(tol) {
-					setMappingValue(group, "tolerance", intNode(50))
+					setMappingValue(group, "tolerance", intNode(100))
 				}
 			}
 		}
@@ -582,8 +588,10 @@ func optimizeProxyGroups(root *yaml.Node) {
 				strNode("name"), strNode("Auto"),
 				strNode("type"), strNode("url-test"),
 				strNode("url"), strNode("https://www.gstatic.com/generate_204"),
-				strNode("interval"), intNode(90),
-				strNode("tolerance"), intNode(50),
+				strNode("interval"), intNode(180),
+				strNode("timeout"), intNode(5000),
+				strNode("lazy"), boolNode(true),
+				strNode("tolerance"), intNode(100),
 				strNode("expected-status"), strNode("200-299"),
 				strNode("max-failed-times"), intNode(2),
 				strNode("proxies"), proxiesSeq,
