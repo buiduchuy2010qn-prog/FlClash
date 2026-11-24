@@ -130,4 +130,26 @@ void main() {
     expect(result.keptNewer, isTrue);
     expect(result.freedBytes, 7);
   });
+
+  test('releaseHasAsset skips updates missing the current platform binary', () {
+    final windowsAsset = selfUpdateAssetFor(
+      Abi.windowsX64,
+      windowsInstalled: true,
+    )!;
+    final androidAsset = selfUpdateAssetFor(
+      Abi.androidArm64,
+      windowsInstalled: false,
+    )!;
+    final apkOnlyRelease = {
+      'tag_name': 'v0.9.13',
+      'assets': [
+        {'name': 'FlClash-0.9.13-android-arm64.apk'},
+        {'name': 'FlClash-0.9.13-SHA256SUMS'},
+      ],
+    };
+
+    expect(releaseHasAsset(apkOnlyRelease, androidAsset), isTrue);
+    expect(releaseHasAsset(apkOnlyRelease, windowsAsset), isFalse);
+    expect(releaseHasAsset({'tag_name': 'v0.9.13'}, windowsAsset), isTrue);
+  });
 }

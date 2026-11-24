@@ -189,6 +189,7 @@ object NetworkObserver {
             ?.value
             ?.dnsList
             .orEmpty()
+            .sortedBy { if (it is Inet4Address) 0 else 1 }
             .map { address -> address.asSocketAddressText(DNS_PORT) }
             .distinct()
         if (dnsList != currentDnsList) {

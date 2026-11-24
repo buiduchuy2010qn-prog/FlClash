@@ -60,6 +60,19 @@ SelfUpdateAsset? Function() resolveSelfUpdateAsset = () => selfUpdateAssetFor(
 
 SelfUpdateAsset? get selfUpdateAsset => resolveSelfUpdateAsset();
 
+bool releaseHasAsset(Map<String, dynamic> release, SelfUpdateAsset asset) {
+  final tag = release['tag_name'];
+  if (tag is! String || tag.isEmpty) {
+    return false;
+  }
+  final assets = release['assets'];
+  if (assets is! List || assets.isEmpty) {
+    return true;
+  }
+  final expected = updateAssetName(tag, asset);
+  return assets.any((item) => item is Map && item['name'] == expected);
+}
+
 @visibleForTesting
 Future<bool> Function(Uri uri) launchReleasePage = launchUrl;
 

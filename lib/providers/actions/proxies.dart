@@ -27,6 +27,7 @@ class _DelayTestJob {
 class ProxiesAction extends _$ProxiesAction {
   static const _builtinNames = {'DIRECT', 'REJECT', 'REJECT-DROP', 'PASS'};
   static const _failoverSlowDelayMs = 2500;
+  static const _watchdogInterval = Duration(seconds: 45);
   CoreController get _core => ref.read(coreHandlerProvider);
 
   final TaskPool _delayTestPool = TaskPool(maxConcurrentDelayTests);
@@ -43,6 +44,8 @@ class ProxiesAction extends _$ProxiesAction {
 
   Timer? _autoPingTimer;
 
+  Timer? _watchdogTimer;
+
   int _lastAutoPingEpoch = -1;
 
   final Map<String, String> _pendingSelectedRollback = {};
@@ -52,10 +55,13 @@ class ProxiesAction extends _$ProxiesAction {
     ref.onDispose(() {
       _delayFlushTimer?.cancel();
       _autoPingTimer?.cancel();
+      _watchdogTimer?.cancel();
     });
     ref.listen(coreStatusProvider, (_, next) {
       if (next != CoreStatus.connected) {
         _autoPingTimer?.cancel();
+        _watchdogTimer?.cancel();
+        _watchdogTimer = null;
         _lastAutoPingEpoch = -1;
         cancelDelayTests();
       }
@@ -63,11 +69,14 @@ class ProxiesAction extends _$ProxiesAction {
     ref.listen(runTimeProvider, (prev, next) {
       if (next == null) {
         _autoPingTimer?.cancel();
+        _watchdogTimer?.cancel();
+        _watchdogTimer = null;
         _lastAutoPingEpoch = -1;
         return;
       }
       if (prev == null) {
         _scheduleAutoPing();
+        _startWatchdog();
       }
     });
     ref.listen(groupsProvider, (prev, next) {
@@ -97,6 +106,19 @@ class ProxiesAction extends _$ProxiesAction {
     });
   }
 
+  void _startWatchdog() {
+    _watchdogTimer?.cancel();
+    _watchdogTimer = Timer.periodic(_watchdogInterval, (_) {
+      if (ref.read(runTimeProvider) == null ||
+          ref.read(coreStatusProvider) != CoreStatus.connected ||
+          !ref.read(autoFailoverProvider) ||
+          ref.read(delayTestingGroupsProvider).isNotEmpty) {
+        return;
+      }
+      unawaited(_autoTestActiveGroup());
+    });
+  }
+
   Future<void> _autoTestActiveGroup() async {
     if (ref.read(runTimeProvider) == null ||
         ref.read(coreStatusProvider) != CoreStatus.connected) {
@@ -112,32 +134,45 @@ class ProxiesAction extends _$ProxiesAction {
     if (primary.all.isEmpty) {
       return;
     }
+    final groups = ref.read(groupsProvider);
     final selectedMap = ref.read(
       currentProfileProvider.select((state) => state?.selectedMap ?? {}),
     );
     final selected = selectedMap[primary.name] ?? '';
     final activeName = primary.getCurrentSelectedName(selected);
-    final proxies = primary.all;
-    final activeProxy = proxies.firstWhereOrNull((p) => p.name == activeName);
-    if (activeProxy == null || _builtinNames.contains(activeProxy.name)) {
+    final defaultTestUrl = ref.read(realTestUrlProvider(primary.testUrl));
+    final real = computeRealSelectedProxyState(
+      activeName,
+      groups: groups,
+      selectedMap: selectedMap,
+    );
+    final targetName = real.proxyName.isNotEmpty ? real.proxyName : activeName;
+    final leafProxy =
+        primary.all.firstWhereOrNull((p) => p.name == targetName) ??
+        groups
+            .expand((g) => g.all)
+            .firstWhereOrNull((p) => p.name == targetName);
+    if (leafProxy == null || _builtinNames.contains(leafProxy.name)) {
       await _runDelayTests([(proxies: primary.all, testUrl: primary.testUrl)]);
       return;
     }
     await _runDelayTests([
-      (proxies: [activeProxy], testUrl: primary.testUrl),
+      (proxies: [leafProxy], testUrl: defaultTestUrl),
     ]);
     if (ref.read(runTimeProvider) == null ||
         ref.read(coreStatusProvider) != CoreStatus.connected) {
       return;
     }
-    final groups = ref.read(groupsProvider);
-    final testUrl = ref.read(realTestUrlProvider(primary.testUrl));
+    final currentGroups = ref.read(groupsProvider);
+    final currentSelectedMap = ref.read(
+      currentProfileProvider.select((state) => state?.selectedMap ?? {}),
+    );
     final delayMap = ref.read(delayDataSourceProvider);
     final activeDelay = computeProxyDelayState(
-      proxyName: activeProxy.name,
-      testUrl: testUrl,
-      groups: groups,
-      selectedMap: selectedMap,
+      proxyName: leafProxy.name,
+      testUrl: defaultTestUrl,
+      groups: currentGroups,
+      selectedMap: currentSelectedMap,
       delayMap: delayMap,
     ).delay;
     final unhealthy = activeDelay <= 0 || activeDelay >= _failoverSlowDelayMs;
@@ -161,7 +196,8 @@ class ProxiesAction extends _$ProxiesAction {
     String groupName, {
     bool automatic = false,
   }) async {
-    final group = ref.read(groupsProvider).getGroup(groupName);
+    final allGroups = ref.read(groupsProvider);
+    final group = allGroups.getGroup(groupName);
     if (group == null || group.all.isEmpty) {
       return;
     }
@@ -170,11 +206,18 @@ class ProxiesAction extends _$ProxiesAction {
       return;
     }
     try {
-      final filtered = [
+      final groupNames = {for (final g in allGroups) g.name};
+      final nonBuiltin = [
         for (final proxy in group.all)
           if (!_builtinNames.contains(proxy.name)) proxy,
       ];
-      final candidates = filtered.isNotEmpty ? filtered : group.all;
+      final leafOnly = [
+        for (final proxy in nonBuiltin)
+          if (!groupNames.contains(proxy.name)) proxy,
+      ];
+      final candidates = leafOnly.isNotEmpty
+          ? leafOnly
+          : (nonBuiltin.isNotEmpty ? nonBuiltin : group.all);
       await delayTest(candidates, group.testUrl);
 
       final groups = ref.read(groupsProvider);
