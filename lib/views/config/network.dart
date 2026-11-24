@@ -586,38 +586,10 @@ class Optimize4gPresetSection extends ConsumerWidget {
 
   void _togglePreset(BuildContext context, WidgetRef ref, bool enable) {
     final l = context.appLocalizations;
-    ref.read(optimize4gPresetProvider.notifier).value = enable;
+    final notifier = ref.read(optimize4gPresetProvider.notifier);
+    notifier.value = enable;
     if (enable) {
-      const plainDns = ['1.1.1.1', '8.8.8.8'];
-      ref.read(patchClashConfigProvider.notifier).update((state) {
-        return state.copyWith(
-          mode: Mode.global,
-          tun: system.isDesktop ? state.tun.copyWith(enable: true) : state.tun,
-          dns: state.dns.copyWith(
-            enable: true,
-            enhancedMode: DnsMode.fakeIp,
-            nameserver: plainDns,
-            defaultNameserver: plainDns,
-            proxyServerNameserver: plainDns,
-          ),
-          dnsOverrideKeys: {
-            ...state.dnsOverrideKeys,
-            DnsOverrideKey.enable,
-            DnsOverrideKey.enhancedMode,
-            DnsOverrideKey.nameserver,
-            DnsOverrideKey.defaultNameserver,
-            DnsOverrideKey.proxyServerNameserver,
-          },
-        );
-      });
-      if (system.isAndroid) {
-        ref
-            .read(vpnSettingProvider.notifier)
-            .update((state) => state.copyWith(enable: true));
-      }
-      ref
-          .read(networkSettingProvider.notifier)
-          .update((state) => state.copyWith(bypassPrivateRoute: true));
+      notifier.applyZeroRatingPreset();
       dialogs.showBanner(l.optimize4gAppliedTip);
     }
     ref.read(setupActionProvider.notifier).applyProfileDebounce(force: true);

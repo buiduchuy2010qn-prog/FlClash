@@ -2,6 +2,7 @@ import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/app.dart';
+import 'package:fl_clash/providers/beltlane_features.dart';
 import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/providers/database.dart';
 import 'package:fl_clash/state.dart';
@@ -311,6 +312,46 @@ void main() {
       expect(outboundItems(isDesktop: true, isLinux: true), hasLength(4));
     });
   });
+
+  group('optimize 4G preset', () {
+    test('hydrates saved toggle and migrates zero-rated DNS and MTU', () async {
+      final presetContainer = ProviderContainer(
+        overrides: [
+          profilesProvider.overrideWith(TestProfiles.new),
+          optimize4gPresetProvider.overrideWith(_Hydrating4gNotifier.new),
+        ],
+      );
+      addTearDown(presetContainer.dispose);
+      final saved = await presetContainer
+          .read(optimize4gPresetProvider.notifier)
+          .ensureHydrated();
+      expect(saved, isTrue);
+
+      final clash = presetContainer.read(patchClashConfigProvider);
+      expect(clash.mode, Mode.global);
+      expect(clash.tun.mtu, 1400);
+      expect(clash.dns.ipv6, isFalse);
+      expect(clash.dns.useHosts, isTrue);
+      expect(clash.dns.respectRules, isTrue);
+      expect(clash.dns.enhancedMode, DnsMode.fakeIp);
+      expect(clash.dns.nameserver, ['1.1.1.1', '8.8.8.8']);
+      expect(clash.dns.defaultNameserver, ['system']);
+      expect(clash.dns.proxyServerNameserver, ['system']);
+      expect(clash.dns.directNameserver, ['system']);
+
+      final network = presetContainer.read(networkSettingProvider);
+      expect(network.bypassPrivateRoute, isTrue);
+      expect(network.appendSystemDns, isFalse);
+    });
+  });
+}
+
+class _Hydrating4gNotifier extends Optimize4gPresetNotifier {
+  @override
+  Future<bool> readValue() async => true;
+
+  @override
+  Future<void> writeValue(bool value) async {}
 }
 
 String _interfaceNameModeLabel(InterfaceNameMode mode) {

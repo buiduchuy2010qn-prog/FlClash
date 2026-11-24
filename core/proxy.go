@@ -12,7 +12,6 @@ import (
 	"github.com/metacubex/mihomo/adapter"
 	"github.com/metacubex/mihomo/adapter/outboundgroup"
 	"github.com/metacubex/mihomo/adapter/provider"
-	"github.com/metacubex/mihomo/common/convert"
 	"github.com/metacubex/mihomo/config"
 	"github.com/metacubex/mihomo/constant"
 	"github.com/metacubex/mihomo/log"
@@ -246,5 +245,5 @@ func handleConvertProxies(params PathParams) ([]map[string]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return convert.ConvertsV2Ray(buf)
+	return convertV2RayBytes(buf)
 }

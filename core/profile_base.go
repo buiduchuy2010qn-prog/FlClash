@@ -266,6 +266,45 @@ func documentHasProcessRule(root *yaml.Node) bool {
 	return false
 }
 
+var androidDoTHosts = []struct {
+	host string
+	ips  []string
+}{
+	{"1dot1dot1dot1.cloudflare-dns.com", []string{"1.1.1.1", "1.0.0.1"}},
+	{"one.one.one.one", []string{"1.1.1.1", "1.0.0.1"}},
+	{"dns.cloudflare.com", []string{"1.1.1.1", "1.0.0.1"}},
+	{"dns.google", []string{"8.8.8.8", "8.8.4.4"}},
+	{"dns.google.com", []string{"8.8.8.8", "8.8.4.4"}},
+	{"dns.quad9.net", []string{"9.9.9.9", "149.112.112.112"}},
+	{"dns.adguard-dns.com", []string{"94.140.14.14", "94.140.15.15"}},
+	{"dns.adguard.com", []string{"94.140.14.14", "94.140.15.15"}},
+	{"dns.alidns.com", []string{"223.5.5.5", "223.6.6.6"}},
+	{"common.dot.dns.yandex.net", []string{"77.88.8.8", "77.88.8.1"}},
+}
+
+var androidFakeIPBypass = []string{
+	"+.lan",
+	"+.local",
+	"1dot1dot1dot1.cloudflare-dns.com",
+	"one.one.one.one",
+	"dns.cloudflare.com",
+	"dns.google",
+	"dns.google.com",
+	"dns.quad9.net",
+	"dns.adguard-dns.com",
+	"dns.adguard.com",
+	"dns.alidns.com",
+	"common.dot.dns.yandex.net",
+	"dns.nextdns.io",
+	"*.dns.nextdns.io",
+	"connectivitycheck.gstatic.com",
+	"www.gstatic.com",
+	"captive.apple.com",
+	"connectivitycheck.platform.hicloud.com",
+	"*.ntp.org",
+	"time.*.com",
+}
+
 func optimizeConfigDocument(document, profile *yaml.Node) {
 	root, err := documentMapping(document)
 	if err != nil {
@@ -285,14 +324,142 @@ func optimizeConfigDocument(document, profile *yaml.Node) {
 	if !isAndroidRuntime {
 		return
 	}
+	ensureAndroidHosts(root)
+	ensureAndroidProfilePersistence(root)
+	ensureAndroidSniffer(root)
 	if dnsNode := resolveAlias(mappingValue(root, "dns")); dnsNode != nil && dnsNode.Kind == yaml.MappingNode {
-		if !isExplicitBool(mappingValue(dnsNode, "enable"), false) {
-			ensureSystemDNSNode(dnsNode, "default-nameserver")
-			ensureSystemDNSNode(dnsNode, "proxy-server-nameserver")
-		}
+		ensureAndroidDNSDefaults(dnsNode)
 	}
 	if !documentHasProcessRule(root) {
 		setMappingValue(root, "find-process-mode", strNode("off"))
+	}
+}
+
+func ensureChildMapping(parent *yaml.Node, key string) *yaml.Node {
+	existing := resolveAlias(mappingValue(parent, key))
+	if existing != nil && !isNull(existing) {
+		if existing.Kind == yaml.MappingNode {
+			return existing
+		}
+		return nil
+	}
+	node := &yaml.Node{Kind: yaml.MappingNode, Tag: "!!map"}
+	setMappingValue(parent, key, node)
+	return node
+}
+
+func ensureSequenceStrings(parent *yaml.Node, key string, additions ...string) {
+	existing := resolveAlias(mappingValue(parent, key))
+	if existing == nil || isNull(existing) {
+		existing = &yaml.Node{Kind: yaml.SequenceNode, Tag: "!!seq"}
+		setMappingValue(parent, key, existing)
+	}
+	if existing.Kind != yaml.SequenceNode {
+		return
+	}
+	seen := make(map[string]struct{}, len(existing.Content))
+	for _, item := range existing.Content {
+		if resolved := resolveAlias(item); resolved != nil && resolved.Kind == yaml.ScalarNode {
+			seen[resolved.Value] = struct{}{}
+		}
+	}
+	for _, entry := range additions {
+		if _, exists := seen[entry]; exists {
+			continue
+		}
+		existing.Content = append(existing.Content, strNode(entry))
+		seen[entry] = struct{}{}
+	}
+}
+
+func ensureAndroidHosts(root *yaml.Node) {
+	hostsNode := ensureChildMapping(root, "hosts")
+	if hostsNode == nil {
+		return
+	}
+	for _, entry := range androidDoTHosts {
+		if existing := resolveAlias(mappingValue(hostsNode, entry.host)); existing == nil || isNull(existing) {
+			ensureSequenceStrings(hostsNode, entry.host, entry.ips...)
+		}
+	}
+}
+
+func ensureAndroidProfilePersistence(root *yaml.Node) {
+	profileNode := ensureChildMapping(root, "profile")
+	if profileNode == nil {
+		return
+	}
+	if node := resolveAlias(mappingValue(profileNode, "store-fake-ip")); node == nil || isNull(node) {
+		setMappingValue(profileNode, "store-fake-ip", boolNode(true))
+	}
+}
+
+func mappingKeyIgnoreCase(mapping *yaml.Node, want string) string {
+	for i := 0; i+1 < len(mapping.Content); i += 2 {
+		if strings.EqualFold(mapping.Content[i].Value, want) {
+			return mapping.Content[i].Value
+		}
+	}
+	return want
+}
+
+func ensureAndroidSniffer(root *yaml.Node) {
+	snifferNode := ensureChildMapping(root, "sniffer")
+	if snifferNode == nil {
+		return
+	}
+	if isExplicitBool(mappingValue(snifferNode, "enable"), false) {
+		return
+	}
+	setMappingValue(snifferNode, "enable", boolNode(true))
+	if node := resolveAlias(mappingValue(snifferNode, "force-dns-mapping")); node == nil || isNull(node) {
+		setMappingValue(snifferNode, "force-dns-mapping", boolNode(true))
+	}
+	if node := resolveAlias(mappingValue(snifferNode, "parse-pure-ip")); node == nil || isNull(node) {
+		setMappingValue(snifferNode, "parse-pure-ip", boolNode(true))
+	}
+	sniffMap := ensureChildMapping(snifferNode, "sniff")
+	if sniffMap == nil {
+		return
+	}
+	if httpNode := ensureChildMapping(sniffMap, mappingKeyIgnoreCase(sniffMap, "HTTP")); httpNode != nil {
+		if existing := resolveAlias(mappingValue(httpNode, "ports")); existing == nil || isNull(existing) {
+			ensureSequenceStrings(httpNode, "ports", "80", "8080-8880")
+		}
+		if od := resolveAlias(mappingValue(httpNode, "override-destination")); od == nil || isNull(od) {
+			setMappingValue(httpNode, "override-destination", boolNode(true))
+		}
+	}
+	if tlsNode := ensureChildMapping(sniffMap, mappingKeyIgnoreCase(sniffMap, "TLS")); tlsNode != nil {
+		if existing := resolveAlias(mappingValue(tlsNode, "ports")); existing == nil || isNull(existing) {
+			ensureSequenceStrings(tlsNode, "ports", "443", "853", "8443")
+		} else {
+			ensureSequenceStrings(tlsNode, "ports", "853")
+		}
+	}
+	if quicNode := ensureChildMapping(sniffMap, mappingKeyIgnoreCase(sniffMap, "QUIC")); quicNode != nil {
+		if existing := resolveAlias(mappingValue(quicNode, "ports")); existing == nil || isNull(existing) {
+			ensureSequenceStrings(quicNode, "ports", "443", "8443")
+		}
+	}
+}
+
+func ensureAndroidDNSDefaults(dnsNode *yaml.Node) {
+	if isExplicitBool(mappingValue(dnsNode, "enable"), false) {
+		return
+	}
+	ensureSystemDNSNode(dnsNode, "default-nameserver")
+	ensureSystemDNSNode(dnsNode, "proxy-server-nameserver")
+	ensureSystemDNSNode(dnsNode, "direct-nameserver")
+	if node := resolveAlias(mappingValue(dnsNode, "respect-rules")); node == nil || isNull(node) {
+		setMappingValue(dnsNode, "respect-rules", boolNode(true))
+	}
+	if node := resolveAlias(mappingValue(dnsNode, "use-hosts")); node == nil || isNull(node) {
+		setMappingValue(dnsNode, "use-hosts", boolNode(true))
+	}
+	modeNode := resolveAlias(mappingValue(dnsNode, "fake-ip-filter-mode"))
+	if modeNode == nil || !strings.EqualFold(modeNode.Value, "whitelist") {
+		ensureSequenceStrings(dnsNode, "fake-ip-filter", androidFakeIPBypass...)
 	}
 }
 
