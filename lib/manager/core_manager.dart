@@ -90,6 +90,11 @@ class _CoreContainerState extends ConsumerState<CoreManager>
         _syncLogStream();
       }
     });
+    ref.listenManual(appVisibleProvider, (prev, next) {
+      if (prev != next && system.isAndroid) {
+        _syncLogStream();
+      }
+    });
     // Every Core process starts without a log stream.
     ref.listenManual(coreStatusProvider, (prev, next) {
       if (next == CoreStatus.connected && prev != CoreStatus.connected) {
@@ -102,7 +107,10 @@ class _CoreContainerState extends ConsumerState<CoreManager>
     if (ref.read(coreStatusProvider) != CoreStatus.connected) {
       return;
     }
-    if (ref.read(appSettingProvider).openLogs) {
+    final allowLogs =
+        ref.read(appSettingProvider).openLogs &&
+        (!system.isAndroid || ref.read(appVisibleProvider));
+    if (allowLogs) {
       _core.startLog();
     } else {
       _core.stopLog();

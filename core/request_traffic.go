@@ -97,6 +97,9 @@ func (w *requestTrafficWatch) clear() {
 }
 
 func watchRequestTraffic(tracker statistic.Tracker) {
+	if isTelemetryPaused() {
+		return
+	}
 	if currentRequestTraffic.add(tracker) {
 		go runRequestTrafficWatch()
 	}
@@ -106,7 +109,7 @@ func runRequestTrafficWatch() {
 	ticker := time.NewTicker(requestTrafficInterval)
 	defer ticker.Stop()
 	for range ticker.C {
-		if !hasEventListener() {
+		if !hasEventListener() || isTelemetryPaused() {
 			currentRequestTraffic.clear()
 			return
 		}

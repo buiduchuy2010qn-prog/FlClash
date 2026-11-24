@@ -28,7 +28,7 @@ import (
 const (
 	proxyHostCacheFilename      = "proxy_host_cache.json"
 	proxyHostLookupTimeout      = 2500 * time.Millisecond
-	proxyHostRefreshMinSpacing  = 60 * time.Second
+	proxyHostRefreshMinSpacing  = 3 * time.Minute
 	proxyHostPersistDelay       = 500 * time.Millisecond
 	proxyHostPrewarmConcurrency = 4
 )

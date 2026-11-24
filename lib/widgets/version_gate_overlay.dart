@@ -16,10 +16,8 @@ class VersionGateOverlay extends ConsumerWidget {
   Future<void> _openDownload(String rawUrl) async {
     final uri = Uri.tryParse(rawUrl);
     if (uri != null && (uri.scheme == 'https' || uri.scheme == 'http')) {
-      final opened = await launchUrl(uri);
-      if (opened) return;
+      await launchUrl(uri);
     }
-    await openReleasePage();
   }
 
   @override

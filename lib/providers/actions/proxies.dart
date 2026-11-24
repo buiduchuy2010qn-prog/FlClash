@@ -27,10 +27,16 @@ class _DelayTestJob {
 class ProxiesAction extends _$ProxiesAction {
   static const _builtinNames = {'DIRECT', 'REJECT', 'REJECT-DROP', 'PASS'};
   static const _failoverSlowDelayMs = 2500;
-  static const _watchdogInterval = Duration(seconds: 45);
+  static const _foregroundWatchdogInterval = Duration(seconds: 60);
+  static const _backgroundWatchdogInterval = Duration(seconds: 180);
+  static const _resumeCheckCooldown = Duration(seconds: 30);
+  static const _failoverConfirmDelay = Duration(milliseconds: 500);
+  static const _autoSwitchHysteresisMs = 100;
   CoreController get _core => ref.read(coreHandlerProvider);
 
-  final TaskPool _delayTestPool = TaskPool(maxConcurrentDelayTests);
+  final TaskPool _delayTestPool = TaskPool(
+    system.isAndroid ? maxConcurrentMobileDelayTests : maxConcurrentDelayTests,
+  );
 
   final List<_DelayTestJob> _delayTestJobs = [];
 
@@ -48,6 +54,8 @@ class ProxiesAction extends _$ProxiesAction {
 
   int _lastAutoPingEpoch = -1;
 
+  DateTime? _lastAutoCheckAt;
+
   final Map<String, String> _pendingSelectedRollback = {};
 
   @override
@@ -63,6 +71,7 @@ class ProxiesAction extends _$ProxiesAction {
         _watchdogTimer?.cancel();
         _watchdogTimer = null;
         _lastAutoPingEpoch = -1;
+        _lastAutoCheckAt = null;
         cancelDelayTests();
       }
     });
@@ -72,11 +81,24 @@ class ProxiesAction extends _$ProxiesAction {
         _watchdogTimer?.cancel();
         _watchdogTimer = null;
         _lastAutoPingEpoch = -1;
+        _lastAutoCheckAt = null;
         return;
       }
       if (prev == null) {
         _scheduleAutoPing();
         _startWatchdog();
+      }
+    });
+    ref.listen(appVisibleProvider, (prev, next) {
+      if (prev == next || ref.read(runTimeProvider) == null) {
+        return;
+      }
+      _startWatchdog();
+      if (next &&
+          (_lastAutoCheckAt == null ||
+              DateTime.now().difference(_lastAutoCheckAt!) >=
+                  _resumeCheckCooldown)) {
+        _scheduleAutoPing();
       }
     });
     ref.listen(groupsProvider, (prev, next) {
@@ -108,7 +130,10 @@ class ProxiesAction extends _$ProxiesAction {
 
   void _startWatchdog() {
     _watchdogTimer?.cancel();
-    _watchdogTimer = Timer.periodic(_watchdogInterval, (_) {
+    final interval = ref.read(appVisibleProvider)
+        ? _foregroundWatchdogInterval
+        : _backgroundWatchdogInterval;
+    _watchdogTimer = Timer.periodic(interval, (_) {
       if (ref.read(runTimeProvider) == null ||
           ref.read(coreStatusProvider) != CoreStatus.connected ||
           !ref.read(autoFailoverProvider) ||
@@ -134,6 +159,7 @@ class ProxiesAction extends _$ProxiesAction {
     if (primary.all.isEmpty) {
       return;
     }
+    _lastAutoCheckAt = DateTime.now();
     final groups = ref.read(groupsProvider);
     final selectedMap = ref.read(
       currentProfileProvider.select((state) => state?.selectedMap ?? {}),
@@ -179,7 +205,31 @@ class ProxiesAction extends _$ProxiesAction {
     if (unhealthy &&
         primary.type == GroupType.Selector &&
         ref.read(autoFailoverProvider)) {
-      await selectFastestProxy(primary.name, automatic: true);
+      await Future<void>.delayed(_failoverConfirmDelay);
+      if (ref.read(runTimeProvider) == null ||
+          ref.read(coreStatusProvider) != CoreStatus.connected ||
+          !ref.read(autoFailoverProvider)) {
+        return;
+      }
+      await _runDelayTests([
+        (proxies: [leafProxy], testUrl: defaultTestUrl),
+      ]);
+      if (ref.read(runTimeProvider) == null ||
+          ref.read(coreStatusProvider) != CoreStatus.connected) {
+        return;
+      }
+      final confirmedDelay = computeProxyDelayState(
+        proxyName: leafProxy.name,
+        testUrl: defaultTestUrl,
+        groups: ref.read(groupsProvider),
+        selectedMap: ref.read(
+          currentProfileProvider.select((state) => state?.selectedMap ?? {}),
+        ),
+        delayMap: ref.read(delayDataSourceProvider),
+      ).delay;
+      if (confirmedDelay <= 0 || confirmedDelay >= _failoverSlowDelayMs) {
+        await selectFastestProxy(primary.name, automatic: true);
+      }
     }
   }
 
@@ -254,6 +304,28 @@ class ProxiesAction extends _$ProxiesAction {
       final selected = selectedMap[groupName] ?? '';
       final currentName = group.getCurrentSelectedName(selected);
       final switched = bestProxy.name != currentName;
+      if (automatic && switched) {
+        final currentLeaf = computeRealSelectedProxyState(
+          currentName,
+          groups: groups,
+          selectedMap: selectedMap,
+        );
+        final currentLookupName = currentLeaf.proxyName.isNotEmpty
+            ? currentLeaf.proxyName
+            : currentName;
+        final currentDelay = computeProxyDelayState(
+          proxyName: currentLookupName,
+          testUrl: defaultTestUrl,
+          groups: groups,
+          selectedMap: selectedMap,
+          delayMap: delayMap,
+        ).delay;
+        if (currentDelay > 0 &&
+            currentDelay < _failoverSlowDelayMs &&
+            bestDelay + _autoSwitchHysteresisMs >= currentDelay) {
+          return;
+        }
+      }
       if (switched && group.type == GroupType.Selector) {
         await changeProxy(groupName: groupName, proxyName: bestProxy.name);
         updateGroupsDebounce();

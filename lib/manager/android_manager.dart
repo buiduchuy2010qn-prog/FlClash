@@ -46,6 +46,11 @@ class _AndroidContainerState extends ConsumerState<AndroidManager>
         }
       }
     });
+    ref.listenManual(appVisibleProvider, (prev, next) {
+      if (prev != next) {
+        unawaited(service?.setTelemetryPaused(!next));
+      }
+    }, fireImmediately: true);
     service?.addListener(this);
     app?.onPackagesChanged = _reloadPackages;
     app?.onSwitchFastestProxy = _switchFastestProxy;

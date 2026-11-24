@@ -184,6 +184,7 @@ void main() {
     late HttpClientAdapter adapter;
     late Future<bool> Function(Uri) launch;
     late List<Uri> launched;
+    late bool? Function(String, String) runInstaller;
 
     setUp(() async {
       home = await Directory.systemTemp.createTemp('self_update');
@@ -196,6 +197,8 @@ void main() {
         launched.add(uri);
         return true;
       };
+      runInstaller = runWindowsUpdateInstaller;
+      runWindowsUpdateInstaller = (_, _) => null;
       resolveSelfUpdateAsset = () => (
         os: ReleaseOs.android,
         arch: ReleaseArch.arm64,
@@ -208,6 +211,7 @@ void main() {
       resolveSelfUpdateAsset = resolveAsset;
       request.releaseDio.httpClientAdapter = adapter;
       launchReleasePage = launch;
+      runWindowsUpdateInstaller = runInstaller;
       await home.delete(recursive: true);
     });
 
@@ -260,37 +264,41 @@ void main() {
       await tapCancel(tester);
     });
 
-    testWidgets('opens the release page for a file the release lacks', (
-      tester,
-    ) async {
-      request.releaseDio.httpClientAdapter = _ReleaseAdapter(
-        sums: '$digest  FlClash-0.8.96-android-armv7.apk\n',
-        asset: () => ResponseBody.fromBytes(package, 200),
-      );
+    testWidgets(
+      'reports a missing release file without opening the repository page',
+      (tester) async {
+        request.releaseDio.httpClientAdapter = _ReleaseAdapter(
+          sums: '$digest  FlClash-0.8.96-android-armv7.apk\n',
+          asset: () => ResponseBody.fromBytes(package, 200),
+        );
 
-      final printed = <String>[];
-      final previousPrint = debugPrint;
-      debugPrint = (message, {wrapWidth}) => printed.add(message ?? '');
-      addTearDown(() => debugPrint = previousPrint);
+        final printed = <String>[];
+        final previousPrint = debugPrint;
+        debugPrint = (message, {wrapWidth}) => printed.add(message ?? '');
+        addTearDown(() => debugPrint = previousPrint);
 
-      final container = await startUpdate(tester);
-      await settleUntil(tester, () => launched.isNotEmpty);
-      await tester.pump();
+        final container = await startUpdate(tester);
+        await settleUntil(
+          tester,
+          () => printed.any(
+            (m) => m.contains('The update file is not in the release.'),
+          ),
+        );
+        await tester.pump();
 
-      expect(container.read(updateDownloadStateProvider), isNull);
-      expect(launched, [
-        Uri.parse('https://github.com/$repository/releases/latest'),
-      ]);
-      expect(
-        printed,
-        contains(
-          '[APP] banner: The update file is not in the release. '
-          'Download it from the release page.',
-        ),
-      );
-      expect(shows('Update failed'), isFalse);
-      await tester.pump(const Duration(seconds: 10));
-    });
+        expect(container.read(updateDownloadStateProvider), isNull);
+        expect(launched, isEmpty);
+        expect(
+          printed,
+          contains(
+            '[APP] banner: The update file is not in the release. '
+            'Download it from the release page.',
+          ),
+        );
+        expect(shows('Update failed'), isFalse);
+        await tester.pump(const Duration(seconds: 10));
+      },
+    );
 
     testWidgets('downloads without blocking and waits to install', (
       tester,
@@ -398,6 +406,8 @@ void main() {
       ),
     );
     await tester.pump();
+    expect(find.text('github.com/$repository'), findsNothing);
+    expect(find.text('GNU GPL-3.0'), findsOneWidget);
 
     final state = container.read(updateDownloadStateProvider.notifier);
     state.value = const UpdateDownloading(

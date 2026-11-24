@@ -71,6 +71,10 @@ func SetEventListener(handler ResultHandler) {
 	})
 }
 
+func SetTelemetryPaused(paused bool) {
+	core.SetTelemetryPaused(paused)
+}
+
 func StopTun() {
 	core.StopTun()
 }

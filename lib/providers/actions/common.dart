@@ -194,7 +194,7 @@ class CommonAction extends _$CommonAction {
           title: currentAppLocalizations.discoverNewVersion,
           message: _releaseSpan(context, tag, data['body'] as String?),
           confirmText: asset == null
-              ? currentAppLocalizations.goDownload
+              ? currentAppLocalizations.confirm
               : currentAppLocalizations.update,
           cancelText: isUser ? null : currentAppLocalizations.noLongerRemind,
         );
@@ -202,9 +202,7 @@ class CommonAction extends _$CommonAction {
         _isUpdateDialogOpen = false;
       }
       if (res == true) {
-        if (asset == null) {
-          _openReleasePage();
-        } else {
+        if (asset != null) {
           unawaited(_downloadUpdate(tag, updateAssetName(tag, asset)));
         }
       } else if (!isUser && res == false) {
@@ -220,10 +218,6 @@ class CommonAction extends _$CommonAction {
         ),
       );
     }
-  }
-
-  void _openReleasePage() {
-    unawaited(openReleasePage());
   }
 
   /// Downloads the latest release for this build even when it is not newer.
@@ -334,7 +328,6 @@ class CommonAction extends _$CommonAction {
         return;
       }
       if (error is ReleaseFileMissingException) {
-        _openReleasePage();
         dialogs.showBanner(currentAppLocalizations.updateFileMissing);
         return;
       }
@@ -392,7 +385,10 @@ class CommonAction extends _$CommonAction {
       download.tag,
       download.path,
     );
-    final started = windows?.runas(download.path, windowsUpdateArguments(pid));
+    final started = runWindowsUpdateInstaller(
+      download.path,
+      windowsUpdateArguments(pid),
+    );
     if (started == true) {
       await ref.read(systemActionProvider.notifier).handleExit();
     } else {
@@ -405,13 +401,9 @@ class CommonAction extends _$CommonAction {
   }
 
   Future<void> _showUpdateFailure(String message) async {
-    final res = await dialogs.showMessage(
+    await dialogs.showAlert(
       title: currentAppLocalizations.updateFailed,
       message: TextSpan(text: message),
-      confirmText: currentAppLocalizations.goDownload,
     );
-    if (res == true) {
-      _openReleasePage();
-    }
   }
 }

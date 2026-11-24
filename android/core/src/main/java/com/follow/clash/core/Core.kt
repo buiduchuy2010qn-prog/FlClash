@@ -79,6 +79,8 @@ object Core {
         )
     }
 
+    fun setTelemetryPaused(paused: Boolean) = Mobile.setTelemetryPaused(paused)
+
     fun quickSetup(
         initParamsString: String,
         setupParamsString: String,

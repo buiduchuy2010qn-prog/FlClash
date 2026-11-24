@@ -2,6 +2,7 @@ package com.follow.clash.service.modules
 
 import android.app.ActivityManager
 import android.app.Service
+import android.os.PowerManager
 import androidx.core.content.getSystemService
 import com.follow.clash.service.MitmPressure
 import kotlinx.coroutines.CoroutineScope
@@ -9,7 +10,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
-private const val POLL_INTERVAL_MS = 15_000L
+private const val POLL_INTERVAL_MS = 60_000L
 
 // Stands in for the running trim levels Android 14 stopped delivering.
 internal class MemoryPressureModule(
@@ -18,11 +19,14 @@ internal class MemoryPressureModule(
 ) : ServiceModule {
     override fun start() {
         val activityManager = service.getSystemService<ActivityManager>() ?: return
+        val powerManager = service.getSystemService<PowerManager>()
         scope.launch {
             val info = ActivityManager.MemoryInfo()
             while (isActive) {
-                activityManager.getMemoryInfo(info)
-                MitmPressure.onMemoryInfo(info)
+                if (powerManager?.isInteractive != false) {
+                    activityManager.getMemoryInfo(info)
+                    MitmPressure.onMemoryInfo(info)
+                }
                 delay(POLL_INTERVAL_MS)
             }
         }

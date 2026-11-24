@@ -73,7 +73,7 @@ internal class NotificationModule(
                 combine(
                     flow {
                         while (true) {
-                            delay(1_000)
+                            delay(2_500)
                             emit(Unit)
                         }
                     },
