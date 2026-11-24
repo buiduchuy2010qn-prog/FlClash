@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/metacubex/mihomo/component/resolver"
+	"github.com/metacubex/mihomo/config"
+	"github.com/metacubex/mihomo/constant"
 	D "github.com/miekg/dns"
 	"go.yaml.in/yaml/v3"
 )
@@ -52,8 +54,10 @@ dns:
 			} `yaml:"sniff"`
 		} `yaml:"sniffer"`
 		DNS struct {
+			PreferH3              bool     `yaml:"prefer-h3"`
 			UseHosts              bool     `yaml:"use-hosts"`
 			RespectRules          bool     `yaml:"respect-rules"`
+			Nameserver            []string `yaml:"nameserver"`
 			DefaultNameserver     []string `yaml:"default-nameserver"`
 			ProxyServerNameserver []string `yaml:"proxy-server-nameserver"`
 			DirectNameserver      []string `yaml:"direct-nameserver"`
@@ -69,11 +73,28 @@ dns:
 	if !slices.Contains(parsed.Hosts["1dot1dot1dot1.cloudflare-dns.com"], "1.1.1.1") {
 		t.Errorf("hosts missing DoT static entry: %#v", parsed.Hosts)
 	}
-	if !parsed.Sniffer.Enable || !slices.Contains(parsed.Sniffer.Sniff["TLS"].Ports, "853") {
-		t.Errorf("sniffer missing TLS DoT port 853: %#v", parsed.Sniffer)
+	if !parsed.Sniffer.Enable ||
+		!slices.Contains(parsed.Sniffer.Sniff["TLS"].Ports, "853") ||
+		!slices.Contains(parsed.Sniffer.Sniff["TLS"].Ports, "5228") ||
+		!slices.Contains(parsed.Sniffer.Sniff["TLS"].Ports, "5229") ||
+		!slices.Contains(parsed.Sniffer.Sniff["TLS"].Ports, "5230") {
+		t.Errorf("sniffer missing TLS DoT/FCM ports: %#v", parsed.Sniffer)
+	}
+	if parsed.DNS.PreferH3 {
+		t.Errorf("dns prefer-h3 = true, want false")
 	}
 	if !parsed.DNS.RespectRules || !parsed.DNS.UseHosts {
 		t.Errorf("dns respect-rules/use-hosts not enabled: %+v", parsed.DNS)
+	}
+	for _, legacy := range []string{"1.1.1.1", "8.8.8.8"} {
+		if slices.Contains(parsed.DNS.Nameserver, legacy) {
+			t.Errorf("dns.nameserver still contains bare UDP resolver %q: %v", legacy, parsed.DNS.Nameserver)
+		}
+	}
+	for _, wantNS := range androidTCPDNSResolvers {
+		if !slices.Contains(parsed.DNS.Nameserver, wantNS) {
+			t.Errorf("dns.nameserver missing TCP/DoH resolver %q: %v", wantNS, parsed.DNS.Nameserver)
+		}
 	}
 	if !slices.Contains(parsed.DNS.DefaultNameserver, "system") ||
 		!slices.Contains(parsed.DNS.ProxyServerNameserver, "system") ||
@@ -81,8 +102,11 @@ dns:
 		t.Errorf("dns missing system bootstrap nameserver: %+v", parsed.DNS)
 	}
 	if !slices.Contains(parsed.DNS.FakeIPFilter, "1dot1dot1dot1.cloudflare-dns.com") ||
-		!slices.Contains(parsed.DNS.FakeIPFilter, "connectivitycheck.gstatic.com") {
-		t.Errorf("fake-ip-filter missing DoT/connectivity domains: %v", parsed.DNS.FakeIPFilter)
+		!slices.Contains(parsed.DNS.FakeIPFilter, "connectivitycheck.gstatic.com") ||
+		!slices.Contains(parsed.DNS.FakeIPFilter, "connectivitycheck.android.com") ||
+		!slices.Contains(parsed.DNS.FakeIPFilter, "mtalk.google.com") ||
+		!slices.Contains(parsed.DNS.FakeIPFilter, "alt1-mtalk.google.com") {
+		t.Errorf("fake-ip-filter missing DoT/connectivity/FCM domains: %v", parsed.DNS.FakeIPFilter)
 	}
 }
 
@@ -96,6 +120,7 @@ func TestOptimizeConfigDocumentPreservesExplicitDisables(t *testing.T) {
 dns:
   enable: true
   respect-rules: false
+  prefer-h3: true
   fake-ip-filter-mode: whitelist
   fake-ip-filter:
     - only.me
@@ -115,6 +140,7 @@ dns:
 			Enable bool `yaml:"enable"`
 		} `yaml:"sniffer"`
 		DNS struct {
+			PreferH3     bool     `yaml:"prefer-h3"`
 			RespectRules bool     `yaml:"respect-rules"`
 			FakeIPFilter []string `yaml:"fake-ip-filter"`
 		} `yaml:"dns"`
@@ -128,8 +154,38 @@ dns:
 	if parsed.DNS.RespectRules {
 		t.Error("explicit dns.respect-rules=false was overridden")
 	}
+	if !parsed.DNS.PreferH3 {
+		t.Error("explicit dns.prefer-h3=true was overridden")
+	}
 	if len(parsed.DNS.FakeIPFilter) != 1 || parsed.DNS.FakeIPFilter[0] != "only.me" {
 		t.Errorf("whitelist fake-ip-filter was polluted: %v", parsed.DNS.FakeIPFilter)
+	}
+
+	const ruleInput = `dns:
+  enable: true
+  fake-ip-filter-mode: rule
+  fake-ip-filter:
+    - DOMAIN,example.com,real-ip
+`
+	var ruleDoc yaml.Node
+	if err := yaml.Unmarshal([]byte(ruleInput), &ruleDoc); err != nil {
+		t.Fatalf("unmarshal ruleInput: %v", err)
+	}
+	optimizeConfigDocument(&ruleDoc, nil)
+	ruleOut, err := yaml.Marshal(&ruleDoc)
+	if err != nil {
+		t.Fatalf("marshal ruleOut: %v", err)
+	}
+	var parsedRule struct {
+		DNS struct {
+			FakeIPFilter []string `yaml:"fake-ip-filter"`
+		} `yaml:"dns"`
+	}
+	if err := yaml.Unmarshal(ruleOut, &parsedRule); err != nil {
+		t.Fatalf("decode ruleOut: %v", err)
+	}
+	if len(parsedRule.DNS.FakeIPFilter) != 1 || parsedRule.DNS.FakeIPFilter[0] != "DOMAIN,example.com,real-ip" {
+		t.Errorf("rule-mode fake-ip-filter was polluted with plain domains: %v", parsedRule.DNS.FakeIPFilter)
 	}
 }
 
@@ -199,7 +255,9 @@ func TestEnsureAndroidDNSStripsSystemNameserver(t *testing.T) {
   enhanced-mode: fake-ip
   nameserver:
     - system://
-    - https://1.1.1.1/dns-query
+    - 1.1.1.1
+    - udp://8.8.8.8:53
+    - https://9.9.9.9/dns-query
 `
 	var doc yaml.Node
 	if err := yaml.Unmarshal([]byte(input), &doc); err != nil {
@@ -222,16 +280,83 @@ func TestEnsureAndroidDNSStripsSystemNameserver(t *testing.T) {
 	if err := yaml.Unmarshal(out, &parsed); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
-	if slices.Contains(parsed.DNS.Nameserver, "system") || slices.Contains(parsed.DNS.Nameserver, "system://") {
-		t.Errorf("dns.nameserver still contains system entry: %v", parsed.DNS.Nameserver)
+	for _, removed := range []string{"system", "system://", "1.1.1.1", "udp://8.8.8.8:53"} {
+		if slices.Contains(parsed.DNS.Nameserver, removed) {
+			t.Errorf("dns.nameserver still contains legacy entry %q: %v", removed, parsed.DNS.Nameserver)
+		}
 	}
-	if !slices.Contains(parsed.DNS.Nameserver, "1.1.1.1") || !slices.Contains(parsed.DNS.Nameserver, "8.8.8.8") {
-		t.Errorf("dns.nameserver missing plain resolvers: %v", parsed.DNS.Nameserver)
+	if !slices.Contains(parsed.DNS.Nameserver, "https://9.9.9.9/dns-query") {
+		t.Errorf("dns.nameserver lost custom entry: %v", parsed.DNS.Nameserver)
+	}
+	for _, wantNS := range androidTCPDNSResolvers {
+		if !slices.Contains(parsed.DNS.Nameserver, wantNS) {
+			t.Errorf("dns.nameserver missing TCP/DoH resolver %q: %v", wantNS, parsed.DNS.Nameserver)
+		}
 	}
 	if !slices.Contains(parsed.DNS.DefaultNameserver, "system") ||
 		!slices.Contains(parsed.DNS.ProxyServerNameserver, "system") ||
 		!slices.Contains(parsed.DNS.DirectNameserver, "system") {
 		t.Errorf("bootstrap resolvers missing system: %+v", parsed.DNS)
+	}
+}
+
+func TestOptimizeConfigDocumentAndroidParsesInMihomo(t *testing.T) {
+	previousAndroid := isAndroidRuntime
+	isAndroidRuntime = true
+	previousHome := constant.Path.HomeDir()
+	home := t.TempDir()
+	constant.SetHomeDir(home)
+	t.Cleanup(func() {
+		isAndroidRuntime = previousAndroid
+		constant.SetHomeDir(previousHome)
+		setDeferredGeoResources(nil)
+	})
+
+	const input = `mode: global
+proxies:
+  - name: n1
+    type: vless
+    server: node.example.net
+    port: 443
+    uuid: 11111111-1111-1111-1111-111111111111
+    tls: true
+    network: ws
+dns:
+  enable: true
+  enhanced-mode: fake-ip
+  nameserver:
+    - 1.1.1.1
+    - 8.8.8.8
+rules:
+  - MATCH,n1
+`
+	var doc yaml.Node
+	if err := yaml.Unmarshal([]byte(input), &doc); err != nil {
+		t.Fatalf("unmarshal input: %v", err)
+	}
+	optimizeConfigDocument(&doc, nil)
+
+	out, err := yaml.Marshal(&doc)
+	if err != nil {
+		t.Fatalf("marshal optimized YAML: %v", err)
+	}
+	raw := config.DefaultRawConfig()
+	if err := yaml.Unmarshal(out, raw); err != nil {
+		t.Fatalf("decode raw config: %v\n%s", err, string(out))
+	}
+	if !raw.Profile.StoreFakeIP {
+		t.Fatal("expected optimized raw config to enable profile.store-fake-ip")
+	}
+	// Keep fake-ip pool in memory during this host parse test so bbolt's
+	// process-wide cache.db handle does not lock t.TempDir() on Windows.
+	raw.Profile.StoreFakeIP = false
+	prepareRawConfigForParse(raw)
+	cfg, err := config.ParseRawConfig(raw)
+	if err != nil {
+		t.Fatalf("config.ParseRawConfig failed on optimized Android config: %v\n%s", err, string(out))
+	}
+	if cfg == nil || cfg.DNS == nil || !cfg.DNS.Enable {
+		t.Fatalf("expected parsed config with active DNS, got: %#v", cfg)
 	}
 }
 

@@ -7,6 +7,7 @@ import android.content.ServiceConnection
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import androidx.core.content.ContextCompat
 import com.follow.clash.common.GlobalState
 import com.follow.clash.common.intent
 import com.follow.clash.core.Core
@@ -99,6 +100,14 @@ object ServiceController {
         }
 
         val currentBinding = binding ?: return@withLock false
+        if (runtime == null) {
+            runCatching {
+                val startIntent = Intent(nextIntent).setAction(ManagedService.ACTION_INTERNAL_START)
+                ContextCompat.startForegroundService(GlobalState.application, startIntent)
+            }.onFailure { error ->
+                GlobalState.log("Unable to promote foreground service: $error")
+            }
+        }
         val result = currentBinding.useService { service -> service.start() }
         if (result.isFailure) {
             GlobalState.log("Unable to start background service: ${result.exceptionOrNull()}")
@@ -107,6 +116,7 @@ object ServiceController {
                     GlobalState.log("Unable to clean up failed background service start: $error")
                 }
             release()
+            stopServices()
             return@withLock false
         }
 

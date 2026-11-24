@@ -54,6 +54,7 @@ object NetworkObserver {
         Handler(HandlerThread("NetworkObserve").apply { start() }.looper)
     }
     private var currentDnsList = listOf<String>()
+    @Volatile
     private var currentNetwork: Network? = null
     private var started = false
 
@@ -141,6 +142,13 @@ object NetworkObserver {
     }
 
     private val updateDnsTask = Runnable(::updateDns)
+
+    fun isActiveNetworkUnvalidatedCellular(): Boolean {
+        val network = currentNetwork ?: return false
+        val info = networkInfos[network] ?: return false
+        val capabilities = connectivity?.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) && !info.validated
+    }
 
     fun setUnderlyingNetworkListener(listener: ((Network?) -> Unit)?) {
         underlyingListener = listener

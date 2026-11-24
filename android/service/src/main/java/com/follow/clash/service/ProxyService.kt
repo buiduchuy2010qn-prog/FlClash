@@ -35,6 +35,8 @@ class ProxyService : Service(), ManagedService {
 
     override fun onBind(intent: Intent): IBinder = binder
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
+
     override fun start() {
         try {
             modules.start()

@@ -333,10 +333,17 @@ void main() {
       expect(clash.generalOverrideKeys, contains(GeneralOverrideKey.ipv6));
       expect(clash.tun.mtu, 1400);
       expect(clash.dns.ipv6, isFalse);
+      expect(clash.dns.preferH3, isFalse);
       expect(clash.dns.useHosts, isTrue);
       expect(clash.dns.respectRules, isTrue);
       expect(clash.dns.enhancedMode, DnsMode.fakeIp);
-      expect(clash.dns.nameserver, ['1.1.1.1', '8.8.8.8']);
+      expect(clash.dns.nameserver, [
+        'https://1.1.1.1/dns-query',
+        'https://8.8.8.8/dns-query',
+        'tcp://1.1.1.1:53',
+        'tcp://8.8.8.8:53',
+      ]);
+      expect(clash.dnsOverrideKeys, contains(DnsOverrideKey.preferH3));
       expect(clash.dns.defaultNameserver, ['system']);
       expect(clash.dns.proxyServerNameserver, ['system']);
       expect(clash.dns.directNameserver, ['system']);
