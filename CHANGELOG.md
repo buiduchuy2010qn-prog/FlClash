@@ -1,5 +1,15 @@
 # Changelog
 
+## Fork Modifications (v0.9.10 – v0.9.15, November 2026)
+
+Modified fork maintained by **Bùi Đức Huy (`@buiduchuy2010qn-prog`)** under GNU GPL-3.0 (see [LICENSE](LICENSE), [NOTICE.md](NOTICE.md), and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)):
+
+- **2026-11-24 (`v0.9.15`)** — Improved Android push notification stability (TCP keepalive socket tuning, push endpoint Fake-IP bypass, TLS sniffer ports), fixed home-screen widget connectivity under VPN (TUN QUIC filter fallback to HTTPS/TCP and DoH/TCP DNS defaults), and hardened `START_STICKY` / foreground notification lifecycle.
+- **2026-11-24 (`v0.9.14`)** — Reduced background battery usage and thermal load (paused off-screen request/DNS/log telemetry streams, throttled notification and memory polling), stabilized proxy failover hysteresis, requested optional Android battery optimization exemption on mobile preset toggle, and added GPL-3.0 modification & security documentation ([NOTICE.md](NOTICE.md), [SECURITY.md](SECURITY.md)).
+- **2026-11-24 (`v0.9.13`)** — Added persistent RAM/disk proxy host DNS resolution cache with captive/bogon filtering, tightened proxy group auto-selection failover thresholds and 45s watchdog, ordered IPv4 resolvers first in `NetworkObserver`, and filtered OTA update checks by host platform.
+- **2026-11-24 (`v0.9.12`)** — Added static DoT host mappings, `profile.store-fake-ip`, TLS sniffer defaults, mobile TUN MTU and DNS configuration defaults, HTTP 200-299 health checks, extended V2Ray share-link compatibility, and standardized persistent Android release signing for seamless OTA upgrades.
+- **2026-11-23 (`v0.9.10` – `v0.9.11`)** — Expanded Vietnamese localization, in-app SHA-256 verified OTA update flow, subscription compatibility helpers, Android auto-VPN / boot behavior, 400-day daily traffic statistics, and hotspot sharing controls.
+
 ## v0.9.4 (2026-11-19)
 
 **Features**

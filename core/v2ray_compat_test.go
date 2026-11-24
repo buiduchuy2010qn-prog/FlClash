@@ -158,15 +158,15 @@ func TestIsQuicRejectRuleAndStrip(t *testing.T) {
 	}
 }
 
-func TestDecodeShareLinksZeroRatingCompat(t *testing.T) {
-	vmessJSON := `{"v":"2","ps":"vmess-0n","add":"104.16.1.1","port":"443","id":"11111111-1111-1111-1111-111111111111","aid":"0","net":"ws","type":"none","host":"cdn.zero.vn","path":"/vm","tls":"tls","allowInsecure":1}`
+func TestDecodeShareLinksMobileCompat(t *testing.T) {
+	vmessJSON := `{"v":"2","ps":"vmess-ws","add":"104.16.1.1","port":"443","id":"11111111-1111-1111-1111-111111111111","aid":"0","net":"ws","type":"none","host":"cdn.example.net","path":"/vm","tls":"tls","allowInsecure":1}`
 	vmessLink := "vmess://" + base64.StdEncoding.EncodeToString([]byte(vmessJSON))
 
 	lines := []string{
-		"vless://11111111-1111-1111-1111-111111111111@1.2.3.4:443?security=tls&type=ws&host=bug.viettel.vn&allowInsecure=1#VN-4G",
-		"vless://11111111-1111-1111-1111-111111111111@1.2.3.4:443?security=tls&sni=m.tiktok.com&type=ws&host=worker.example.dev#ExplicitSNI",
-		"trojan://secretpass@5.6.7.8:443?type=ws&host=ws.bughost.vn&path=/ws&allowInsecure=true#TrojanWS",
-		"vless://11111111-1111-1111-1111-111111111111@1.2.3.4:80?security=none&type=tcp&headerType=http&host=a.tiktok.com,b.tiktokcdn.com&path=/v1#HttpObfs",
+		"vless://11111111-1111-1111-1111-111111111111@1.2.3.4:443?security=tls&type=ws&host=ws.example.com&allowInsecure=1#Mobile-WS",
+		"vless://11111111-1111-1111-1111-111111111111@1.2.3.4:443?security=tls&sni=sni.example.com&type=ws&host=worker.example.dev#ExplicitSNI",
+		"trojan://secretpass@5.6.7.8:443?type=ws&host=ws-host.example.com&path=/ws&allowInsecure=true#TrojanWS",
+		"vless://11111111-1111-1111-1111-111111111111@1.2.3.4:80?security=none&type=tcp&headerType=http&host=a.example.org,b.example.org&path=/v1#HttpObfs",
 		"vless://11111111-1111-1111-1111-111111111111@1.2.3.4:443?type=splithttp&security=tls&sni=split.example&path=/xh#Split",
 		vmessLink,
 	}
@@ -176,19 +176,19 @@ func TestDecodeShareLinksZeroRatingCompat(t *testing.T) {
 	}
 
 	p0 := results[0][0]
-	if p0["skip-cert-verify"] != true || p0["servername"] != "bug.viettel.vn" {
-		t.Fatalf("vless bug-host fallback failed: %#v", p0)
+	if p0["skip-cert-verify"] != true || p0["servername"] != "ws.example.com" {
+		t.Fatalf("vless ws host fallback failed: %#v", p0)
 	}
 	p1 := results[1][0]
-	if p1["servername"] != "m.tiktok.com" {
+	if p1["servername"] != "sni.example.com" {
 		t.Fatalf("explicit sni overwritten: %#v", p1)
 	}
 	p2 := results[2][0]
-	if p2["sni"] != "ws.bughost.vn" || p2["skip-cert-verify"] != true || p2["network"] != "ws" {
+	if p2["sni"] != "ws-host.example.com" || p2["skip-cert-verify"] != true || p2["network"] != "ws" {
 		t.Fatalf("trojan ws compat failed: %#v", p2)
 	}
 	wsHeaders, _ := p2["ws-opts"].(map[string]any)["headers"].(map[string]string)
-	if wsHeaders["Host"] != "ws.bughost.vn" {
+	if wsHeaders["Host"] != "ws-host.example.com" {
 		t.Fatalf("trojan ws host missing: %#v", p2["ws-opts"])
 	}
 	p3 := results[3][0]
@@ -196,7 +196,7 @@ func TestDecodeShareLinksZeroRatingCompat(t *testing.T) {
 		t.Fatalf("tcp http headerType failed: %#v", p3)
 	}
 	httpHosts, _ := p3["http-opts"].(map[string]any)["headers"].(map[string]any)["Host"].([]string)
-	if len(httpHosts) != 2 || httpHosts[0] != "a.tiktok.com" || httpHosts[1] != "b.tiktokcdn.com" {
+	if len(httpHosts) != 2 || httpHosts[0] != "a.example.org" || httpHosts[1] != "b.example.org" {
 		t.Fatalf("comma-separated HTTP Host not split: %#v", p3["http-opts"])
 	}
 	p4 := results[4][0]
@@ -204,7 +204,7 @@ func TestDecodeShareLinksZeroRatingCompat(t *testing.T) {
 		t.Fatalf("splithttp -> xhttp mapping failed: %#v", p4)
 	}
 	p5 := results[5][0]
-	if p5["skip-cert-verify"] != true || p5["servername"] != "cdn.zero.vn" {
+	if p5["skip-cert-verify"] != true || p5["servername"] != "cdn.example.net" {
 		t.Fatalf("vmess JSON compat failed: %#v", p5)
 	}
 

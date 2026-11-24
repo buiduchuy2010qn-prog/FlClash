@@ -26,10 +26,10 @@ void main() {
 
   test('parseProfileTitleHeader decodes base64 and plain headers', () {
     final encoded = base64Url
-        .encode(utf8.encode('Gói 4G Cao Cấp'))
+        .encode(utf8.encode('Cấu hình di động'))
         .replaceAll('=', '');
-    expect(parseProfileTitleHeader('base64:$encoded'), 'Gói 4G Cao Cấp');
-    expect(parseProfileTitleHeader('  BASE64:QkVUTFRPTkU= '), 'BETLTONE');
+    expect(parseProfileTitleHeader('base64:$encoded'), 'Cấu hình di động');
+    expect(parseProfileTitleHeader('  BASE64:RVhBTVBMRQ== '), 'EXAMPLE');
     expect(parseProfileTitleHeader('Plain Label'), 'Plain Label');
     expect(parseProfileTitleHeader('   '), isNull);
     expect(parseProfileTitleHeader(null), isNull);

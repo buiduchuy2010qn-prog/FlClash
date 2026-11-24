@@ -600,7 +600,7 @@ class Optimize4gPresetSection extends ConsumerWidget {
     final notifier = ref.read(optimize4gPresetProvider.notifier);
     notifier.value = enable;
     if (enable) {
-      notifier.applyZeroRatingPreset();
+      notifier.applyMobilePreset();
       if (system.isAndroid) {
         unawaited(_ensureBatteryExemption(ref));
       }

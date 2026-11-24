@@ -1,10 +1,10 @@
 export 'action.dart';
 export 'app.dart';
-export 'beltlane_features.dart';
 export 'config.dart';
 export 'core.dart';
 export 'daily_traffic.dart';
 export 'database.dart';
+export 'mobile_features.dart';
 export 'on_demand.dart';
 export 'route_state.dart';
 export 'smart_proxy.dart';

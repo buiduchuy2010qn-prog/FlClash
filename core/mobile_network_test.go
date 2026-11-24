@@ -15,7 +15,7 @@ import (
 	"go.yaml.in/yaml/v3"
 )
 
-func TestOptimizeConfigDocumentAndroidZeroRatingDefaults(t *testing.T) {
+func TestOptimizeConfigDocumentAndroidMobileDefaults(t *testing.T) {
 	previousAndroid := isAndroidRuntime
 	isAndroidRuntime = true
 	t.Cleanup(func() { isAndroidRuntime = previousAndroid })
@@ -430,7 +430,7 @@ func TestResilientProxyHostResolverCacheAndCaptiveFilter(t *testing.T) {
 	failingUpstream := &stubResolver{ips: []netip.Addr{netip.MustParseAddr("10.149.204.129")}}
 	r2 := newResilientProxyHostResolver(failingUpstream, cachePath)
 	r2.dohQuery = func(_ context.Context, _ string) ([]netip.Addr, error) {
-		return nil, errors.New("carrier blocked doh")
+		return nil, errors.New("doh unreachable")
 	}
 	fallback, err := r2.LookupIPv4(context.Background(), "node2.example.net")
 	if err != nil || len(fallback) != 1 || fallback[0] != netip.MustParseAddr("172.67.168.158") {

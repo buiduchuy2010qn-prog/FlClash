@@ -146,11 +146,11 @@ class Optimize4gPresetNotifier extends _PersistedBoolNotifier {
   @override
   void onHydrated(bool saved) {
     if (saved) {
-      applyZeroRatingPreset();
+      applyMobilePreset();
     }
   }
 
-  void applyZeroRatingPreset() {
+  void applyMobilePreset() {
     if (_disposed) return;
     const dnsResolvers = [
       'https://1.1.1.1/dns-query',
