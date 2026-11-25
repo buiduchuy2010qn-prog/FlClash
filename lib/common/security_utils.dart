@@ -1,3 +1,4 @@
+import 'package:fl_clash/common/subscription_insights.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 
@@ -89,40 +90,61 @@ bool isEssentialBypassPackage(String packageName) {
   );
 }
 
-enum SubscriptionAlertKind { expiredOrExhausted, lowQuota, expiringSoon }
+enum SubscriptionAlertKind {
+  expiredOrExhausted,
+  deviceLimitExceeded,
+  lowQuota,
+  expiringSoon,
+}
 
 class SubscriptionAlert {
   const SubscriptionAlert({
     required this.kind,
     this.remainingPercent,
     this.daysLeft,
+    this.onlineDevices,
+    this.deviceLimit,
   });
 
   final SubscriptionAlertKind kind;
   final int? remainingPercent;
   final int? daysLeft;
+  final int? onlineDevices;
+  final int? deviceLimit;
 }
 
 SubscriptionAlert? evaluateSubscriptionAlert(
   SubscriptionInfo? info, {
+  SubscriptionDeviceMeta? deviceMeta,
   DateTime? now,
 }) {
+  final refNow = now ?? DateTime.now();
+  if (info != null && (info.total > 0 || info.expire > 0)) {
+    final expireDate = info.expireDate;
+    if (expireDate != null && !expireDate.isAfter(refNow)) {
+      return const SubscriptionAlert(
+        kind: SubscriptionAlertKind.expiredOrExhausted,
+      );
+    }
+    final used = info.upload + info.download;
+    if (info.total > 0 && used >= info.total) {
+      return const SubscriptionAlert(
+        kind: SubscriptionAlertKind.expiredOrExhausted,
+      );
+    }
+  }
+  if (deviceMeta != null && deviceMeta.isOverLimit) {
+    return SubscriptionAlert(
+      kind: SubscriptionAlertKind.deviceLimitExceeded,
+      onlineDevices: deviceMeta.onlineDevices,
+      deviceLimit: deviceMeta.deviceLimit,
+    );
+  }
   if (info == null || (info.total <= 0 && info.expire <= 0)) {
     return null;
   }
-  final refNow = now ?? DateTime.now();
   final expireDate = info.expireDate;
-  if (expireDate != null && !expireDate.isAfter(refNow)) {
-    return const SubscriptionAlert(
-      kind: SubscriptionAlertKind.expiredOrExhausted,
-    );
-  }
   final used = info.upload + info.download;
-  if (info.total > 0 && used >= info.total) {
-    return const SubscriptionAlert(
-      kind: SubscriptionAlertKind.expiredOrExhausted,
-    );
-  }
   if (info.total > 0) {
     final usedRatio = used / info.total;
     if (usedRatio >= 0.90) {

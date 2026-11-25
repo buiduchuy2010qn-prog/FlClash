@@ -85,6 +85,18 @@ class CoreAction extends _$CoreAction {
     await _core.closeConnections();
   }
 
+  Future<void> clearDnsCache() async {
+    await _core.clearDnsCache();
+  }
+
+  Future<void> resetConnections() async {
+    await _core.resetConnections();
+  }
+
+  Future<SessionFootprint> inspectSessionFootprint() async {
+    return _core.getConnectionsWith(analyzeSessionFootprint);
+  }
+
   Future<void> reportNetworkChange() async {
     if (ref.read(coreStatusProvider) != CoreStatus.connected) {
       return;

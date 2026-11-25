@@ -205,11 +205,23 @@ extension ProfileExtension on Profile {
     return _getFile();
   }
 
-  Future<Profile> update({required ValidateConfig validate}) async {
+  Future<Profile> update({
+    required ValidateConfig validate,
+    void Function(SubscriptionDeviceMeta meta)? onDeviceMeta,
+  }) async {
     final response = await request.getSubscriptionResponseForUrl(url);
     final disposition = response.headers.value('content-disposition');
     final profileTitle = response.headers.value('profile-title');
     final userinfo = response.headers.value('subscription-userinfo');
+    final bytes = decompressUnlabeled(response.data ?? Uint8List(0));
+    final deviceMeta = parseSubscriptionDeviceMeta(
+      headers: response.headers.map,
+      userinfoHeader: userinfo,
+      payloadBytes: bytes,
+    );
+    if (deviceMeta != null) {
+      onDeviceMeta?.call(deviceMeta);
+    }
     return copyWith(
       label: label.takeFirstValid([
         parseProfileTitleHeader(profileTitle),
@@ -217,10 +229,7 @@ extension ProfileExtension on Profile {
         defaultLabel,
       ]),
       subscriptionInfo: SubscriptionInfo.formHString(userinfo),
-    ).saveFile(
-      decompressUnlabeled(response.data ?? Uint8List(0)),
-      validate: validate,
-    );
+    ).saveFile(bytes, validate: validate);
   }
 
   Future<Profile> saveFile(

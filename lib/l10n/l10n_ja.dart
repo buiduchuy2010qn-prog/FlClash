@@ -4018,4 +4018,203 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get subExpiredOrExhaustedWarning => '現在のサブスクリプションは期限切れまたは上限に達しました';
+
+  @override
+  String get activeDevices => '稼働中のデバイス';
+
+  @override
+  String devicesShort(Object value) {
+    return '$value 台';
+  }
+
+  @override
+  String get devicesNotReported => 'プランから未通知';
+
+  @override
+  String get openPlanPortal => 'プラン管理ページを開く';
+
+  @override
+  String subDeviceLimitExceededWarning(Object online, Object limit) {
+    return '稼働デバイス数 ($online/$limit) が上限を超えています';
+  }
+
+  @override
+  String get quotaForecast => 'データ使用予測';
+
+  @override
+  String quotaAvgDaily(Object avg) {
+    return '平均 $avg/日';
+  }
+
+  @override
+  String quotaDaysEstimate(Object avg, Object days) {
+    return '$avg/日 · 残り約 $days 日';
+  }
+
+  @override
+  String quotaSafeUntilExpiry(Object avg) {
+    return '$avg/日 · 期限まで十分';
+  }
+
+  @override
+  String quotaDailyBudget(Object budget) {
+    return '目安上限 ~$budget/日';
+  }
+
+  @override
+  String get quotaExhaustedHint => 'データ上限到達または期限切れ';
+
+  @override
+  String get smartHubTitle => 'スマートハブ';
+
+  @override
+  String get smartHubSubtitle => '接続スコア、1タップ自己修復、デバイス監視と保護モード';
+
+  @override
+  String get smartHealthTitle => '接続ヘルス';
+
+  @override
+  String get smartHealthExcellent => '非常に良好';
+
+  @override
+  String get smartHealthStable => '安定';
+
+  @override
+  String get smartHealthAttention => '要確認';
+
+  @override
+  String get smartHealthStopped => 'VPN 停止中';
+
+  @override
+  String get smartSelfHealTitle => '1タップ自己修復';
+
+  @override
+  String get smartSelfHealDesc => 'DNS を消去し使用中ノードのみ確認、応答なし時のみ切替';
+
+  @override
+  String get smartSelfHealRun => '修復を実行';
+
+  @override
+  String get smartSelfHealRunning => '修復中...';
+
+  @override
+  String get smartHealStartVpnFirst => '先に VPN を開始してから実行してください';
+
+  @override
+  String get smartHealStepClean => 'ステップ 1/4: DNS と停滞接続を整理中...';
+
+  @override
+  String get smartHealStepProbe => 'ステップ 2/4: 現在のノードを確認中...';
+
+  @override
+  String get smartHealStepFallback => 'ステップ 3/4: 応答する代替ノードを探索中...';
+
+  @override
+  String get smartHealStepVerify => 'ステップ 4/4: 単一セッションを確認中...';
+
+  @override
+  String smartHealDoneHealthy(Object node, Object delay) {
+    return 'ノード $node は正常です ($delay)';
+  }
+
+  @override
+  String smartHealDoneSwitched(Object node) {
+    return '安定ノード $node に切り替えました';
+  }
+
+  @override
+  String get smartHealDoneFailed => 'ノードを確認できませんでした。サブスクリプションを更新してください。';
+
+  @override
+  String get smartFootprintTitle => 'この端末のセッション';
+
+  @override
+  String get smartFootprintIdle => '待機中 (VPN オフ)';
+
+  @override
+  String smartFootprintSingle(Object node, Object count) {
+    return '1 ノード ($node) · $count 接続';
+  }
+
+  @override
+  String smartFootprintMultiWarn(Object nodes, Object count) {
+    return '$nodes ノードが同時稼働中 ($count 接続)';
+  }
+
+  @override
+  String get smartFootprintCleanup => '接続を 1 ノードに整理';
+
+  @override
+  String get smartFootprintCleanedTip => '古い接続を整理しました';
+
+  @override
+  String get smartModesSection => 'スマート保護モード';
+
+  @override
+  String get smartModeSingleDevice => '単一デバイス厳格ガード';
+
+  @override
+  String get smartModeSingleDeviceDesc => '単一ノード固定、切替時切断、IPv6 競合を無効化';
+
+  @override
+  String get smartModeSingleDeviceApplied => '単一デバイス厳格ガードを適用しました';
+
+  @override
+  String get smartModePrivacyMax => 'プライバシー最大シールド';
+
+  @override
+  String get smartModePrivacyMaxDesc => 'IP 表示を隠し Android マルチタスク画面を保護';
+
+  @override
+  String get smartModePrivacyMaxApplied => 'プライバシー最大シールドを有効化しました';
+
+  @override
+  String get smartTopConsumers => '通信量の多い接続';
+
+  @override
+  String get smartTopConsumersEmpty => 'アクティブな通信はまだありません';
+
+  @override
+  String get portalAccountSync => 'プランアカウント同期';
+
+  @override
+  String get portalConnectSubtitle => 'サインインして稼働デバイス数を取得';
+
+  @override
+  String portalConnectedAs(Object email) {
+    return '同期済み: $email';
+  }
+
+  @override
+  String get portalSessionExpired => 'セッション期限切れ — タップして再ログイン';
+
+  @override
+  String get portalOriginLabel => 'ポータル URL';
+
+  @override
+  String get portalEmailLabel => 'メールアドレス';
+
+  @override
+  String get portalPasswordLabel => 'パスワード';
+
+  @override
+  String get portalSecurityFooter => '端末にはセッショントークンのみを保存し、パスワード自体は保存しません。';
+
+  @override
+  String get portalConnectedTip => 'プランアカウントを連携しました';
+
+  @override
+  String get portalDisconnect => '連携を解除';
+
+  @override
+  String get portalDisconnectedTip => 'プランアカウントの連携を解除しました';
+
+  @override
+  String get portalInvalidUrl => '有効な http/https URL を入力してください';
+
+  @override
+  String get portalInvalidEmail => '有効なメールアドレスを入力してください';
+
+  @override
+  String get planName => 'プラン名';
 }

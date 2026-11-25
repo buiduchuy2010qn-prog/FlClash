@@ -166,6 +166,145 @@ class Request {
     }
   }
 
+  static const _portalTimeout = Duration(seconds: 12);
+
+  Future<Response<T>> _sendPortalRequest<T>(
+    Uri uri,
+    Future<Response<T>> Function(Dio client, CancelToken cancelToken) call,
+  ) async {
+    Future<Response<T>> run(Dio client) {
+      final cancelToken = CancelToken();
+      return call(client, cancelToken).timeout(
+        _portalTimeout,
+        onTimeout: () {
+          cancelToken.cancel();
+          throw DioException.receiveTimeout(
+            timeout: _portalTimeout,
+            requestOptions: RequestOptions(path: uri.toString()),
+          );
+        },
+      );
+    }
+
+    try {
+      return await run(directDio);
+    } on DioException catch (e) {
+      final hasProxyFallback = _findProxy(uri) != 'DIRECT';
+      final isNetworkFailure =
+          e.type != DioExceptionType.badResponse &&
+          e.type != DioExceptionType.cancel;
+      if (!isNetworkFailure ||
+          (!hasProxyFallback && !allowProxyFallbackForTesting)) {
+        rethrow;
+      }
+      return run(_clashDio);
+    }
+  }
+
+  Object? _decodeJsonPayload(Object? data) {
+    if (data is Map || data is List) return data;
+    if (data is String && data.trim().isNotEmpty) {
+      try {
+        return json.decode(data);
+      } catch (_) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  Future<String> loginPlanPortal({
+    required String origin,
+    required String email,
+    required String password,
+  }) async {
+    final normalizedOrigin = derivePortalOrigin(origin);
+    if (normalizedOrigin == null) {
+      throw const MessageException('Invalid portal URL');
+    }
+    final uri = Uri.parse('$normalizedOrigin/api/v1/passport/auth/login');
+    final response = await _sendPortalRequest<Object?>(
+      uri,
+      (client, cancelToken) => client.postUri<Object?>(
+        uri,
+        data: {'email': email.trim(), 'password': password},
+        options: Options(
+          responseType: ResponseType.json,
+          headers: {
+            'User-Agent': browserUa,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          validateStatus: (code) => code != null && code < 500,
+        ),
+        cancelToken: cancelToken,
+      ),
+    );
+    final payload = _decodeJsonPayload(response.data);
+    final status = response.statusCode ?? 0;
+    final token = parsePortalLoginToken(payload);
+    if (status >= 400 || token == null || token.isEmpty) {
+      final message = parsePortalErrorMessage(payload);
+      throw MessageException(message ?? 'HTTP $status');
+    }
+    return token;
+  }
+
+  Future<PortalSubscribeSnapshot> fetchPlanPortalStatus({
+    required String origin,
+    required String authToken,
+  }) async {
+    final normalizedOrigin = derivePortalOrigin(origin);
+    if (normalizedOrigin == null) {
+      throw const MessageException('Invalid portal URL');
+    }
+    final uri = Uri.parse('$normalizedOrigin/api/v1/user/getSubscribe');
+    Future<Response<Object?>> getWith(String headerAuth) {
+      return _sendPortalRequest<Object?>(
+        uri,
+        (client, cancelToken) => client.getUri<Object?>(
+          uri,
+          options: Options(
+            responseType: ResponseType.json,
+            headers: {
+              'User-Agent': browserUa,
+              'Accept': 'application/json',
+              'Cache-Control': 'no-cache',
+              'Authorization': headerAuth,
+            },
+            validateStatus: (code) => code != null && code < 500,
+          ),
+          cancelToken: cancelToken,
+        ),
+      );
+    }
+
+    var response = await getWith(authToken);
+    var status = response.statusCode ?? 0;
+    if ((status == 401 || status == 403) &&
+        !authToken.toLowerCase().startsWith('bearer ')) {
+      response = await getWith('Bearer $authToken');
+      status = response.statusCode ?? 0;
+    }
+    if (status == 401 || status == 403) {
+      throw const PortalAuthExpiredException();
+    }
+    final payload = _decodeJsonPayload(response.data);
+    if (status >= 400) {
+      throw MessageException(
+        parsePortalErrorMessage(payload) ?? 'HTTP $status',
+      );
+    }
+    final snapshot = parsePortalSubscribeResponse(
+      payload,
+      origin: normalizedOrigin,
+    );
+    if (snapshot == null) {
+      throw const MessageException('Empty subscription telemetry');
+    }
+    return snapshot;
+  }
+
   Future<Response<Uint8List>> getFileResponseForUrl(String url) async {
     try {
       return await _download<Uint8List>(url, ResponseType.bytes);

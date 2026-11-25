@@ -7381,6 +7381,360 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Active subscription has expired or run out of data'**
   String get subExpiredOrExhaustedWarning;
+
+  /// No description provided for @activeDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Devices'**
+  String get activeDevices;
+
+  /// No description provided for @devicesShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} devices'**
+  String devicesShort(Object value);
+
+  /// No description provided for @devicesNotReported.
+  ///
+  /// In en, this message translates to:
+  /// **'Not reported by plan'**
+  String get devicesNotReported;
+
+  /// No description provided for @openPlanPortal.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Plan Management Portal'**
+  String get openPlanPortal;
+
+  /// No description provided for @subDeviceLimitExceededWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Active devices ({online}/{limit}) exceed your plan limit'**
+  String subDeviceLimitExceededWarning(Object online, Object limit);
+
+  /// No description provided for @quotaForecast.
+  ///
+  /// In en, this message translates to:
+  /// **'Quota Forecast'**
+  String get quotaForecast;
+
+  /// No description provided for @quotaAvgDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg {avg}/day'**
+  String quotaAvgDaily(Object avg);
+
+  /// No description provided for @quotaDaysEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'{avg}/day · ~{days}d left'**
+  String quotaDaysEstimate(Object avg, Object days);
+
+  /// No description provided for @quotaSafeUntilExpiry.
+  ///
+  /// In en, this message translates to:
+  /// **'{avg}/day · Enough until expiry'**
+  String quotaSafeUntilExpiry(Object avg);
+
+  /// No description provided for @quotaDailyBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Safe budget ~{budget}/day'**
+  String quotaDailyBudget(Object budget);
+
+  /// No description provided for @quotaExhaustedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription quota exhausted or expired'**
+  String get quotaExhaustedHint;
+
+  /// No description provided for @smartHubTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Hub'**
+  String get smartHubTitle;
+
+  /// No description provided for @smartHubSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Health score, 1-tap network self-heal, device monitor & modes'**
+  String get smartHubSubtitle;
+
+  /// No description provided for @smartHealthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection Health'**
+  String get smartHealthTitle;
+
+  /// No description provided for @smartHealthExcellent.
+  ///
+  /// In en, this message translates to:
+  /// **'Excellent'**
+  String get smartHealthExcellent;
+
+  /// No description provided for @smartHealthStable.
+  ///
+  /// In en, this message translates to:
+  /// **'Stable'**
+  String get smartHealthStable;
+
+  /// No description provided for @smartHealthAttention.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs Attention'**
+  String get smartHealthAttention;
+
+  /// No description provided for @smartHealthStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'VPN Stopped'**
+  String get smartHealthStopped;
+
+  /// No description provided for @smartSelfHealTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'1-Tap Network Self-Heal'**
+  String get smartSelfHealTitle;
+
+  /// No description provided for @smartSelfHealDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Flush stale DNS, verify active node, switch only if unresponsive'**
+  String get smartSelfHealDesc;
+
+  /// No description provided for @smartSelfHealRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Run Self-Heal'**
+  String get smartSelfHealRun;
+
+  /// No description provided for @smartSelfHealRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Healing...'**
+  String get smartSelfHealRunning;
+
+  /// No description provided for @smartHealStartVpnFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on VPN first to run self-heal'**
+  String get smartHealStartVpnFirst;
+
+  /// No description provided for @smartHealStepClean.
+  ///
+  /// In en, this message translates to:
+  /// **'Step 1/4: Flushing DNS & closing stalled streams...'**
+  String get smartHealStepClean;
+
+  /// No description provided for @smartHealStepProbe.
+  ///
+  /// In en, this message translates to:
+  /// **'Step 2/4: Checking active node...'**
+  String get smartHealStepProbe;
+
+  /// No description provided for @smartHealStepFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Step 3/4: Finding first responsive backup node...'**
+  String get smartHealStepFallback;
+
+  /// No description provided for @smartHealStepVerify.
+  ///
+  /// In en, this message translates to:
+  /// **'Step 4/4: Verifying session footprint...'**
+  String get smartHealStepVerify;
+
+  /// No description provided for @smartHealDoneHealthy.
+  ///
+  /// In en, this message translates to:
+  /// **'Active node {node} is healthy ({delay})'**
+  String smartHealDoneHealthy(Object node, Object delay);
+
+  /// No description provided for @smartHealDoneSwitched.
+  ///
+  /// In en, this message translates to:
+  /// **'Switched cleanly to responsive node {node}'**
+  String smartHealDoneSwitched(Object node);
+
+  /// No description provided for @smartHealDoneFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not verify active node. Try refreshing your subscription.'**
+  String get smartHealDoneFailed;
+
+  /// No description provided for @smartFootprintTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This Device Session'**
+  String get smartFootprintTitle;
+
+  /// No description provided for @smartFootprintIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'Idle (VPN off)'**
+  String get smartFootprintIdle;
+
+  /// No description provided for @smartFootprintSingle.
+  ///
+  /// In en, this message translates to:
+  /// **'1 node ({node}) · {count} streams'**
+  String smartFootprintSingle(Object node, Object count);
+
+  /// No description provided for @smartFootprintMultiWarn.
+  ///
+  /// In en, this message translates to:
+  /// **'{nodes} nodes active simultaneously ({count} streams)'**
+  String smartFootprintMultiWarn(Object nodes, Object count);
+
+  /// No description provided for @smartFootprintCleanup.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset streams back to 1 active node'**
+  String get smartFootprintCleanup;
+
+  /// No description provided for @smartFootprintCleanedTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed old connections cleanly'**
+  String get smartFootprintCleanedTip;
+
+  /// No description provided for @smartModesSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Protection Modes'**
+  String get smartModesSection;
+
+  /// No description provided for @smartModeSingleDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Single-Device Strict Guard'**
+  String get smartModeSingleDevice;
+
+  /// No description provided for @smartModeSingleDeviceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock 1 active node, close old streams on switch, disable IPv6 racing'**
+  String get smartModeSingleDeviceDesc;
+
+  /// No description provided for @smartModeSingleDeviceApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Single-Device Strict Guard applied'**
+  String get smartModeSingleDeviceApplied;
+
+  /// No description provided for @smartModePrivacyMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Max Shield'**
+  String get smartModePrivacyMax;
+
+  /// No description provided for @smartModePrivacyMaxDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Mask IP displays and block Android Recents screenshots'**
+  String get smartModePrivacyMaxDesc;
+
+  /// No description provided for @smartModePrivacyMaxApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Max Shield enabled'**
+  String get smartModePrivacyMaxApplied;
+
+  /// No description provided for @smartTopConsumers.
+  ///
+  /// In en, this message translates to:
+  /// **'Top Session Usage'**
+  String get smartTopConsumers;
+
+  /// No description provided for @smartTopConsumersEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No active traffic streams yet'**
+  String get smartTopConsumersEmpty;
+
+  /// No description provided for @portalAccountSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan Portal Account Sync'**
+  String get portalAccountSync;
+
+  /// No description provided for @portalConnectSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to fetch live active devices'**
+  String get portalConnectSubtitle;
+
+  /// No description provided for @portalConnectedAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced: {email}'**
+  String portalConnectedAs(Object email);
+
+  /// No description provided for @portalSessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Session expired — tap to sign in again'**
+  String get portalSessionExpired;
+
+  /// No description provided for @portalOriginLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Portal Website URL'**
+  String get portalOriginLabel;
+
+  /// No description provided for @portalEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Email'**
+  String get portalEmailLabel;
+
+  /// No description provided for @portalPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get portalPasswordLabel;
+
+  /// No description provided for @portalSecurityFooter.
+  ///
+  /// In en, this message translates to:
+  /// **'Only an encrypted session token is stored locally; your password is never saved on device.'**
+  String get portalSecurityFooter;
+
+  /// No description provided for @portalConnectedTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan portal account connected'**
+  String get portalConnectedTip;
+
+  /// No description provided for @portalDisconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect Portal Account'**
+  String get portalDisconnect;
+
+  /// No description provided for @portalDisconnectedTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Portal account disconnected'**
+  String get portalDisconnectedTip;
+
+  /// No description provided for @portalInvalidUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid http/https website URL'**
+  String get portalInvalidUrl;
+
+  /// No description provided for @portalInvalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email address'**
+  String get portalInvalidEmail;
+
+  /// No description provided for @planName.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan Name'**
+  String get planName;
 }
 
 class _AppLocalizationsDelegate

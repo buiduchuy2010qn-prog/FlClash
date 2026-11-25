@@ -1,5 +1,6 @@
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/features/features.dart';
 import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
@@ -81,6 +82,17 @@ class _ToolViewState extends ConsumerState<ToolsView> {
       appSettingProvider.select((state) => state.developerMode),
     );
     final items = [
+      generateSection(
+        title: context.appLocalizations.smartHubTitle,
+        items: [
+          ListItem.open(
+            leading: const GlyphIcon(AppGlyphs.sparkle),
+            title: Text(context.appLocalizations.smartHubTitle),
+            subtitle: Text(context.appLocalizations.smartHubSubtitle),
+            widget: const SmartHubSheet(),
+          ),
+        ],
+      ),
       Consumer(
         builder: (_, ref, _) {
           final state = ref.watch(moreToolsSelectorStateProvider);

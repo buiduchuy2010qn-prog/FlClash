@@ -3,6 +3,7 @@ part of '../action.dart';
 @Riverpod(keepAlive: true)
 class ProfilesAction extends _$ProfilesAction {
   static const _subAlertCooldown = Duration(hours: 12);
+  static const _portalRefreshCooldown = Duration(seconds: 15);
   CoreController get _core => ref.read(coreHandlerProvider);
   final Map<int, DateTime> _lastSubAlertAt = {};
 
@@ -10,7 +11,11 @@ class ProfilesAction extends _$ProfilesAction {
   void build() {}
 
   void _maybeNotifySubscriptionHealth(Profile profile) {
-    final alert = evaluateSubscriptionAlert(profile.subscriptionInfo);
+    final deviceMeta = ref.read(subscriptionInsightsProvider)[profile.id];
+    final alert = evaluateSubscriptionAlert(
+      profile.subscriptionInfo,
+      deviceMeta: deviceMeta,
+    );
     if (alert == null) return;
     final now = DateTime.now();
     final last = _lastSubAlertAt[profile.id];
@@ -22,6 +27,11 @@ class ProfilesAction extends _$ProfilesAction {
     final message = switch (alert.kind) {
       SubscriptionAlertKind.expiredOrExhausted =>
         l.subExpiredOrExhaustedWarning,
+      SubscriptionAlertKind.deviceLimitExceeded =>
+        l.subDeviceLimitExceededWarning(
+          alert.onlineDevices ?? 0,
+          alert.deviceLimit ?? 0,
+        ),
       SubscriptionAlertKind.lowQuota => l.subQuotaLowWarning(
         alert.remainingPercent ?? 0,
       ),
@@ -30,6 +40,110 @@ class ProfilesAction extends _$ProfilesAction {
       ),
     };
     dialogs.showBanner(message, level: BannerLevel.warning);
+  }
+
+  Future<PortalSubscribeSnapshot> connectPortalAccount({
+    required Profile profile,
+    required String origin,
+    required String email,
+    required String password,
+  }) async {
+    final normalizedOrigin = derivePortalOrigin(origin);
+    if (normalizedOrigin == null) {
+      throw MessageException(currentAppLocalizations.portalInvalidUrl);
+    }
+    final token = await request.loginPlanPortal(
+      origin: normalizedOrigin,
+      email: email,
+      password: password,
+    );
+    final snapshot = await request.fetchPlanPortalStatus(
+      origin: normalizedOrigin,
+      authToken: token,
+    );
+    final binding = PortalAccountBinding(
+      origin: normalizedOrigin,
+      email: email.trim(),
+      authToken: token,
+      lastSyncedAt: DateTime.now(),
+      authExpired: false,
+    );
+    ref.read(portalAccountsProvider.notifier).setBinding(profile.id, binding);
+    ref
+        .read(subscriptionInsightsProvider.notifier)
+        .setMeta(profile.id, snapshot.deviceMeta);
+    final latest = ref.read(profilesProvider).getProfile(profile.id) ?? profile;
+    final nextProfile = snapshot.subscriptionInfo != null
+        ? latest.copyWith(subscriptionInfo: snapshot.subscriptionInfo)
+        : latest;
+    if (snapshot.subscriptionInfo != null) {
+      ref.read(profilesProvider.notifier).put(nextProfile);
+    }
+    _maybeNotifySubscriptionHealth(nextProfile);
+    return snapshot;
+  }
+
+  Future<bool> refreshPortalStatus(
+    Profile profile, {
+    bool force = false,
+  }) async {
+    final binding = ref.read(portalAccountsProvider)[profile.id];
+    if (binding == null || binding.authExpired) {
+      return false;
+    }
+    if (!force &&
+        binding.lastSyncedAt != null &&
+        DateTime.now().difference(binding.lastSyncedAt!) <
+            _portalRefreshCooldown) {
+      return false;
+    }
+    try {
+      final snapshot = await request.fetchPlanPortalStatus(
+        origin: binding.origin,
+        authToken: binding.authToken,
+      );
+      if (!ref.mounted) return false;
+      ref
+          .read(portalAccountsProvider.notifier)
+          .setBinding(
+            profile.id,
+            binding.copyWith(lastSyncedAt: DateTime.now(), authExpired: false),
+          );
+      ref
+          .read(subscriptionInsightsProvider.notifier)
+          .setMeta(profile.id, snapshot.deviceMeta);
+      final latest =
+          ref.read(profilesProvider).getProfile(profile.id) ?? profile;
+      final nextProfile = snapshot.subscriptionInfo != null
+          ? latest.copyWith(subscriptionInfo: snapshot.subscriptionInfo)
+          : latest;
+      if (snapshot.subscriptionInfo != null) {
+        ref.read(profilesProvider.notifier).put(nextProfile);
+      }
+      _maybeNotifySubscriptionHealth(nextProfile);
+      return true;
+    } on PortalAuthExpiredException {
+      if (!ref.mounted) return false;
+      ref
+          .read(portalAccountsProvider.notifier)
+          .setBinding(profile.id, binding.copyWith(authExpired: true));
+      dialogs.showBanner(
+        currentAppLocalizations.portalSessionExpired,
+        level: BannerLevel.warning,
+      );
+      return false;
+    } catch (error) {
+      commonPrint.log(
+        'refreshPortalStatus(${profile.id}) failed: ${compactError(error)}',
+        logLevel: LogLevel.warning,
+      );
+      return false;
+    }
+  }
+
+  void disconnectPortalAccount(int profileId) {
+    ref.read(portalAccountsProvider.notifier).remove(profileId);
+    ref.read(subscriptionInsightsProvider.notifier).clearPortalMeta(profileId);
   }
 
   void updateCurrentSelectedMap(String groupName, String proxyName) {
@@ -64,6 +178,8 @@ class ProfilesAction extends _$ProfilesAction {
 
   Future<void> deleteProfile(int id) async {
     await ref.read(profilesProvider.notifier).del(id);
+    ref.read(portalAccountsProvider.notifier).remove(id);
+    ref.read(subscriptionInsightsProvider.notifier).remove(id);
     await clearEffect(id);
     final currentProfileId = ref.read(currentProfileIdProvider);
     if (currentProfileId == id) {
@@ -189,6 +305,11 @@ class ProfilesAction extends _$ProfilesAction {
       ref.read(profilesProvider.notifier).put(profile);
       final updated = await profile.update(
         validate: (path, key) => _core.validateProfile(path, key),
+        onDeviceMeta: (meta) {
+          ref
+              .read(subscriptionInsightsProvider.notifier)
+              .setMeta(profile.id, meta);
+        },
       );
       // The download can take minutes; edits and deletes made meanwhile win.
       final latest = ref.read(profilesProvider).getProfile(profile.id);
@@ -202,6 +323,9 @@ class ProfilesAction extends _$ProfilesAction {
         lastUpdateDate: updated.lastUpdateDate,
       );
       ref.read(profilesProvider.notifier).put(newProfile);
+      if (ref.read(portalAccountsProvider)[profile.id] != null) {
+        unawaited(refreshPortalStatus(newProfile, force: true));
+      }
       if (profile.id == ref.read(currentProfileIdProvider)) {
         _maybeNotifySubscriptionHealth(newProfile);
         ref
@@ -447,6 +571,11 @@ class ProfilesAction extends _$ProfilesAction {
   Future<Profile> _download(Profile profile) {
     return profile.update(
       validate: (path, key) => _core.validateProfile(path, key),
+      onDeviceMeta: (meta) {
+        ref
+            .read(subscriptionInsightsProvider.notifier)
+            .setMeta(profile.id, meta);
+      },
     );
   }
 

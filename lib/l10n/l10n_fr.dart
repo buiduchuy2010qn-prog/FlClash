@@ -4259,4 +4259,217 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get subExpiredOrExhaustedWarning =>
       'L\'abonnement actif a expiré ou épuisé ses données';
+
+  @override
+  String get activeDevices => 'Appareils actifs';
+
+  @override
+  String devicesShort(Object value) {
+    return '$value appareils';
+  }
+
+  @override
+  String get devicesNotReported => 'Non fourni par le forfait';
+
+  @override
+  String get openPlanPortal => 'Ouvrir le portail du forfait';
+
+  @override
+  String subDeviceLimitExceededWarning(Object online, Object limit) {
+    return 'Appareils actifs ($online/$limit) au-dessus de la limite';
+  }
+
+  @override
+  String get quotaForecast => 'Prévision du forfait';
+
+  @override
+  String quotaAvgDaily(Object avg) {
+    return 'Moy. $avg/j';
+  }
+
+  @override
+  String quotaDaysEstimate(Object avg, Object days) {
+    return '$avg/j · ~$days j restants';
+  }
+
+  @override
+  String quotaSafeUntilExpiry(Object avg) {
+    return '$avg/j · Suffisant jusqu\'à échéance';
+  }
+
+  @override
+  String quotaDailyBudget(Object budget) {
+    return 'Budget sûr ~$budget/j';
+  }
+
+  @override
+  String get quotaExhaustedHint => 'Forfait épuisé ou expiré';
+
+  @override
+  String get smartHubTitle => 'Centre intelligent';
+
+  @override
+  String get smartHubSubtitle =>
+      'Score santé, réparation 1-clic, suivi appareils et modes rapides';
+
+  @override
+  String get smartHealthTitle => 'Santé de la connexion';
+
+  @override
+  String get smartHealthExcellent => 'Excellente';
+
+  @override
+  String get smartHealthStable => 'Stable';
+
+  @override
+  String get smartHealthAttention => 'À vérifier';
+
+  @override
+  String get smartHealthStopped => 'VPN arrêté';
+
+  @override
+  String get smartSelfHealTitle => 'Réparation réseau en 1 clic';
+
+  @override
+  String get smartSelfHealDesc =>
+      'Vide le DNS, teste le nœud actif et bascule seulement si inactif';
+
+  @override
+  String get smartSelfHealRun => 'Réparer';
+
+  @override
+  String get smartSelfHealRunning => 'Réparation...';
+
+  @override
+  String get smartHealStartVpnFirst =>
+      'Activez le VPN avant de lancer la réparation';
+
+  @override
+  String get smartHealStepClean =>
+      'Étape 1/4 : Nettoyage du cache DNS et des flux bloqués...';
+
+  @override
+  String get smartHealStepProbe => 'Étape 2/4 : Vérification du nœud actif...';
+
+  @override
+  String get smartHealStepFallback =>
+      'Étape 3/4 : Recherche d\'un nœud de secours...';
+
+  @override
+  String get smartHealStepVerify =>
+      'Étape 4/4 : Vérification de la session unique...';
+
+  @override
+  String smartHealDoneHealthy(Object node, Object delay) {
+    return 'Le nœud $node répond normalement ($delay)';
+  }
+
+  @override
+  String smartHealDoneSwitched(Object node) {
+    return 'Basculé proprement vers le nœud $node';
+  }
+
+  @override
+  String get smartHealDoneFailed =>
+      'Impossible de vérifier le nœud. Essayez de synchroniser le profil.';
+
+  @override
+  String get smartFootprintTitle => 'Session de cet appareil';
+
+  @override
+  String get smartFootprintIdle => 'Inactif (VPN arrêté)';
+
+  @override
+  String smartFootprintSingle(Object node, Object count) {
+    return '1 nœud ($node) · $count flux';
+  }
+
+  @override
+  String smartFootprintMultiWarn(Object nodes, Object count) {
+    return '$nodes nœuds actifs simultanément ($count flux)';
+  }
+
+  @override
+  String get smartFootprintCleanup => 'Réduire les flux sur 1 seul nœud';
+
+  @override
+  String get smartFootprintCleanedTip => 'Anciennes connexions fermées';
+
+  @override
+  String get smartModesSection => 'Modes intelligents';
+
+  @override
+  String get smartModeSingleDevice => 'Garde stricte 1 appareil';
+
+  @override
+  String get smartModeSingleDeviceDesc =>
+      '1 nœud, fermeture au changement et IPv6 désactivé';
+
+  @override
+  String get smartModeSingleDeviceApplied =>
+      'Garde stricte 1 appareil appliquée';
+
+  @override
+  String get smartModePrivacyMax => 'Bouclier confidentialité max';
+
+  @override
+  String get smartModePrivacyMaxDesc =>
+      'Masque les IP affichées et bloque les captures sur Android';
+
+  @override
+  String get smartModePrivacyMaxApplied =>
+      'Bouclier confidentialité max activé';
+
+  @override
+  String get smartTopConsumers => 'Principales consommations';
+
+  @override
+  String get smartTopConsumersEmpty => 'Aucun flux actif pour le moment';
+
+  @override
+  String get portalAccountSync => 'Synchronisation compte portail';
+
+  @override
+  String get portalConnectSubtitle =>
+      'Connectez-vous pour lire les appareils actifs';
+
+  @override
+  String portalConnectedAs(Object email) {
+    return 'Synchronisé : $email';
+  }
+
+  @override
+  String get portalSessionExpired =>
+      'Session expirée — touchez pour vous reconnecter';
+
+  @override
+  String get portalOriginLabel => 'URL du portail';
+
+  @override
+  String get portalEmailLabel => 'E-mail du compte';
+
+  @override
+  String get portalPasswordLabel => 'Mot de passe';
+
+  @override
+  String get portalSecurityFooter =>
+      'Seul le jeton de session est conservé localement ; le mot de passe n\'est jamais enregistré.';
+
+  @override
+  String get portalConnectedTip => 'Compte du portail connecté';
+
+  @override
+  String get portalDisconnect => 'Déconnecter le compte';
+
+  @override
+  String get portalDisconnectedTip => 'Compte du portail déconnecté';
+
+  @override
+  String get portalInvalidUrl => 'Veuillez saisir une URL http/https valide';
+
+  @override
+  String get portalInvalidEmail => 'Veuillez saisir un e-mail valide';
+
+  @override
+  String get planName => 'Nom du forfait';
 }

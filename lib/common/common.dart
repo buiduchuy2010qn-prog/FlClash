@@ -46,6 +46,7 @@ export 'search.dart';
 export 'security_utils.dart';
 export 'snowflake.dart';
 export 'string.dart';
+export 'subscription_insights.dart';
 export 'system.dart';
 export 'system_fonts.dart';
 export 'task.dart';
