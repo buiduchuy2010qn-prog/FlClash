@@ -26,12 +26,15 @@ class _DelayTestJob {
 @Riverpod(keepAlive: true)
 class ProxiesAction extends _$ProxiesAction {
   static const _builtinNames = {'DIRECT', 'REJECT', 'REJECT-DROP', 'PASS'};
-  static const _failoverSlowDelayMs = 2500;
+  static const _failoverSlowDelayMs = 1800;
   static const _foregroundWatchdogInterval = Duration(seconds: 60);
   static const _backgroundWatchdogInterval = Duration(seconds: 180);
   static const _resumeCheckCooldown = Duration(seconds: 30);
   static const _failoverConfirmDelay = Duration(milliseconds: 500);
   static const _autoSwitchHysteresisMs = 100;
+  static const _quarantineDuration = Duration(minutes: 3);
+  static const _quarantinePenaltyMs = 1500;
+  static const _autoSubRefreshCooldown = Duration(minutes: 15);
   CoreController get _core => ref.read(coreHandlerProvider);
 
   final TaskPool _delayTestPool = TaskPool(
@@ -57,6 +60,10 @@ class ProxiesAction extends _$ProxiesAction {
   DateTime? _lastAutoCheckAt;
 
   final Map<String, String> _pendingSelectedRollback = {};
+
+  final Map<String, DateTime> _quarantinedUntil = {};
+
+  final Map<int, DateTime> _lastAutoSubRefreshAt = {};
 
   @override
   void build() {
@@ -117,6 +124,14 @@ class ProxiesAction extends _$ProxiesAction {
           ref.read(runTimeProvider) != null) {
         _lastAutoPingEpoch = next;
         _scheduleAutoPing();
+      }
+    });
+    ref.listen(routeTrackerProvider.select((state) => state.routeVersion), (
+      prev,
+      next,
+    ) {
+      if (next != prev && ref.read(runTimeProvider) != null) {
+        updateGroupsDebounce();
       }
     });
   }
@@ -228,8 +243,47 @@ class ProxiesAction extends _$ProxiesAction {
         delayMap: ref.read(delayDataSourceProvider),
       ).delay;
       if (confirmedDelay <= 0 || confirmedDelay >= _failoverSlowDelayMs) {
+        if (confirmedDelay <= 0) {
+          _quarantinedUntil[leafProxy.name] = DateTime.now().add(
+            _quarantineDuration,
+          );
+        }
         await selectFastestProxy(primary.name, automatic: true);
       }
+    }
+  }
+
+  bool _isQuarantined(String proxyName, DateTime now) {
+    _quarantinedUntil.removeWhere((_, until) => !now.isBefore(until));
+    final until = _quarantinedUntil[proxyName];
+    return until != null && now.isBefore(until);
+  }
+
+  Future<bool> _tryRecoverDeadSubscription() async {
+    final profile = ref.read(currentProfileProvider);
+    if (profile == null ||
+        profile.type != ProfileType.url ||
+        profile.url.isEmpty) {
+      return false;
+    }
+    final now = DateTime.now();
+    final lastRefresh = _lastAutoSubRefreshAt[profile.id];
+    if (lastRefresh != null &&
+        now.difference(lastRefresh) < _autoSubRefreshCooldown) {
+      return false;
+    }
+    _lastAutoSubRefreshAt[profile.id] = now;
+    try {
+      await ref.read(profilesActionProvider.notifier).updateProfile(profile);
+      if (!ref.mounted) return false;
+      await updateGroups();
+      return true;
+    } catch (e) {
+      commonPrint.log(
+        'auto subscription recovery failed: $e',
+        logLevel: LogLevel.warning,
+      );
+      return false;
     }
   }
 
@@ -245,6 +299,7 @@ class ProxiesAction extends _$ProxiesAction {
   Future<void> selectFastestProxy(
     String groupName, {
     bool automatic = false,
+    bool allowSubscriptionRecovery = true,
   }) async {
     final allGroups = ref.read(groupsProvider);
     final group = allGroups.getGroup(groupName);
@@ -255,6 +310,7 @@ class ProxiesAction extends _$ProxiesAction {
     if (!testing.start(groupName)) {
       return;
     }
+    var recoverNeeded = false;
     try {
       final groupNames = {for (final g in allGroups) g.name};
       final nonBuiltin = [
@@ -276,8 +332,10 @@ class ProxiesAction extends _$ProxiesAction {
       );
       final defaultTestUrl = ref.read(realTestUrlProvider(group.testUrl));
       final delayMap = ref.read(delayDataSourceProvider);
+      final now = DateTime.now();
 
       Proxy? bestProxy;
+      var bestScore = 1 << 30;
       var bestDelay = 1 << 30;
       for (final candidate in candidates) {
         final delay = computeProxyDelayState(
@@ -287,65 +345,80 @@ class ProxiesAction extends _$ProxiesAction {
           selectedMap: selectedMap,
           delayMap: delayMap,
         ).delay;
-        if (delay > 0 && delay < bestDelay) {
+        if (delay <= 0) continue;
+        final penalty = automatic && _isQuarantined(candidate.name, now)
+            ? _quarantinePenaltyMs
+            : 0;
+        final score = delay + penalty;
+        if (score < bestScore || (score == bestScore && delay < bestDelay)) {
+          bestScore = score;
           bestDelay = delay;
           bestProxy = candidate;
         }
       }
       if (bestProxy == null) {
-        if (!automatic) {
+        recoverNeeded =
+            allowSubscriptionRecovery && await _tryRecoverDeadSubscription();
+        if (!recoverNeeded && !automatic) {
           dialogs.showBanner(
             currentAppLocalizations.noAvailableProxyTip,
             level: BannerLevel.warning,
           );
         }
-        return;
-      }
-      final selected = selectedMap[groupName] ?? '';
-      final currentName = group.getCurrentSelectedName(selected);
-      final switched = bestProxy.name != currentName;
-      if (automatic && switched) {
-        final currentLeaf = computeRealSelectedProxyState(
-          currentName,
-          groups: groups,
-          selectedMap: selectedMap,
-        );
-        final currentLookupName = currentLeaf.proxyName.isNotEmpty
-            ? currentLeaf.proxyName
-            : currentName;
-        final currentDelay = computeProxyDelayState(
-          proxyName: currentLookupName,
-          testUrl: defaultTestUrl,
-          groups: groups,
-          selectedMap: selectedMap,
-          delayMap: delayMap,
-        ).delay;
-        if (currentDelay > 0 &&
-            currentDelay < _failoverSlowDelayMs &&
-            bestDelay + _autoSwitchHysteresisMs >= currentDelay) {
+      } else {
+        final selected = selectedMap[groupName] ?? '';
+        final currentName = group.getCurrentSelectedName(selected);
+        final switched = bestProxy.name != currentName;
+        if (automatic && switched) {
+          final currentLeaf = computeRealSelectedProxyState(
+            currentName,
+            groups: groups,
+            selectedMap: selectedMap,
+          );
+          final currentLookupName = currentLeaf.proxyName.isNotEmpty
+              ? currentLeaf.proxyName
+              : currentName;
+          final currentDelay = computeProxyDelayState(
+            proxyName: currentLookupName,
+            testUrl: defaultTestUrl,
+            groups: groups,
+            selectedMap: selectedMap,
+            delayMap: delayMap,
+          ).delay;
+          if (currentDelay > 0 &&
+              currentDelay < _failoverSlowDelayMs &&
+              bestDelay + _autoSwitchHysteresisMs >= currentDelay) {
+            return;
+          }
+        }
+        if (switched && group.type == GroupType.Selector) {
+          await changeProxy(groupName: groupName, proxyName: bestProxy.name);
+          updateGroupsDebounce();
+        }
+        if (automatic && !switched) {
           return;
         }
+        final delayLabel = '${bestDelay}ms';
+        final tip = automatic
+            ? currentAppLocalizations.autoFailoverSwitchedTip(
+                bestProxy.name,
+                delayLabel,
+              )
+            : currentAppLocalizations.fastestProxySelectedTip(
+                bestProxy.name,
+                delayLabel,
+              );
+        dialogs.showBanner(tip, level: BannerLevel.success);
       }
-      if (switched && group.type == GroupType.Selector) {
-        await changeProxy(groupName: groupName, proxyName: bestProxy.name);
-        updateGroupsDebounce();
-      }
-      if (automatic && !switched) {
-        return;
-      }
-      final delayLabel = '${bestDelay}ms';
-      final tip = automatic
-          ? currentAppLocalizations.autoFailoverSwitchedTip(
-              bestProxy.name,
-              delayLabel,
-            )
-          : currentAppLocalizations.fastestProxySelectedTip(
-              bestProxy.name,
-              delayLabel,
-            );
-      dialogs.showBanner(tip, level: BannerLevel.success);
     } finally {
       testing.stop(groupName);
+    }
+    if (recoverNeeded && ref.mounted) {
+      await selectFastestProxy(
+        groupName,
+        automatic: automatic,
+        allowSubscriptionRecovery: false,
+      );
     }
   }
 
@@ -412,7 +485,7 @@ class ProxiesAction extends _$ProxiesAction {
 
   Future<void> updateGroups() async {
     try {
-      ref.read(groupsProvider.notifier).value = await retry(
+      final groups = await retry<List<Group>>(
         task: () async {
           final sortType = ref.read(
             proxiesStyleSettingProvider.select((state) => state.sortType),
@@ -436,11 +509,27 @@ class ProxiesAction extends _$ProxiesAction {
               'updateGroups error: $e',
               logLevel: coreFailureLogLevel(e),
             );
-            return [];
+            return <Group>[];
           }
         },
         retryIf: (res) => res.isEmpty,
       );
+      ref.read(groupsProvider.notifier).value = groups;
+      final currentProfile = ref.read(currentProfileProvider);
+      if (currentProfile != null && groups.isNotEmpty) {
+        final profilesAction = ref.read(profilesActionProvider.notifier);
+        for (final group in groups) {
+          final corePick = group.now;
+          if (group.type == GroupType.Selector &&
+              corePick != null &&
+              corePick.isNotEmpty &&
+              !_pendingSelectedRollback.containsKey(group.name) &&
+              currentProfile.selectedMap.containsKey(group.name) &&
+              currentProfile.selectedMap[group.name] != corePick) {
+            profilesAction.updateCurrentSelectedMap(group.name, corePick);
+          }
+        }
+      }
     } catch (e) {
       // The Core failure path already runs inside the retry task above; a
       // throw here only means ref.read hit a disposed container or the

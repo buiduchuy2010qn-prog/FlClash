@@ -62,6 +62,7 @@ class Preferences {
   static const _autoStartOnBootKey = 'auto_start_on_boot';
   static const _rootHotspotShareKey = 'root_hotspot_share';
   static const _optimize4gPresetKey = 'optimize_4g_preset';
+  static const _optimize4gSnapshotKey = 'optimize_4g_snapshot_v1';
   static const _dailyTrafficEnabledKey = 'daily_traffic_enabled';
   static const _dailyTrafficHistoryKey = 'daily_traffic_history_v1';
   static const _versionGateCacheKey = 'version_gate_cache_v1';
@@ -118,6 +119,11 @@ class Preferences {
 
   Future<void> setOptimize4gPreset(bool value) =>
       _setBool(_optimize4gPresetKey, value);
+
+  Future<String?> getOptimize4gSnapshot() => _getString(_optimize4gSnapshotKey);
+
+  Future<void> setOptimize4gSnapshot(String? value) =>
+      _setString(_optimize4gSnapshotKey, value);
 
   Future<bool> getDailyTrafficEnabled() =>
       _getBool(_dailyTrafficEnabledKey, true);

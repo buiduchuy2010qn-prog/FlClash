@@ -75,6 +75,10 @@ func SetTelemetryPaused(paused bool) {
 	core.SetTelemetryPaused(paused)
 }
 
+func SetAutoFailover(enabled bool) {
+	core.SetAutoFailover(enabled)
+}
+
 func StopTun() {
 	core.StopTun()
 }

@@ -1,9 +1,10 @@
 # Changelog
 
-## Fork Modifications (v0.9.10 – v0.9.16, November 2026)
+## Fork Modifications (v0.9.10 – v0.9.17, November 2026)
 
 Modified fork maintained by **Bùi Đức Huy (`@buiduchuy2010qn-prog`)** under GNU GPL-3.0 (see [LICENSE](LICENSE), [NOTICE.md](NOTICE.md), and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)):
 
+- **2026-11-25 (`v0.9.17`)** — Added native Go core primary `Selector` smart failover and stalled/throttled stream detection with node quarantine scoring, upgraded Android Auto-VPN to require validated non-captive Wi-Fi before stopping VPN, added dead-subscription recovery refresh and core-pick profile sync, and made the mobile optimization preset snapshot & cleanly restore previous settings when toggled off.
 - **2026-11-25 (`v0.9.16`)** — Restored automated GitHub Actions multi-platform OTA release publishing (Android `arm64` APK + Windows `amd64` installer/portable with SHA-256 verification), updated GPL-3.0 compliance & third-party notices ([NOTICE.md](NOTICE.md), [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)), and cleaned up repository module naming.
 - **2026-11-24 (`v0.9.15`)** — Improved Android push notification stability (TCP keepalive socket tuning, push endpoint Fake-IP bypass, TLS sniffer ports), fixed home-screen widget connectivity under VPN (TUN QUIC filter fallback to HTTPS/TCP and DoH/TCP DNS defaults), and hardened `START_STICKY` / foreground notification lifecycle.
 - **2026-11-24 (`v0.9.14`)** — Reduced background battery usage and thermal load (paused off-screen request/DNS/log telemetry streams, throttled notification and memory polling), stabilized proxy failover hysteresis, requested optional Android battery optimization exemption on mobile preset toggle, and added GPL-3.0 modification & security documentation ([NOTICE.md](NOTICE.md), [SECURITY.md](SECURITY.md)).

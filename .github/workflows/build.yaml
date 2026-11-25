@@ -402,10 +402,10 @@ jobs:
           make_latest: true
           body: |
             <!-- flclash:changelog:begin -->
-            - Đồng bộ phát hành OTA đa nền tảng cho cả Android (`arm64`) và Windows (`setup.exe` cài đặt trực tiếp + `portable.zip`), kèm kiểm tra toàn vẹn mã băm SHA-256 tự động.
-            - Cải thiện độ ổn định nhận thông báo đẩy và tải widget màn hình chính của các ứng dụng khác khi bật VPN chạy nền trên Android (tối ưu TCP keepalive, tách xử lý miền thông báo đẩy hệ thống và dự phòng QUIC sang HTTPS/TCP).
-            - Tối ưu tiết kiệm pin, giảm nóng máy và tự động chuyển đổi dự phòng kết nối mượt mà hơn khi mạng di động không ổn định.
-            - Hoàn thiện tài liệu bản quyền mã nguồn mở GNU GPL-3.0, thông báo thành phần bên thứ ba và cấu trúc mã nguồn chuẩn hóa.
+            - Bổ sung tự động chuyển đổi dự phòng thông minh trực tiếp trong nhân mạng ngay cả khi đóng giao diện nền
+            - Nhận diện luồng dữ liệu bị treo hoặc nghẽn băng thông và tạm cách ly máy chủ lỗi trong 3 phút để tránh nhảy lặp
+            - Kiểm tra kết nối Wi-Fi thực sự có Internet và không vướng trang đăng nhập trước khi tự động bật hoặc tắt VPN
+            - Tự động làm mới gói đăng ký URL khi toàn bộ máy chủ mất phản hồi, đồng bộ máy chủ đang chọn và khôi phục cấu hình mạng cũ khi tắt chế độ Tối ưu mạng di động
             <!-- flclash:changelog:end -->
 
             ### Hướng dẫn chọn file tải phù hợp:

@@ -596,16 +596,26 @@ class Optimize4gPresetSection extends ConsumerWidget {
   }
 
   void _togglePreset(BuildContext context, WidgetRef ref, bool enable) {
+    unawaited(_applyToggle(context, ref, enable));
+  }
+
+  Future<void> _applyToggle(
+    BuildContext context,
+    WidgetRef ref,
+    bool enable,
+  ) async {
     final l = context.appLocalizations;
     final notifier = ref.read(optimize4gPresetProvider.notifier);
-    notifier.value = enable;
     if (enable) {
-      notifier.applyMobilePreset();
+      await notifier.enablePreset();
       if (system.isAndroid) {
         unawaited(_ensureBatteryExemption(ref));
       }
       dialogs.showBanner(l.optimize4gAppliedTip);
+    } else {
+      await notifier.disablePresetAndRestore();
     }
+    if (!context.mounted) return;
     ref.read(setupActionProvider.notifier).applyProfileDebounce(force: true);
   }
 

@@ -4,6 +4,7 @@ import 'package:collection/collection.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
+import 'package:fl_clash/plugins/service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
@@ -28,6 +29,7 @@ class AutoFailoverNotifier extends Notifier<bool> {
     if (!_disposed && state != saved) {
       state = saved;
     }
+    unawaited(service?.setAutoFailover(saved));
   }
 
   void toggle() => setEnabled(!state);
@@ -35,6 +37,7 @@ class AutoFailoverNotifier extends Notifier<bool> {
   void setEnabled(bool value) {
     state = value;
     unawaited(preferences.setAutoFailover(value));
+    unawaited(service?.setAutoFailover(value));
   }
 }
 

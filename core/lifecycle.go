@@ -42,6 +42,11 @@ func handleInitialized() bool {
 
 func setRunning(running bool) {
 	isRunning.Store(running)
+	if running {
+		startSmartFailoverMonitor()
+	} else {
+		stopSmartFailoverMonitor()
+	}
 }
 
 func handleStartListener() {

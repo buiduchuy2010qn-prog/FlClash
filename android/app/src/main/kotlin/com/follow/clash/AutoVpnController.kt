@@ -6,12 +6,41 @@ import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.net.VpnService
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import androidx.core.content.edit
 import com.follow.clash.common.GlobalState
 import kotlinx.coroutines.launch
+
+internal enum class AutoVpnAction {
+    NONE,
+    START,
+    STOP,
+}
+
+internal fun isUsableValidatedWifi(
+    validated: Boolean,
+    captivePortal: Boolean,
+    notSuspended: Boolean,
+): Boolean = validated && !captivePortal && notSuspended
+
+internal fun decideAutoVpnAction(
+    onCellular: Boolean,
+    offWifi: Boolean,
+    hasValidatedWifi: Boolean,
+    hasCellular: Boolean,
+    isRunRequested: Boolean,
+): AutoVpnAction {
+    if (offWifi && hasValidatedWifi) {
+        return if (isRunRequested) AutoVpnAction.STOP else AutoVpnAction.NONE
+    }
+    if (onCellular && !hasValidatedWifi && hasCellular) {
+        return if (!isRunRequested) AutoVpnAction.START else AutoVpnAction.NONE
+    }
+    return AutoVpnAction.NONE
+}
 
 object AutoVpnController {
     private const val NATIVE_PREFS = "flclash_auto_vpn"
@@ -23,7 +52,7 @@ object AutoVpnController {
     private const val MANUAL_COOLDOWN_MS = 45_000L
 
     private val lock = Any()
-    private val wifiNetworks = mutableSetOf<Network>()
+    private val wifiValidStates = mutableMapOf<Network, Boolean>()
     private val cellularNetworks = mutableSetOf<Network>()
     private val mainHandler = Handler(Looper.getMainLooper())
     private val evaluateRunnable = Runnable { evaluateTransition() }
@@ -91,17 +120,58 @@ object AutoVpnController {
         return flutterPrefs.getBoolean("flutter.$key", false)
     }
 
+    private fun isValidatedWifiCapabilities(caps: NetworkCapabilities?): Boolean {
+        if (caps == null) return false
+        val validated = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+        val captivePortal = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL)
+        val notSuspended = Build.VERSION.SDK_INT < Build.VERSION_CODES.P ||
+            caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_SUSPENDED)
+        return isUsableValidatedWifi(
+            validated = validated,
+            captivePortal = captivePortal,
+            notSuspended = notSuspended,
+        )
+    }
+
     private fun networkCallback(isWifi: Boolean) = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
-            synchronized(lock) {
-                if (isWifi) wifiNetworks.add(network) else cellularNetworks.add(network)
+            if (isWifi) {
+                val cm = appContext?.getSystemService(ConnectivityManager::class.java)
+                val valid = isValidatedWifiCapabilities(cm?.getNetworkCapabilities(network))
+                synchronized(lock) {
+                    wifiValidStates[network] = valid
+                }
+            } else {
+                synchronized(lock) {
+                    cellularNetworks.add(network)
+                }
             }
             scheduleEvaluate()
         }
 
+        override fun onCapabilitiesChanged(
+            network: Network,
+            networkCapabilities: NetworkCapabilities,
+        ) {
+            if (!isWifi) return
+            val valid = isValidatedWifiCapabilities(networkCapabilities)
+            val changed = synchronized(lock) {
+                val previous = wifiValidStates[network]
+                wifiValidStates[network] = valid
+                previous != valid
+            }
+            if (changed) {
+                scheduleEvaluate()
+            }
+        }
+
         override fun onLost(network: Network) {
             synchronized(lock) {
-                if (isWifi) wifiNetworks.remove(network) else cellularNetworks.remove(network)
+                if (isWifi) {
+                    wifiValidStates.remove(network)
+                } else {
+                    cellularNetworks.remove(network)
+                }
             }
             scheduleEvaluate()
         }
@@ -123,25 +193,35 @@ object AutoVpnController {
             return
         }
 
-        val hasWifi: Boolean
+        val hasValidatedWifi: Boolean
         val hasCellular: Boolean
         synchronized(lock) {
-            hasWifi = wifiNetworks.isNotEmpty()
+            hasValidatedWifi = wifiValidStates.values.any { it }
             hasCellular = cellularNetworks.isNotEmpty()
         }
 
-        if (onCellular && !hasWifi && hasCellular) {
-            if (!ServiceState.isRunRequested && VpnService.prepare(ctx) == null) {
-                GlobalState.launch {
-                    ServiceState.handleStartAction()
+        when (
+            decideAutoVpnAction(
+                onCellular = onCellular,
+                offWifi = offWifi,
+                hasValidatedWifi = hasValidatedWifi,
+                hasCellular = hasCellular,
+                isRunRequested = ServiceState.isRunRequested,
+            )
+        ) {
+            AutoVpnAction.START -> {
+                if (VpnService.prepare(ctx) == null) {
+                    GlobalState.launch {
+                        ServiceState.handleStartAction()
+                    }
                 }
             }
-        } else if (offWifi && hasWifi) {
-            if (ServiceState.isRunRequested) {
+            AutoVpnAction.STOP -> {
                 GlobalState.launch {
                     ServiceState.handleStopAction()
                 }
             }
+            AutoVpnAction.NONE -> Unit
         }
     }
 }

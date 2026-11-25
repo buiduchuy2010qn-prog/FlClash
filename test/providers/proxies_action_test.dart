@@ -1306,5 +1306,143 @@ void main() {
         debouncer.cancel(FunctionTag.updateGroups);
       },
     );
+
+    test(
+      'updateGroups syncs currentProfile.selectedMap when core selector changes',
+      () async {
+        when(core.getProxies).thenAnswer(
+          (_) async => ProxiesData(
+            all: const ['Proxy'],
+            proxies: Map<String, dynamic>.from({
+              'Proxy': Map<String, dynamic>.from({
+                'name': 'Proxy',
+                'type': 'Selector',
+                'now': 'SG-Fast',
+                'all': ['HK-Slow', 'SG-Fast'],
+              }),
+              'HK-Slow': Map<String, dynamic>.from({
+                'name': 'HK-Slow',
+                'type': 'ss',
+              }),
+              'SG-Fast': Map<String, dynamic>.from({
+                'name': 'SG-Fast',
+                'type': 'ss',
+              }),
+            }),
+          ),
+        );
+        final container = buildContainer(profile: _selectedProfile('HK-Slow'));
+
+        await actionOf(container).updateGroups();
+
+        expect(
+          container.read(currentProfileProvider)?.selectedMap['Proxy'],
+          'SG-Fast',
+        );
+      },
+    );
+
+    test(
+      'auto-failover refreshes dead URL subscription once within cooldown',
+      () async {
+        addTearDown(() => debouncer.cancel(FunctionTag.updateGroups));
+        var refreshCalls = 0;
+        var recovered = false;
+
+        final subProfile = Profile.normal(
+          label: 'Sub',
+          url: 'https://sub.example.com/list',
+        ).copyWith(selectedMap: const {'Proxy': 'Dead-01'});
+
+        when(
+          () => core.changeProxy(any()),
+        ).thenAnswer((_) async => const ChangeProxyResult(changed: true));
+        when(core.closeConnections).thenAnswer((_) async => true);
+        when(core.getProxies).thenAnswer((_) async {
+          final nodes = recovered
+              ? const ['Dead-01', 'SG-Recovered']
+              : const ['Dead-01'];
+          return ProxiesData(
+            all: const ['Proxy'],
+            proxies: Map<String, dynamic>.from({
+              'Proxy': Map<String, dynamic>.from({
+                'name': 'Proxy',
+                'type': 'Selector',
+                'now': 'Dead-01',
+                'all': nodes,
+              }),
+              for (final node in nodes)
+                node: Map<String, dynamic>.from({'name': node, 'type': 'ss'}),
+            }),
+          );
+        });
+        when(() => core.testDelay(_delayTest(_testUrl))).thenAnswer((
+          invocation,
+        ) async {
+          final name =
+              (invocation.positionalArguments[0] as TestDelayParams).proxyName;
+          return Delay(
+            name: name,
+            url: _testUrl,
+            value: name == 'SG-Recovered' ? 55 : -1,
+          );
+        });
+
+        final container = _delayContainer(() {
+          final c = ProviderContainer(
+            overrides: [
+              coreHandlerProvider.overrideWithValue(
+                CoreController.scoped(core),
+              ),
+              profilesProvider.overrideWith(() => TestProfiles([subProfile])),
+              currentProfileIdProvider.overrideWithBuild(
+                (_, _) => subProfile.id,
+              ),
+              profilesActionProvider.overrideWith(
+                () => _SpyProfilesAction((_) async {
+                  refreshCalls++;
+                  recovered = true;
+                }),
+              ),
+            ],
+          );
+          addTearDown(c.dispose);
+          return c;
+        });
+        container.listen(patchClashConfigProvider, (_, _) {});
+        container.read(groupsProvider.notifier).value = [
+          _group('Proxy', const [Proxy(name: 'Dead-01', type: 'ss')]),
+        ];
+
+        await actionOf(container).selectFastestProxy('Proxy', automatic: true);
+        expect(refreshCalls, 1);
+        verify(
+          () => core.changeProxy(
+            const ChangeProxyParams(
+              groupName: 'Proxy',
+              proxyName: 'SG-Recovered',
+            ),
+          ),
+        ).called(1);
+
+        recovered = false;
+        container.read(groupsProvider.notifier).value = [
+          _group('Proxy', const [Proxy(name: 'Dead-01', type: 'ss')]),
+        ];
+        await actionOf(container).selectFastestProxy('Proxy', automatic: true);
+        expect(refreshCalls, 1);
+        debouncer.cancel(FunctionTag.updateGroups);
+      },
+    );
   });
+}
+
+class _SpyProfilesAction extends ProfilesAction {
+  _SpyProfilesAction(this.onUpdate);
+
+  final Future<void> Function(Profile profile) onUpdate;
+
+  @override
+  Future<void> updateProfile(Profile profile, {bool showLoading = false}) =>
+      onUpdate(profile);
 }

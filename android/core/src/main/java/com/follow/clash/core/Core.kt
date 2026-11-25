@@ -81,6 +81,8 @@ object Core {
 
     fun setTelemetryPaused(paused: Boolean) = Mobile.setTelemetryPaused(paused)
 
+    fun setAutoFailover(enabled: Boolean) = Mobile.setAutoFailover(enabled)
+
     fun quickSetup(
         initParamsString: String,
         setupParamsString: String,
