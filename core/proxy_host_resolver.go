@@ -477,68 +477,12 @@ func queryDoHOverDialer(ctx context.Context, host string, dialFn func(context.Co
 	return usableProxyIPv4s(host, addrs), nil
 }
 
-func aliveLeafProxyForDoH() constant.Proxy {
-	for _, p := range tunnel.AllProxies() {
-		t := p.Type()
-		if isProxyGroupType(t) || t == constant.Direct || t == constant.Reject || t == constant.RejectDrop || t == constant.Pass || t == constant.Compatible {
-			continue
-		}
-		if p.AliveForTestUrl("") {
-			return p
-		}
-	}
-	return nil
-}
-
 func defaultDoHQueryIPv4(ctx context.Context, host string) ([]netip.Addr, error) {
-	raceCtx, cancel := context.WithTimeout(withSkipDoHFallback(ctx), proxyHostLookupTimeout)
+	directCtx, cancel := context.WithTimeout(withSkipDoHFallback(ctx), proxyHostLookupTimeout)
 	defer cancel()
-
-	type dohResult struct {
-		ips []netip.Addr
-		err error
-	}
-	ch := make(chan dohResult, 2)
-	attempts := 1
-	go func() {
-		ips, err := queryDoHOverDialer(raceCtx, host, func(dctx context.Context, network, address string) (net.Conn, error) {
-			return dialer.DialContext(dctx, network, address)
-		})
-		ch <- dohResult{ips: ips, err: err}
-	}()
-
-	if leaf := aliveLeafProxyForDoH(); leaf != nil {
-		attempts++
-		go func() {
-			ips, err := queryDoHOverDialer(raceCtx, host, func(dctx context.Context, network, address string) (net.Conn, error) {
-				md, err := probeMetadata(address)
-				if err != nil {
-					return nil, err
-				}
-				return leaf.DialContext(dctx, md)
-			})
-			ch <- dohResult{ips: ips, err: err}
-		}()
-	}
-
-	var lastErr error
-	for i := 0; i < attempts; i++ {
-		select {
-		case res := <-ch:
-			if res.err == nil && len(res.ips) > 0 {
-				return res.ips, nil
-			}
-			if res.err != nil {
-				lastErr = res.err
-			}
-		case <-raceCtx.Done():
-			return nil, raceCtx.Err()
-		}
-	}
-	if lastErr != nil {
-		return nil, lastErr
-	}
-	return nil, fmt.Errorf("%w: doh empty answer for %s", resolver.ErrIPNotFound, host)
+	return queryDoHOverDialer(directCtx, host, func(dctx context.Context, network, address string) (net.Conn, error) {
+		return dialer.DialContext(dctx, network, address)
+	})
 }
 
 func installResilientProxyHostResolver() {

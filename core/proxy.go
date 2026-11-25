@@ -184,20 +184,29 @@ func selectableGroup(groupName string) (pickableGroup, error) {
 
 func handleChangeProxy(params *ChangeProxyParams) *ChangeProxyResult {
 	selectMu.Lock()
-	defer selectMu.Unlock()
 
 	selector, err := selectableGroup(params.GroupName)
 	if err != nil {
+		selectMu.Unlock()
 		return &ChangeProxyResult{Message: err.Error()}
 	}
 	before := selector.Now()
 	if params.ProxyName == "" {
 		selector.ForceSet(params.ProxyName)
 	} else if err := selector.Set(params.ProxyName); err != nil {
+		selectMu.Unlock()
 		return &ChangeProxyResult{Message: err.Error()}
 	}
-	changed := selector.Now() != before
+	after := selector.Now()
+	changed := after != before
 	refreshRouteLocked(routeUnchanged)
+	selectMu.Unlock()
+
+	if changed && before != "" {
+		safeGo("closePreviousProxyConns", func() {
+			closeConnectionsForLeaf(before)
+		})
+	}
 	return &ChangeProxyResult{Changed: changed}
 }
 

@@ -44,6 +44,7 @@ dns:
 	}
 	var parsed struct {
 		Hosts   map[string][]string `yaml:"hosts"`
+		IPv6    *bool               `yaml:"ipv6"`
 		Profile struct {
 			StoreFakeIP bool `yaml:"store-fake-ip"`
 		} `yaml:"profile"`
@@ -54,6 +55,7 @@ dns:
 			} `yaml:"sniff"`
 		} `yaml:"sniffer"`
 		DNS struct {
+			IPv6                  *bool    `yaml:"ipv6"`
 			PreferH3              bool     `yaml:"prefer-h3"`
 			UseHosts              bool     `yaml:"use-hosts"`
 			RespectRules          bool     `yaml:"respect-rules"`
@@ -66,6 +68,12 @@ dns:
 	}
 	if err := yaml.Unmarshal(out, &parsed); err != nil {
 		t.Fatalf("unmarshal optimized YAML: %v\n%s", err, string(out))
+	}
+	if parsed.IPv6 == nil || *parsed.IPv6 {
+		t.Errorf("root ipv6 = %v, want false", parsed.IPv6)
+	}
+	if parsed.DNS.IPv6 == nil || *parsed.DNS.IPv6 {
+		t.Errorf("dns.ipv6 = %v, want false", parsed.DNS.IPv6)
 	}
 	if !parsed.Profile.StoreFakeIP {
 		t.Errorf("profile.store-fake-ip = false, want true")
@@ -197,10 +205,20 @@ func TestOptimizeProxyGroupsFallbackAndAuto(t *testing.T) {
 	const input = `proxies:
   - {name: node1, type: vless, server: node1.example.com, port: 80, uuid: 11111111-1111-1111-1111-111111111111}
   - {name: node2, type: vless, server: node2.example.net, port: 443, uuid: 11111111-1111-1111-1111-111111111111, tls: true}
+proxy-providers:
+  sub:
+    type: file
+    path: ./sub.yaml
+    health-check:
+      enable: true
+      url: https://www.gstatic.com/generate_204
+      interval: 300
 proxy-groups:
   - {name: ProxyMain, type: select, proxies: [AutoFallback, AutoShort, node1, node2]}
   - {name: AutoFallback, type: fallback, proxies: [node1, node2], url: 'http://cp.cloudflare.com/', interval: 7200}
   - {name: AutoShort, type: url-test, proxies: [node1, node2], interval: 120}
+  - {name: Streaming, type: select, proxies: [AutoShort, node1, node2]}
+  - {name: AdBlock, type: select, proxies: [REJECT, DIRECT]}
 `
 	var doc yaml.Node
 	if err := yaml.Unmarshal([]byte(input), &doc); err != nil {
@@ -213,36 +231,48 @@ proxy-groups:
 		t.Fatalf("marshal: %v", err)
 	}
 	var parsed struct {
+		ProxyProviders map[string]struct {
+			HealthCheck struct {
+				Enable   bool `yaml:"enable"`
+				Interval int  `yaml:"interval"`
+			} `yaml:"health-check"`
+		} `yaml:"proxy-providers"`
 		ProxyGroups []struct {
-			Name           string   `yaml:"name"`
-			Type           string   `yaml:"type"`
-			URL            string   `yaml:"url"`
-			Interval       int      `yaml:"interval"`
-			Timeout        int      `yaml:"timeout"`
-			Lazy           bool     `yaml:"lazy"`
-			Tolerance      int      `yaml:"tolerance"`
-			ExpectedStatus string   `yaml:"expected-status"`
-			MaxFailedTimes int      `yaml:"max-failed-times"`
-			Proxies        []string `yaml:"proxies"`
+			Name     string   `yaml:"name"`
+			Type     string   `yaml:"type"`
+			Interval int      `yaml:"interval"`
+			Hidden   bool     `yaml:"hidden"`
+			Proxies  []string `yaml:"proxies"`
 		} `yaml:"proxy-groups"`
 	}
 	if err := yaml.Unmarshal(out, &parsed); err != nil {
 		t.Fatalf("decode: %v\n%s", err, string(out))
 	}
-	if len(parsed.ProxyGroups) != 3 {
-		t.Fatalf("proxy-groups len = %d, want 3 (no synthetic Auto injected): %+v", len(parsed.ProxyGroups), parsed.ProxyGroups)
+	if subHC := parsed.ProxyProviders["sub"].HealthCheck; subHC.Enable || subHC.Interval != 0 {
+		t.Errorf("proxy-providers.sub.health-check = %+v, want disabled with interval 0", subHC)
+	}
+	if len(parsed.ProxyGroups) != 5 {
+		t.Fatalf("proxy-groups len = %d, want 5: %+v", len(parsed.ProxyGroups), parsed.ProxyGroups)
 	}
 	sel := parsed.ProxyGroups[0]
-	if len(sel.Proxies) < 2 || sel.Proxies[0] != "AutoFallback" || sel.Proxies[1] != "AutoShort" {
-		t.Errorf("ProxyMain proxies = %v, want [AutoFallback AutoShort ...]", sel.Proxies)
+	if sel.Type != "select" || len(sel.Proxies) != 2 || sel.Proxies[0] != "node1" || sel.Proxies[1] != "node2" {
+		t.Errorf("ProxyMain proxies = %v, want [node1 node2]", sel.Proxies)
 	}
 	fb := parsed.ProxyGroups[1]
-	if fb.Interval != 7200 || fb.Timeout != 5000 || !fb.Lazy || fb.ExpectedStatus != "200-299" || fb.MaxFailedTimes != 2 || fb.URL != "https://www.gstatic.com/generate_204" {
-		t.Errorf("AutoFallback not optimized properly: %+v", fb)
+	if fb.Type != "select" || fb.Interval != 0 || !fb.Hidden || len(fb.Proxies) == 0 || fb.Proxies[0] != "ProxyMain" {
+		t.Errorf("AutoFallback not unified cleanly: %+v", fb)
 	}
 	shortGroup := parsed.ProxyGroups[2]
-	if shortGroup.Interval != 600 || !shortGroup.Lazy || shortGroup.Tolerance != 100 {
-		t.Errorf("AutoShort interval not raised to >=600: %+v", shortGroup)
+	if shortGroup.Type != "select" || shortGroup.Interval != 0 || !shortGroup.Hidden || len(shortGroup.Proxies) == 0 || shortGroup.Proxies[0] != "ProxyMain" {
+		t.Errorf("AutoShort not unified cleanly: %+v", shortGroup)
+	}
+	streaming := parsed.ProxyGroups[3]
+	if len(streaming.Proxies) == 0 || streaming.Proxies[0] != "ProxyMain" {
+		t.Errorf("Streaming proxies = %v, want ProxyMain at index 0", streaming.Proxies)
+	}
+	adBlock := parsed.ProxyGroups[4]
+	if len(adBlock.Proxies) == 0 || adBlock.Proxies[0] != "REJECT" {
+		t.Errorf("AdBlock reject-first order changed: %v", adBlock.Proxies)
 	}
 }
 
