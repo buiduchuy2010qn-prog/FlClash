@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"net"
 	"testing"
 	"time"
@@ -119,15 +120,83 @@ func TestSetAutoFailoverToggle(t *testing.T) {
 	previous := IsAutoFailoverEnabled()
 	t.Cleanup(func() { SetAutoFailover(previous) })
 
-	if !previous {
-		t.Fatal("expected autoFailoverEnabled to default to true")
+	if previous {
+		t.Fatal("expected autoFailoverEnabled to default to false")
+	}
+	SetAutoFailover(true)
+	if !IsAutoFailoverEnabled() {
+		t.Fatal("expected IsAutoFailoverEnabled() == true after SetAutoFailover(true)")
 	}
 	SetAutoFailover(false)
 	if IsAutoFailoverEnabled() {
 		t.Fatal("expected IsAutoFailoverEnabled() == false after SetAutoFailover(false)")
 	}
-	SetAutoFailover(true)
-	if !IsAutoFailoverEnabled() {
-		t.Fatal("expected IsAutoFailoverEnabled() == true after SetAutoFailover(true)")
+}
+
+func TestSelectFailoverCandidateSequentialEarlyExitsOnFirstFastNode(t *testing.T) {
+	now := time.Now()
+	t.Cleanup(func() {
+		smartFailoverMu.Lock()
+		quarantinedNodes = map[string]time.Time{}
+		smartFailoverMu.Unlock()
+	})
+
+	quarantineNode("node-quarantined", now)
+	candidates := []string{
+		"node-current",
+		"node-dead",
+		"node-fast-1",
+		"node-fast-2",
+		"node-fast-3",
+		"node-quarantined",
+	}
+	probed := []string{}
+	best, delay := selectFailoverCandidateSequential(
+		t.Context(),
+		candidates,
+		"node-current",
+		now,
+		func(_ context.Context, name string) int {
+			probed = append(probed, name)
+			switch name {
+			case "node-dead":
+				return -1
+			case "node-fast-1":
+				return 120
+			default:
+				return 80
+			}
+		},
+	)
+	if best != "node-fast-1" || delay != 120 {
+		t.Fatalf("selectFailoverCandidateSequential = (%q, %d), want (%q, 120)", best, delay, "node-fast-1")
+	}
+	wantProbed := []string{"node-dead", "node-fast-1"}
+	if len(probed) != len(wantProbed) || probed[0] != wantProbed[0] || probed[1] != wantProbed[1] {
+		t.Fatalf("probed = %v, want %v (must stop on first healthy fast node)", probed, wantProbed)
+	}
+
+	slowProbed := []string{}
+	slowBest, slowDelay := selectFailoverCandidateSequential(
+		t.Context(),
+		[]string{"node-current", "node-quarantined", "node-slow-a", "node-slow-b"},
+		"node-current",
+		now,
+		func(_ context.Context, name string) int {
+			slowProbed = append(slowProbed, name)
+			if name == "node-slow-a" {
+				return 1400
+			}
+			if name == "node-slow-b" {
+				return 1100
+			}
+			return 90
+		},
+	)
+	if slowBest != "node-slow-b" || slowDelay != 1100 {
+		t.Fatalf("slow clean fallback = (%q, %d), want (%q, 1100)", slowBest, slowDelay, "node-slow-b")
+	}
+	if len(slowProbed) != 2 {
+		t.Fatalf("expected quarantined node to be skipped when clean node responds, probed=%v", slowProbed)
 	}
 }

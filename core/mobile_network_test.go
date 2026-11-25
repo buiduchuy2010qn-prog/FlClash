@@ -198,8 +198,9 @@ func TestOptimizeProxyGroupsFallbackAndAuto(t *testing.T) {
   - {name: node1, type: vless, server: node1.example.com, port: 80, uuid: 11111111-1111-1111-1111-111111111111}
   - {name: node2, type: vless, server: node2.example.net, port: 443, uuid: 11111111-1111-1111-1111-111111111111, tls: true}
 proxy-groups:
-  - {name: ProxyMain, type: select, proxies: [AutoFallback, node1, node2]}
+  - {name: ProxyMain, type: select, proxies: [AutoFallback, AutoShort, node1, node2]}
   - {name: AutoFallback, type: fallback, proxies: [node1, node2], url: 'http://cp.cloudflare.com/', interval: 7200}
+  - {name: AutoShort, type: url-test, proxies: [node1, node2], interval: 120}
 `
 	var doc yaml.Node
 	if err := yaml.Unmarshal([]byte(input), &doc); err != nil {
@@ -229,19 +230,19 @@ proxy-groups:
 		t.Fatalf("decode: %v\n%s", err, string(out))
 	}
 	if len(parsed.ProxyGroups) != 3 {
-		t.Fatalf("proxy-groups len = %d, want 3 (select + fallback + Auto): %+v", len(parsed.ProxyGroups), parsed.ProxyGroups)
+		t.Fatalf("proxy-groups len = %d, want 3 (no synthetic Auto injected): %+v", len(parsed.ProxyGroups), parsed.ProxyGroups)
 	}
 	sel := parsed.ProxyGroups[0]
-	if len(sel.Proxies) < 2 || sel.Proxies[0] != "Auto" || sel.Proxies[1] != "AutoFallback" {
-		t.Errorf("ProxyMain proxies = %v, want [Auto AutoFallback ...]", sel.Proxies)
+	if len(sel.Proxies) < 2 || sel.Proxies[0] != "AutoFallback" || sel.Proxies[1] != "AutoShort" {
+		t.Errorf("ProxyMain proxies = %v, want [AutoFallback AutoShort ...]", sel.Proxies)
 	}
 	fb := parsed.ProxyGroups[1]
-	if fb.Interval != 180 || fb.Timeout != 5000 || !fb.Lazy || fb.ExpectedStatus != "200-299" || fb.MaxFailedTimes != 2 || fb.URL != "https://www.gstatic.com/generate_204" {
-		t.Errorf("AutoFallback not optimized: %+v", fb)
+	if fb.Interval != 7200 || fb.Timeout != 5000 || !fb.Lazy || fb.ExpectedStatus != "200-299" || fb.MaxFailedTimes != 2 || fb.URL != "https://www.gstatic.com/generate_204" {
+		t.Errorf("AutoFallback not optimized properly: %+v", fb)
 	}
-	auto := parsed.ProxyGroups[2]
-	if auto.Name != "Auto" || auto.Type != "url-test" || auto.Interval != 180 || auto.Timeout != 5000 || !auto.Lazy || auto.Tolerance != 100 || auto.ExpectedStatus != "200-299" || auto.MaxFailedTimes != 2 {
-		t.Errorf("Auto group not built properly: %+v", auto)
+	shortGroup := parsed.ProxyGroups[2]
+	if shortGroup.Interval != 600 || !shortGroup.Lazy || shortGroup.Tolerance != 100 {
+		t.Errorf("AutoShort interval not raised to >=600: %+v", shortGroup)
 	}
 }
 

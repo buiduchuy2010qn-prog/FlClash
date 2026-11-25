@@ -5,11 +5,17 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'common.dart';
 
 extension PackageInfoExtension on PackageInfo {
-  String get ua => [
-    '$appName/v$version',
-    'clash-verge',
-    'Platform/${Platform.operatingSystem}',
-  ].join(' ');
+  String get ua {
+    final segments = version.split('+').first.split('-').first.split('.');
+    final majorMinor = segments.length >= 2
+        ? '${segments[0]}.${segments[1]}'
+        : version;
+    return [
+      '$appName/v$majorMinor',
+      'clash-verge',
+      'Platform/${Platform.operatingSystem}',
+    ].join(' ');
+  }
 }
 
 int _parseSegment(List<String> parts, int index) {

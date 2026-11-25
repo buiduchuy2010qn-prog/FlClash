@@ -27,6 +27,8 @@ class _DelayTestJob {
 class ProxiesAction extends _$ProxiesAction {
   static const _builtinNames = {'DIRECT', 'REJECT', 'REJECT-DROP', 'PASS'};
   static const _failoverSlowDelayMs = 1800;
+  static const _autoFastCandidateDelayMs = 800;
+  static const _autoProbeBatchSize = 2;
   static const _foregroundWatchdogInterval = Duration(seconds: 60);
   static const _backgroundWatchdogInterval = Duration(seconds: 180);
   static const _resumeCheckCooldown = Duration(seconds: 30);
@@ -194,7 +196,6 @@ class ProxiesAction extends _$ProxiesAction {
             .expand((g) => g.all)
             .firstWhereOrNull((p) => p.name == targetName);
     if (leafProxy == null || _builtinNames.contains(leafProxy.name)) {
-      await _runDelayTests([(proxies: primary.all, testUrl: primary.testUrl)]);
       return;
     }
     await _runDelayTests([
@@ -216,8 +217,7 @@ class ProxiesAction extends _$ProxiesAction {
       selectedMap: currentSelectedMap,
       delayMap: delayMap,
     ).delay;
-    final unhealthy = activeDelay <= 0 || activeDelay >= _failoverSlowDelayMs;
-    if (unhealthy &&
+    if (activeDelay <= 0 &&
         primary.type == GroupType.Selector &&
         ref.read(autoFailoverProvider)) {
       await Future<void>.delayed(_failoverConfirmDelay);
@@ -242,12 +242,10 @@ class ProxiesAction extends _$ProxiesAction {
         ),
         delayMap: ref.read(delayDataSourceProvider),
       ).delay;
-      if (confirmedDelay <= 0 || confirmedDelay >= _failoverSlowDelayMs) {
-        if (confirmedDelay <= 0) {
-          _quarantinedUntil[leafProxy.name] = DateTime.now().add(
-            _quarantineDuration,
-          );
-        }
+      if (confirmedDelay <= 0) {
+        _quarantinedUntil[leafProxy.name] = DateTime.now().add(
+          _quarantineDuration,
+        );
         await selectFastestProxy(primary.name, automatic: true);
       }
     }
@@ -324,7 +322,88 @@ class ProxiesAction extends _$ProxiesAction {
       final candidates = leafOnly.isNotEmpty
           ? leafOnly
           : (nonBuiltin.isNotEmpty ? nonBuiltin : group.all);
-      await delayTest(candidates, group.testUrl);
+      final probedCandidates = <Proxy>[];
+      if (!automatic) {
+        await delayTest(candidates, group.testUrl);
+        probedCandidates.addAll(candidates);
+      } else {
+        final initialSelectedMap = ref.read(
+          currentProfileProvider.select((state) => state?.selectedMap ?? {}),
+        );
+        final currentName = group.getCurrentSelectedName(
+          initialSelectedMap[groupName] ?? '',
+        );
+        final currentLeaf = computeRealSelectedProxyState(
+          currentName,
+          groups: allGroups,
+          selectedMap: initialSelectedMap,
+        );
+        final currentLookupName = currentLeaf.proxyName.isNotEmpty
+            ? currentLeaf.proxyName
+            : currentName;
+        final defaultTestUrl = ref.read(realTestUrlProvider(group.testUrl));
+        final probeNow = DateTime.now();
+        final otherClean = <Proxy>[];
+        final otherQuarantined = <Proxy>[];
+        final selfCandidates = <Proxy>[];
+        for (final candidate in candidates) {
+          if (candidate.name == currentLookupName) {
+            selfCandidates.add(candidate);
+          } else if (_isQuarantined(candidate.name, probeNow)) {
+            otherQuarantined.add(candidate);
+          } else {
+            otherClean.add(candidate);
+          }
+        }
+        Future<bool> probeBatches(List<Proxy> pool) async {
+          var foundAlive = false;
+          for (var i = 0; i < pool.length; i += _autoProbeBatchSize) {
+            final end = (i + _autoProbeBatchSize > pool.length)
+                ? pool.length
+                : i + _autoProbeBatchSize;
+            final batch = pool.sublist(i, end);
+            await delayTest(batch, group.testUrl);
+            probedCandidates.addAll(batch);
+            final latestGroups = ref.read(groupsProvider);
+            final latestSelectedMap = ref.read(
+              currentProfileProvider.select(
+                (state) => state?.selectedMap ?? {},
+              ),
+            );
+            final latestDelays = ref.read(delayDataSourceProvider);
+            var hitFast = false;
+            for (final candidate in batch) {
+              final delay = computeProxyDelayState(
+                proxyName: candidate.name,
+                testUrl: defaultTestUrl,
+                groups: latestGroups,
+                selectedMap: latestSelectedMap,
+                delayMap: latestDelays,
+              ).delay;
+              if (delay > 0) {
+                foundAlive = true;
+                if (delay < _autoFastCandidateDelayMs) {
+                  hitFast = true;
+                }
+              }
+            }
+            if (hitFast) {
+              break;
+            }
+          }
+          return foundAlive;
+        }
+
+        final cleanAlive = await probeBatches(otherClean);
+        if (!cleanAlive) {
+          final quarantinedAlive = await probeBatches(otherQuarantined);
+          if (!quarantinedAlive &&
+              otherClean.isEmpty &&
+              otherQuarantined.isEmpty) {
+            await probeBatches(selfCandidates);
+          }
+        }
+      }
 
       final groups = ref.read(groupsProvider);
       final selectedMap = ref.read(
@@ -337,7 +416,7 @@ class ProxiesAction extends _$ProxiesAction {
       Proxy? bestProxy;
       var bestScore = 1 << 30;
       var bestDelay = 1 << 30;
-      for (final candidate in candidates) {
+      for (final candidate in probedCandidates) {
         final delay = computeProxyDelayState(
           proxyName: candidate.name,
           testUrl: defaultTestUrl,

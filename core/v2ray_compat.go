@@ -1147,33 +1147,13 @@ func buildClashConfigFromProxies(proxies []map[string]any) ([]byte, bool) {
 		proxy["name"] = name
 		names = append(names, name)
 	}
-	selectList := make([]string, 0, len(names)+2)
-	selectList = append(selectList, "Auto", "Fallback")
-	selectList = append(selectList, names...)
 	doc := map[string]any{
 		"proxies": proxies,
 		"proxy-groups": []map[string]any{
 			{
 				"name":    "Proxy",
 				"type":    "select",
-				"proxies": selectList,
-			},
-			{
-				"name":            "Auto",
-				"type":            "url-test",
-				"url":             "https://www.gstatic.com/generate_204",
-				"interval":        180,
-				"tolerance":       50,
-				"expected-status": "200-299",
-				"proxies":         names,
-			},
-			{
-				"name":            "Fallback",
-				"type":            "fallback",
-				"url":             "https://www.gstatic.com/generate_204",
-				"interval":        180,
-				"expected-status": "200-299",
-				"proxies":         names,
+				"proxies": names,
 			},
 		},
 		"rules": []string{"MATCH,Proxy"},

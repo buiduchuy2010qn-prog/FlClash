@@ -402,10 +402,10 @@ jobs:
           make_latest: true
           body: |
             <!-- flclash:changelog:begin -->
-            - Tự động khóa an toàn cổng điều khiển nội bộ và tạo mã xác thực ngẫu nhiên bảo vệ trước cấu hình lạ từ bên ngoài
-            - Bổ sung công cụ Kiểm tra độ kín và rò rỉ mạng tích hợp sẵn giúp đối chiếu IP gốc, IP qua VPN, DNS mã hóa và IPv6
-            - Thêm chế độ Chống chụp màn hình, ẩn địa chỉ nhạy cảm và lối tắt mở nhanh khóa chống rò rỉ VPN của hệ thống Android
-            - Hỗ trợ chọn nhanh bỏ qua VPN cho nhóm ứng dụng Ngân hàng, Ví điện tử và Dịch vụ công nội địa chỉ với 1 chạm, kèm cảnh báo sớm hạn và dung lượng gói đăng ký
+            - Giảm tối đa kết nối song song để một máy không bị hệ thống đăng ký tính thành nhiều thiết bị: bỏ tự động quét ngầm toàn bộ máy chủ khi bật VPN hoặc khi chuyển mạng 4G/Wi-Fi
+            - Sửa cơ chế tự động chuyển server để không hiểu nhầm kết nối chờ dài (WebSocket/keep-alive) và chỉ dò tuần tự từng node đến khi gặp node phản hồi tốt
+            - Bổ sung mã nhận diện thiết bị cố định x-hwid gửi kèm khi cập nhật gói đăng ký, giữ nguyên User-Agent qua các bản vá và ưu tiên tải gói trực tiếp
+            - Giới hạn số luồng đo ping tự động trên di động và bỏ qua bước quét lại toàn bộ nhóm khi node hiện tại chưa xác định
             <!-- flclash:changelog:end -->
 
             ### Hướng dẫn chọn file tải phù hợp:

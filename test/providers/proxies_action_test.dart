@@ -1434,6 +1434,82 @@ void main() {
         debouncer.cancel(FunctionTag.updateGroups);
       },
     );
+
+    test(
+      'automatic failover probes small batches and stops on first fast node',
+      () async {
+        addTearDown(() => debouncer.cancel(FunctionTag.updateGroups));
+        final probed = <String>[];
+        when(
+          () => core.changeProxy(any()),
+        ).thenAnswer((_) async => const ChangeProxyResult(changed: true));
+        when(core.closeConnections).thenAnswer((_) async => true);
+        when(() => core.testDelay(_delayTest(_testUrl))).thenAnswer((
+          invocation,
+        ) async {
+          final name =
+              (invocation.positionalArguments[0] as TestDelayParams).proxyName;
+          probed.add(name);
+          final value = switch (name) {
+            'N1' => -1,
+            'N2' => 140,
+            _ => 45,
+          };
+          return Delay(name: name, url: _testUrl, value: value);
+        });
+        final container = _delayContainer(
+          () => buildContainer(profile: _selectedProfile('CurrentDead')),
+        );
+        container.listen(patchClashConfigProvider, (_, _) {});
+        container.read(groupsProvider.notifier).value = [
+          _group('Proxy', const [
+            Proxy(name: 'CurrentDead', type: 'ss'),
+            Proxy(name: 'N1', type: 'ss'),
+            Proxy(name: 'N2', type: 'ss'),
+            Proxy(name: 'N3', type: 'ss'),
+            Proxy(name: 'N4', type: 'ss'),
+            Proxy(name: 'N5', type: 'ss'),
+          ]),
+        ];
+
+        await actionOf(container).selectFastestProxy('Proxy', automatic: true);
+
+        expect(probed, ['N1', 'N2']);
+        verify(
+          () => core.changeProxy(
+            const ChangeProxyParams(groupName: 'Proxy', proxyName: 'N2'),
+          ),
+        ).called(1);
+        debouncer.cancel(FunctionTag.updateGroups);
+      },
+    );
+
+    testWidgets(
+      'auto-ping skips group scan when resolved active proxy is builtin',
+      (tester) async {
+        when(() => core.testDelay(any())).thenAnswer(
+          (_) async => const Delay(name: 'N1', url: _testUrl, value: 50),
+        );
+        final container = _delayContainer(
+          () => buildContainer(profile: _selectedProfile('DIRECT')),
+        );
+        container.read(coreStatusProvider.notifier).value =
+            CoreStatus.connected;
+        container.read(groupsProvider.notifier).value = [
+          _group('Proxy', const [
+            Proxy(name: 'DIRECT', type: 'direct'),
+            Proxy(name: 'N1', type: 'ss'),
+            Proxy(name: 'N2', type: 'ss'),
+          ]).copyWith(hidden: false),
+        ];
+        actionOf(container);
+
+        container.read(runTimeProvider.notifier).value = 1;
+        await tester.pump(const Duration(milliseconds: 650));
+
+        verifyNever(() => core.testDelay(any()));
+      },
+    );
   });
 }
 
