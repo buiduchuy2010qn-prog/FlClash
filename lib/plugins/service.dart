@@ -155,6 +155,12 @@ class Service {
     } catch (_) {}
   }
 
+  Future<void> setAutoFailover(bool enabled) async {
+    try {
+      await methodChannel.invokeMethod<bool>('setAutoFailover', enabled);
+    } catch (_) {}
+  }
+
   Future<bool> shutdown() async {
     return await methodChannel.invokeMethod<bool>('shutdown') ?? true;
   }

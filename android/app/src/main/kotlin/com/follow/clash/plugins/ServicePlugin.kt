@@ -1,5 +1,6 @@
 package com.follow.clash.plugins
 
+import android.content.Context
 import com.follow.clash.ServiceController
 import com.follow.clash.ServiceState
 import com.follow.clash.StartFailure
@@ -63,6 +64,7 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
             "getRunTime" -> getRunTime(result)
             "syncState" -> syncState(call, result)
             "setTelemetryPaused" -> setTelemetryPaused(call, result)
+            "setAutoFailover" -> setAutoFailover(call, result)
             "start" -> start(call, result)
             "stop" -> stop(call, result)
             else -> result.notImplemented()
@@ -79,6 +81,10 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     private fun initialize(result: MethodChannel.Result) {
         NetworkObserver.start()
         ServiceController.setTelemetryPaused(false)
+        val savedAutoFailover = GlobalState.application
+            .getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+            .getBoolean("flutter.smart_auto_failover", true)
+        ServiceController.setAutoFailover(savedAutoFailover)
         ServiceController.setEventListener(::sendEvent)
             .onSuccess { result.success("") }
             .onFailure { error -> result.success(error.message.orEmpty()) }
@@ -95,6 +101,19 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
         scope.launch {
             runCatching { Core.load() }
             val outcome = ServiceController.setTelemetryPaused(paused)
+            scope.launch(Dispatchers.Main) {
+                outcome
+                    .onSuccess { result.success(true) }
+                    .onFailure { error -> result.error("CORE_ERROR", error.message, null) }
+            }
+        }
+    }
+
+    private fun setAutoFailover(call: MethodCall, result: MethodChannel.Result) {
+        val enabled = call.arguments as? Boolean ?: true
+        scope.launch {
+            runCatching { Core.load() }
+            val outcome = ServiceController.setAutoFailover(enabled)
             scope.launch(Dispatchers.Main) {
                 outcome
                     .onSuccess { result.success(true) }

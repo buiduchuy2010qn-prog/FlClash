@@ -60,6 +60,10 @@ object ServiceController {
         setupParams: String,
     ): Result<String> = runCatching {
         NetworkObserver.start()
+        val savedAutoFailover = GlobalState.application
+            .getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+            .getBoolean("flutter.smart_auto_failover", true)
+        runCatching { Core.setAutoFailover(savedAutoFailover) }
         suspendCancellableCoroutine { continuation ->
             Core.quickSetup(initParams, setupParams) { result ->
                 continuation.resume(result.orEmpty())
@@ -73,6 +77,10 @@ object ServiceController {
 
     fun setTelemetryPaused(paused: Boolean): Result<Unit> = runCatching {
         Core.setTelemetryPaused(paused)
+    }
+
+    fun setAutoFailover(enabled: Boolean): Result<Unit> = runCatching {
+        Core.setAutoFailover(enabled)
     }
 
     suspend fun start(options: VpnOptions): Boolean = lock.withLock {

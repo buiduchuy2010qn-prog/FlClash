@@ -13,6 +13,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:prism_ui/prism_ui.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../helpers/glyph_finders.dart';
 import '../helpers/test_app.dart';
@@ -352,6 +353,68 @@ void main() {
       expect(network.bypassPrivateRoute, isTrue);
       expect(network.appendSystemDns, isFalse);
     });
+
+    test(
+      'enablePreset snapshots state and disablePresetAndRestore restores it',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        await preferences.rebind();
+
+        final presetContainer = ProviderContainer(
+          overrides: [profilesProvider.overrideWith(TestProfiles.new)],
+        );
+        addTearDown(presetContainer.dispose);
+        presetContainer.listen(patchClashConfigProvider, (_, _) {});
+        presetContainer.listen(networkSettingProvider, (_, _) {});
+
+        expect(presetContainer.read(patchClashConfigProvider).mode, Mode.rule);
+        expect(
+          presetContainer.read(patchClashConfigProvider).tun.mtu,
+          defaultTunMtu,
+        );
+        expect(
+          presetContainer.read(networkSettingProvider).appendSystemDns,
+          isTrue,
+        );
+
+        final notifier = presetContainer.read(
+          optimize4gPresetProvider.notifier,
+        );
+        await notifier.enablePreset();
+
+        expect(presetContainer.read(optimize4gPresetProvider), isTrue);
+        expect(
+          presetContainer.read(patchClashConfigProvider).mode,
+          Mode.global,
+        );
+        expect(presetContainer.read(patchClashConfigProvider).tun.mtu, 1400);
+        expect(
+          presetContainer.read(networkSettingProvider).appendSystemDns,
+          isFalse,
+        );
+
+        await notifier.disablePresetAndRestore();
+
+        expect(presetContainer.read(optimize4gPresetProvider), isFalse);
+        expect(presetContainer.read(patchClashConfigProvider).mode, Mode.rule);
+        expect(
+          presetContainer.read(patchClashConfigProvider).tun.mtu,
+          defaultTunMtu,
+        );
+        expect(
+          presetContainer.read(patchClashConfigProvider).generalOverrideKeys,
+          isEmpty,
+        );
+        expect(
+          presetContainer.read(patchClashConfigProvider).dnsOverrideKeys,
+          isEmpty,
+        );
+        expect(
+          presetContainer.read(networkSettingProvider).appendSystemDns,
+          isTrue,
+        );
+      },
+    );
   });
 }
 

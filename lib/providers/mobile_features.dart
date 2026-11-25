@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/plugins/app.dart';
 import 'package:fl_clash/providers/config.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -137,6 +139,19 @@ final rootHotspotShareProvider =
     );
 
 class Optimize4gPresetNotifier extends _PersistedBoolNotifier {
+  static const _presetDnsOverrideKeys = {
+    DnsOverrideKey.enable,
+    DnsOverrideKey.ipv6,
+    DnsOverrideKey.preferH3,
+    DnsOverrideKey.useHosts,
+    DnsOverrideKey.respectRules,
+    DnsOverrideKey.enhancedMode,
+    DnsOverrideKey.nameserver,
+    DnsOverrideKey.defaultNameserver,
+    DnsOverrideKey.proxyServerNameserver,
+    DnsOverrideKey.directNameserver,
+  };
+
   @override
   Future<bool> readValue() => preferences.getOptimize4gPreset();
 
@@ -148,6 +163,96 @@ class Optimize4gPresetNotifier extends _PersistedBoolNotifier {
     if (saved) {
       applyMobilePreset();
     }
+  }
+
+  Future<void> enablePreset() async {
+    if (await preferences.getOptimize4gSnapshot() == null) {
+      if (_disposed) return;
+      final snapshot = json.encode({
+        'clash': ref.read(patchClashConfigProvider).toJson(),
+        'vpn': ref.read(vpnSettingProvider).toJson(),
+        'network': ref.read(networkSettingProvider).toJson(),
+      });
+      await preferences.setOptimize4gSnapshot(snapshot);
+    }
+    if (_disposed) return;
+    value = true;
+    applyMobilePreset();
+  }
+
+  Future<void> disablePresetAndRestore() async {
+    value = false;
+    final raw = await preferences.getOptimize4gSnapshot();
+    await preferences.setOptimize4gSnapshot(null);
+    if (_disposed) return;
+    if (raw != null) {
+      try {
+        final decoded = json.decode(raw) as Map<String, Object?>;
+        final savedClash = PatchClashConfig.fromJson(
+          Map<String, Object?>.from(decoded['clash']! as Map),
+        );
+        final savedVpn = VpnProps.fromJson(
+          Map<String, Object?>.from(decoded['vpn']! as Map),
+        );
+        final savedNetwork = NetworkProps.fromJson(
+          Map<String, Object?>.from(decoded['network']! as Map),
+        );
+        ref.read(patchClashConfigProvider.notifier).update((state) {
+          return state.copyWith(
+            mode: savedClash.mode,
+            ipv6: savedClash.ipv6,
+            generalOverrideKeys: savedClash.generalOverrideKeys,
+            tun: state.tun.copyWith(
+              enable: savedClash.tun.enable,
+              mtu: savedClash.tun.mtu,
+            ),
+            dns: savedClash.dns,
+            dnsOverrideKeys: savedClash.dnsOverrideKeys,
+          );
+        });
+        if (system.isAndroid) {
+          ref.read(vpnSettingProvider.notifier).update((state) {
+            return state.copyWith(
+              enable: savedVpn.enable,
+              systemProxy: savedVpn.systemProxy,
+              ipv6: savedVpn.ipv6,
+              dnsHijacking: savedVpn.dnsHijacking,
+              allowBypass: savedVpn.allowBypass,
+            );
+          });
+        }
+        ref.read(networkSettingProvider.notifier).update((state) {
+          return state.copyWith(
+            bypassPrivateRoute: savedNetwork.bypassPrivateRoute,
+            appendSystemDns: savedNetwork.appendSystemDns,
+          );
+        });
+        return;
+      } catch (_) {}
+    }
+
+    ref.read(patchClashConfigProvider.notifier).update((state) {
+      return state.copyWith(
+        mode: Mode.rule,
+        generalOverrideKeys: {
+          for (final key in state.generalOverrideKeys)
+            if (key != GeneralOverrideKey.ipv6) key,
+        },
+        tun: state.tun.copyWith(mtu: defaultTunMtu),
+        dnsOverrideKeys: {
+          for (final key in state.dnsOverrideKeys)
+            if (!_presetDnsOverrideKeys.contains(key)) key,
+        },
+      );
+    });
+    if (system.isAndroid) {
+      ref.read(vpnSettingProvider.notifier).update((state) {
+        return state.copyWith(dnsHijacking: false, allowBypass: true);
+      });
+    }
+    ref.read(networkSettingProvider.notifier).update((state) {
+      return state.copyWith(appendSystemDns: true);
+    });
   }
 
   void applyMobilePreset() {
@@ -183,19 +288,7 @@ class Optimize4gPresetNotifier extends _PersistedBoolNotifier {
           proxyServerNameserver: systemBootstrap,
           directNameserver: systemBootstrap,
         ),
-        dnsOverrideKeys: {
-          ...state.dnsOverrideKeys,
-          DnsOverrideKey.enable,
-          DnsOverrideKey.ipv6,
-          DnsOverrideKey.preferH3,
-          DnsOverrideKey.useHosts,
-          DnsOverrideKey.respectRules,
-          DnsOverrideKey.enhancedMode,
-          DnsOverrideKey.nameserver,
-          DnsOverrideKey.defaultNameserver,
-          DnsOverrideKey.proxyServerNameserver,
-          DnsOverrideKey.directNameserver,
-        },
+        dnsOverrideKeys: {...state.dnsOverrideKeys, ..._presetDnsOverrideKeys},
       );
     });
     if (system.isAndroid) {
