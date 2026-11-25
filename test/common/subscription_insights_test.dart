@@ -299,6 +299,15 @@ proxies:
         parsePortalErrorMessage({'message': 'Invalid credentials'}),
         'Invalid credentials',
       );
+      expect(
+        parsePortalErrorMessage({
+          'message': 'The given data was invalid.',
+          'errors': {
+            'password': ['Password too short'],
+          },
+        }),
+        'Password too short',
+      );
 
       final snap = parsePortalSubscribeResponse({
         'data': {
@@ -322,6 +331,13 @@ proxies:
       expect(snap.subscriptionInfo?.upload, 1024);
       expect(snap.subscriptionInfo?.download, 2048);
       expect(snap.subscriptionInfo?.total, 10737418240);
+
+      final zeroDevices = parsePortalSubscribeResponse({
+        'data': {'alive_ip': null, 'device_limit': 2},
+      }, origin: 'https://example.com');
+      expect(zeroDevices?.deviceMeta.onlineDevices, 0);
+      expect(zeroDevices?.deviceMeta.deviceLimit, 2);
+      expect(zeroDevices?.deviceMeta.badgeLabel, '0/2');
 
       final nestedLimit = parsePortalSubscribeResponse({
         'data': {

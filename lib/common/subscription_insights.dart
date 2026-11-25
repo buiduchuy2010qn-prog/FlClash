@@ -953,6 +953,21 @@ String? parsePortalLoginToken(Object? raw) {
 
 String? parsePortalErrorMessage(Object? raw) {
   if (raw is! Map) return null;
+  final errors = raw['errors'];
+  if (errors is Map) {
+    for (final entry in errors.entries) {
+      final val = entry.value;
+      if (val is List) {
+        for (final item in val) {
+          final text = item?.toString().trim();
+          if (text != null && text.isNotEmpty) return text;
+        }
+      } else {
+        final text = val?.toString().trim();
+        if (text != null && text.isNotEmpty) return text;
+      }
+    }
+  }
   for (final key in const ['message', 'error', 'msg']) {
     final value = raw[key]?.toString().trim();
     if (value != null && value.isNotEmpty) return value;
@@ -998,6 +1013,13 @@ PortalSubscribeSnapshot? parsePortalSubscribeResponse(
       deviceLimit = candidate;
       break;
     }
+  }
+
+  if (onlineDevices == null &&
+      deviceLimit != null &&
+      data.containsKey('alive_ip') &&
+      data['alive_ip'] == null) {
+    onlineDevices = 0;
   }
 
   final rawPlanName = (plan?['name'] ?? data['plan_name'])?.toString().trim();

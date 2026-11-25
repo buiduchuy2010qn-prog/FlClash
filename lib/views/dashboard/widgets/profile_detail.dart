@@ -284,11 +284,22 @@ class _ProfileDetailSheetState extends ConsumerState<ProfileDetailSheet>
                                     .copyWith(color: deviceColor),
                               ),
                             ),
-                          if (forecast != null && forecast.avgDailyBytes > 0)
+                          if (forecast != null &&
+                              (forecast.avgDailyBytes > 0 ||
+                                  forecast.status == QuotaBurnStatus.exhausted))
                             _InfoRow(
                               label: appLocalizations.quotaForecast,
                               value: Text(
-                                forecast.estimatedDaysLeft != null
+                                forecast.status == QuotaBurnStatus.exhausted
+                                    ? appLocalizations.quotaExhaustedHint
+                                    : (forecast.daysUntilExpiry != null &&
+                                          forecast.estimatedDaysLeft != null &&
+                                          forecast.estimatedDaysLeft! >=
+                                              forecast.daysUntilExpiry!)
+                                    ? appLocalizations.quotaSafeUntilExpiry(
+                                        forecast.avgDailyBytes.traffic.show,
+                                      )
+                                    : forecast.estimatedDaysLeft != null
                                     ? appLocalizations.quotaDaysEstimate(
                                         forecast.avgDailyBytes.traffic.show,
                                         forecast.estimatedDaysLeft!,
@@ -303,7 +314,7 @@ class _ProfileDetailSheetState extends ConsumerState<ProfileDetailSheet>
                             title: Text(appLocalizations.portalAccountSync),
                             subtitle: Text(
                               portalSubtitle,
-                              maxLines: 1,
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                             trailing: const GlyphIcon(AppGlyphs.chevronForward),
