@@ -2,10 +2,35 @@ part of '../action.dart';
 
 @Riverpod(keepAlive: true)
 class ProfilesAction extends _$ProfilesAction {
+  static const _subAlertCooldown = Duration(hours: 12);
   CoreController get _core => ref.read(coreHandlerProvider);
+  final Map<int, DateTime> _lastSubAlertAt = {};
 
   @override
   void build() {}
+
+  void _maybeNotifySubscriptionHealth(Profile profile) {
+    final alert = evaluateSubscriptionAlert(profile.subscriptionInfo);
+    if (alert == null) return;
+    final now = DateTime.now();
+    final last = _lastSubAlertAt[profile.id];
+    if (last != null && now.difference(last) < _subAlertCooldown) {
+      return;
+    }
+    _lastSubAlertAt[profile.id] = now;
+    final l = currentAppLocalizations;
+    final message = switch (alert.kind) {
+      SubscriptionAlertKind.expiredOrExhausted =>
+        l.subExpiredOrExhaustedWarning,
+      SubscriptionAlertKind.lowQuota => l.subQuotaLowWarning(
+        alert.remainingPercent ?? 0,
+      ),
+      SubscriptionAlertKind.expiringSoon => l.subExpiringSoonWarning(
+        alert.daysLeft ?? 0,
+      ),
+    };
+    dialogs.showBanner(message, level: BannerLevel.warning);
+  }
 
   void updateCurrentSelectedMap(String groupName, String proxyName) {
     final currentProfile = ref.read(currentProfileProvider);
@@ -178,6 +203,7 @@ class ProfilesAction extends _$ProfilesAction {
       );
       ref.read(profilesProvider.notifier).put(newProfile);
       if (profile.id == ref.read(currentProfileIdProvider)) {
+        _maybeNotifySubscriptionHealth(newProfile);
         ref
             .read(setupActionProvider.notifier)
             .applyProfileDebounce(silence: true);

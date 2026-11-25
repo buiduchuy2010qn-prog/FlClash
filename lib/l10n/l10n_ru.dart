@@ -4131,4 +4131,81 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get versionGateRetry => 'Проверить снова';
+
+  @override
+  String get securitySectionTitle => 'Безопасность и приватность';
+
+  @override
+  String get securitySectionFooter =>
+      'Локальный контроллер слушает только loopback со случайным ключом. Защита экрана скрывает предпросмотр.';
+
+  @override
+  String get privacyScreenShield => 'Защита от снимков экрана';
+
+  @override
+  String get privacyScreenShieldDesc =>
+      'Запрещает скриншоты и скрывает превью в недавних (FLAG_SECURE)';
+
+  @override
+  String get systemKillSwitch => 'Системный Kill Switch VPN';
+
+  @override
+  String get systemKillSwitchDesc =>
+      'Открыть настройки VPN Android для включения Постоянного VPN и блокировки без VPN';
+
+  @override
+  String get leakCheckTitle => 'Проверка утечек сети';
+
+  @override
+  String get leakCheckDesc =>
+      'Сравнение прямого и VPN IP, шифрованного DNS и утечки IPv6';
+
+  @override
+  String get leakCheckProtected => 'Защищено (Туннель активен)';
+
+  @override
+  String get leakCheckExposed => 'Не изолировано / Прямой выход';
+
+  @override
+  String get leakCheckDirectIp => 'Прямой IP';
+
+  @override
+  String get leakCheckTunnelIp => 'Выходной IP VPN';
+
+  @override
+  String get leakCheckDnsStatus => 'Шифрованный DNS / Fake-IP';
+
+  @override
+  String get leakCheckDnsSafe => 'Включено (Защищено)';
+
+  @override
+  String get leakCheckDnsWarn => 'Не шифруется или отключено';
+
+  @override
+  String get leakCheckIpv6Safe => 'Утечка IPv6 не обнаружена';
+
+  @override
+  String get leakCheckIpv6Warn => 'IPv6 совпадает с прямым выходом';
+
+  @override
+  String get bypassEssentialApps => 'Исключить банки и госуслуги';
+
+  @override
+  String bypassEssentialAppsTip(Object count) {
+    return 'Обход VPN применён к $count банковским и государственным приложениям';
+  }
+
+  @override
+  String subQuotaLowWarning(Object percent) {
+    return 'Заканчивается трафик подписки (осталось ~$percent%)';
+  }
+
+  @override
+  String subExpiringSoonWarning(Object days) {
+    return 'Срок текущей подписки истекает примерно через $days дн.';
+  }
+
+  @override
+  String get subExpiredOrExhaustedWarning =>
+      'Срок текущей подписки истёк или трафик исчерпан';
 }

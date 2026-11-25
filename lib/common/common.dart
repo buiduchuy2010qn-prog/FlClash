@@ -43,6 +43,7 @@ export 'provider_reader.dart';
 export 'proxy.dart';
 export 'request.dart';
 export 'search.dart';
+export 'security_utils.dart';
 export 'snowflake.dart';
 export 'string.dart';
 export 'system.dart';

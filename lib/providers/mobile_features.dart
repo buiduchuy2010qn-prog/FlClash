@@ -317,3 +317,32 @@ final optimize4gPresetProvider =
     NotifierProvider<Optimize4gPresetNotifier, bool>(
       Optimize4gPresetNotifier.new,
     );
+
+class PrivacyScreenShieldNotifier extends _PersistedBoolNotifier {
+  @override
+  Future<bool> readValue() => preferences.getPrivacyScreenShield();
+
+  @override
+  Future<void> writeValue(bool value) =>
+      preferences.setPrivacyScreenShield(value);
+
+  @override
+  void onHydrated(bool saved) {
+    if (system.isAndroid) {
+      unawaited(app?.setSecureScreen(saved));
+    }
+  }
+
+  @override
+  set value(bool next) {
+    super.value = next;
+    if (system.isAndroid) {
+      unawaited(app?.setSecureScreen(next));
+    }
+  }
+}
+
+final privacyScreenShieldProvider =
+    NotifierProvider<PrivacyScreenShieldNotifier, bool>(
+      PrivacyScreenShieldNotifier.new,
+    );

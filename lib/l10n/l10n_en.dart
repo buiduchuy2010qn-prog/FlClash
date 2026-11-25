@@ -4135,4 +4135,81 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get versionGateRetry => 'Check again';
+
+  @override
+  String get securitySectionTitle => 'Security & Privacy';
+
+  @override
+  String get securitySectionFooter =>
+      'Controller API listens only on local loopback with random secret protection. Screen shield blocks recent-task previews and screenshots on Android.';
+
+  @override
+  String get privacyScreenShield => 'Screen Capture Shield';
+
+  @override
+  String get privacyScreenShieldDesc =>
+      'Block screenshots and hide app preview in Android Recents (FLAG_SECURE)';
+
+  @override
+  String get systemKillSwitch => 'System VPN Kill Switch';
+
+  @override
+  String get systemKillSwitchDesc =>
+      'Open Android VPN settings to enable Always-on VPN and Block connections without VPN';
+
+  @override
+  String get leakCheckTitle => 'Network & Leak Check';
+
+  @override
+  String get leakCheckDesc =>
+      'Compare direct vs tunnel IP addresses, encrypted DNS, and IPv6 exposure';
+
+  @override
+  String get leakCheckProtected => 'Protected (Tunnel active)';
+
+  @override
+  String get leakCheckExposed => 'Not isolated / Direct exit';
+
+  @override
+  String get leakCheckDirectIp => 'Direct ISP IP';
+
+  @override
+  String get leakCheckTunnelIp => 'VPN Exit IP';
+
+  @override
+  String get leakCheckDnsStatus => 'Encrypted DNS / Fake-IP';
+
+  @override
+  String get leakCheckDnsSafe => 'Active (Protected)';
+
+  @override
+  String get leakCheckDnsWarn => 'Unencrypted or Disabled';
+
+  @override
+  String get leakCheckIpv6Safe => 'No IPv6 leak detected';
+
+  @override
+  String get leakCheckIpv6Warn => 'IPv6 matches direct exit';
+
+  @override
+  String get bypassEssentialApps => 'Bypass Banking & Gov Apps';
+
+  @override
+  String bypassEssentialAppsTip(Object count) {
+    return 'Applied VPN bypass to $count essential banking/public apps';
+  }
+
+  @override
+  String subQuotaLowWarning(Object percent) {
+    return 'Active subscription data is running low (~$percent% left)';
+  }
+
+  @override
+  String subExpiringSoonWarning(Object days) {
+    return 'Active subscription expires in about $days day(s)';
+  }
+
+  @override
+  String get subExpiredOrExhaustedWarning =>
+      'Active subscription has expired or run out of data';
 }

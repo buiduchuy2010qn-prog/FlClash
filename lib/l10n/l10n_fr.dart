@@ -4182,4 +4182,81 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get versionGateRetry => 'Vérifier à nouveau';
+
+  @override
+  String get securitySectionTitle => 'Sécurité et confidentialité';
+
+  @override
+  String get securitySectionFooter =>
+      'Le contrôleur écoute uniquement en local avec un secret aléatoire. Le bouclier d\'écran masque les aperçus.';
+
+  @override
+  String get privacyScreenShield => 'Protection contre les captures';
+
+  @override
+  String get privacyScreenShieldDesc =>
+      'Bloque les captures d\'écran et masque l\'aperçu dans Récents (FLAG_SECURE)';
+
+  @override
+  String get systemKillSwitch => 'Kill Switch VPN système';
+
+  @override
+  String get systemKillSwitchDesc =>
+      'Ouvre les paramètres VPN Android pour activer VPN permanent et bloquer sans VPN';
+
+  @override
+  String get leakCheckTitle => 'Test de fuites réseau';
+
+  @override
+  String get leakCheckDesc =>
+      'Compare IP directe et IP VPN, DNS chiffré et exposition IPv6';
+
+  @override
+  String get leakCheckProtected => 'Protégé (Tunnel actif)';
+
+  @override
+  String get leakCheckExposed => 'Non isolé / Sortie directe';
+
+  @override
+  String get leakCheckDirectIp => 'IP directe';
+
+  @override
+  String get leakCheckTunnelIp => 'IP de sortie VPN';
+
+  @override
+  String get leakCheckDnsStatus => 'DNS chiffré / Fake-IP';
+
+  @override
+  String get leakCheckDnsSafe => 'Actif (Protégé)';
+
+  @override
+  String get leakCheckDnsWarn => 'Non chiffré ou désactivé';
+
+  @override
+  String get leakCheckIpv6Safe => 'Aucune fuite IPv6 détectée';
+
+  @override
+  String get leakCheckIpv6Warn => 'IPv6 identique à la sortie directe';
+
+  @override
+  String get bypassEssentialApps => 'Exclure banques et services publics';
+
+  @override
+  String bypassEssentialAppsTip(Object count) {
+    return 'Contournement VPN appliqué à $count applications bancaires/publiques';
+  }
+
+  @override
+  String subQuotaLowWarning(Object percent) {
+    return 'Le forfait de l\'abonnement actif est bas (~$percent% restant)';
+  }
+
+  @override
+  String subExpiringSoonWarning(Object days) {
+    return 'L\'abonnement actif expire dans environ $days jour(s)';
+  }
+
+  @override
+  String get subExpiredOrExhaustedWarning =>
+      'L\'abonnement actif a expiré ou épuisé ses données';
 }

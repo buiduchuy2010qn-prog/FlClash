@@ -4,11 +4,12 @@ import 'dart:io';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/common/mitm_network.dart';
 import 'package:fl_clash/enum/enum.dart';
-import 'package:fl_clash/features/form/form.dart';
+import 'package:fl_clash/features/features.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/plugins/app.dart';
 import 'package:fl_clash/providers/mitm.dart';
 import 'package:fl_clash/providers/providers.dart';
+import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/views/config/override.dart';
 import 'package:fl_clash/views/config/tun.dart';
 import 'package:fl_clash/widgets/widgets.dart';
@@ -638,6 +639,58 @@ class Optimize4gPresetSection extends ConsumerWidget {
   }
 }
 
+class SecurityAndPrivacySection extends ConsumerWidget {
+  const SecurityAndPrivacySection({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.appLocalizations;
+    final hideIp = ref.watch(
+      appSettingProvider.select((state) => state.hideIp),
+    );
+    final screenShield = system.isAndroid
+        ? ref.watch(privacyScreenShieldProvider)
+        : false;
+    return generateSection(
+      title: l.securitySectionTitle,
+      items: [
+        ListItem.toggle(
+          title: Text(l.hideIp),
+          value: hideIp,
+          onChanged: (value) {
+            ref
+                .read(appSettingProvider.notifier)
+                .update((state) => state.copyWith(hideIp: value));
+          },
+        ),
+        if (system.isAndroid)
+          ListItem.toggle(
+            title: Text(l.privacyScreenShield),
+            subtitle: Text(l.privacyScreenShieldDesc),
+            value: screenShield,
+            onChanged: (value) {
+              ref.read(privacyScreenShieldProvider.notifier).value = value;
+            },
+          ),
+        if (system.isAndroid)
+          ListItem(
+            title: Text(l.systemKillSwitch),
+            subtitle: Text(l.systemKillSwitchDesc),
+            trailing: const GlyphIcon(AppGlyphs.chevronForward),
+            onTap: () => unawaited(app?.openVpnSettings()),
+          ),
+        ListItem(
+          title: Text(l.leakCheckTitle),
+          subtitle: Text(l.leakCheckDesc),
+          trailing: const GlyphIcon(AppGlyphs.chevronForward),
+          onTap: () => showLeakCheckSheet(context),
+        ),
+      ],
+      footer: l.securitySectionFooter,
+    );
+  }
+}
+
 class HotspotShareSection extends ConsumerWidget {
   const HotspotShareSection({super.key});
 
@@ -674,12 +727,18 @@ class HotspotShareSection extends ConsumerWidget {
     final mixedPort = ref.watch(
       patchClashConfigProvider.select((state) => state.mixedPort),
     );
+    final hideIp = ref.watch(
+      appSettingProvider.select((state) => state.hideIp),
+    );
     final localIp = ref.watch(localIpProvider);
     final rootShare = ref.watch(rootHotspotShareProvider);
     final host = (localIp != null && localIp.isNotEmpty)
         ? localIp
         : '192.168.43.1';
     final proxyAddress = '$host:$mixedPort';
+    final displayedProxyAddress = hideIp
+        ? '$maskedSensitiveValue:$mixedPort'
+        : proxyAddress;
 
     return generateSection(
       title: l.hotspotSectionTitle,
@@ -697,10 +756,10 @@ class HotspotShareSection extends ConsumerWidget {
         if (allowLan)
           ListItem(
             title: Text(l.hotspotProxyAddress),
-            subtitle: Text(proxyAddress),
+            subtitle: Text(displayedProxyAddress),
             onTap: () {
               unawaited(Clipboard.setData(ClipboardData(text: proxyAddress)));
-              dialogs.showBanner(l.hotspotCopiedTip(proxyAddress));
+              dialogs.showBanner(l.hotspotCopiedTip(displayedProxyAddress));
             },
           ),
         ListItem.toggle(
@@ -729,6 +788,7 @@ class NetworkListView extends StatelessWidget {
       children: [
         if (system.isAndroid) const VpnSections(),
         const Optimize4gPresetSection(),
+        const SecurityAndPrivacySection(),
         if (system.isAndroid) const HotspotShareSection(),
         if (system.isDesktop) const SystemProxySection(),
         const NetworkOptionsSection(),

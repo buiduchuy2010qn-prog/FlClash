@@ -4177,4 +4177,81 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get versionGateRetry => 'Comprobar de nuevo';
+
+  @override
+  String get securitySectionTitle => 'Seguridad y privacidad';
+
+  @override
+  String get securitySectionFooter =>
+      'La API local escucha solo en loopback con secreto aleatorio. La protección de pantalla oculta vistas previas.';
+
+  @override
+  String get privacyScreenShield => 'Protección de captura de pantalla';
+
+  @override
+  String get privacyScreenShieldDesc =>
+      'Bloquea capturas y oculta la vista previa en apps recientes (FLAG_SECURE)';
+
+  @override
+  String get systemKillSwitch => 'Interruptor de bloqueo VPN del sistema';
+
+  @override
+  String get systemKillSwitchDesc =>
+      'Abre ajustes de VPN de Android para activar VPN siempre activa y bloquear sin VPN';
+
+  @override
+  String get leakCheckTitle => 'Prueba de fugas de red';
+
+  @override
+  String get leakCheckDesc =>
+      'Compara IP directa y VPN, DNS cifrado y exposición IPv6';
+
+  @override
+  String get leakCheckProtected => 'Protegido (Túnel activo)';
+
+  @override
+  String get leakCheckExposed => 'Sin aislar / Salida directa';
+
+  @override
+  String get leakCheckDirectIp => 'IP directa';
+
+  @override
+  String get leakCheckTunnelIp => 'IP de salida VPN';
+
+  @override
+  String get leakCheckDnsStatus => 'DNS cifrado / Fake-IP';
+
+  @override
+  String get leakCheckDnsSafe => 'Activo (Protegido)';
+
+  @override
+  String get leakCheckDnsWarn => 'Sin cifrar o desactivado';
+
+  @override
+  String get leakCheckIpv6Safe => 'Sin fuga IPv6 detectada';
+
+  @override
+  String get leakCheckIpv6Warn => 'IPv6 coincide con la salida directa';
+
+  @override
+  String get bypassEssentialApps => 'Omitir apps bancarias y públicas';
+
+  @override
+  String bypassEssentialAppsTip(Object count) {
+    return 'Se omitió la VPN para $count apps esenciales de banca/servicios públicos';
+  }
+
+  @override
+  String subQuotaLowWarning(Object percent) {
+    return 'Queda pocos datos en la suscripción activa (~$percent%)';
+  }
+
+  @override
+  String subExpiringSoonWarning(Object days) {
+    return 'La suscripción activa vence en unos $days día(s)';
+  }
+
+  @override
+  String get subExpiredOrExhaustedWarning =>
+      'La suscripción activa caducó o agotó sus datos';
 }
