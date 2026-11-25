@@ -1,4 +1,5 @@
 import 'package:fl_clash/common/security_utils.dart';
+import 'package:fl_clash/common/subscription_insights.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -105,6 +106,28 @@ void main() {
           evaluateSubscriptionAlert(exhausted, now: now)?.kind,
           SubscriptionAlertKind.expiredOrExhausted,
         );
+
+        final withinDevices = evaluateSubscriptionAlert(
+          healthy,
+          deviceMeta: const SubscriptionDeviceMeta(
+            onlineDevices: 2,
+            deviceLimit: 2,
+          ),
+          now: now,
+        );
+        expect(withinDevices, isNull);
+
+        final overDevices = evaluateSubscriptionAlert(
+          healthy,
+          deviceMeta: const SubscriptionDeviceMeta(
+            onlineDevices: 3,
+            deviceLimit: 2,
+          ),
+          now: now,
+        );
+        expect(overDevices?.kind, SubscriptionAlertKind.deviceLimitExceeded);
+        expect(overDevices?.onlineDevices, 3);
+        expect(overDevices?.deviceLimit, 2);
       },
     );
   });

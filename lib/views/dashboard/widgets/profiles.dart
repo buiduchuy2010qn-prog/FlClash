@@ -15,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'card.dart';
 import 'profile_detail.dart';
+
 import 'package:prism_ui/prism_ui.dart';
 
 typedef _Usage = ({int used, int total, double share});
@@ -76,6 +77,10 @@ class ProfilesCard extends ConsumerWidget {
     final compact = density.isCompact;
     final appLocalizations = context.appLocalizations;
     final profile = ref.watch(currentProfileProvider);
+    final deviceMeta = profile == null
+        ? null
+        : ref.watch(effectiveProfileDeviceMetaProvider(profile.id));
+    final deviceBadge = deviceMeta?.badgeLabel;
     final switchable = ref.watch(
       profilesProvider.select((profiles) => profiles.length > 1),
     );
@@ -145,6 +150,15 @@ class ProfilesCard extends ConsumerWidget {
             glyph: AppGlyphs.profiles,
             title: appLocalizations.profile,
             chevron: mobile,
+            leading: [
+              if (deviceBadge != null)
+                DashboardChip(
+                  label: deviceBadge,
+                  tone: (deviceMeta!.isOverLimit || deviceMeta.isAtLimit)
+                      ? DashboardChipTone.warn
+                      : DashboardChipTone.ok,
+                ),
+            ],
             trailing: [
               if (mobile)
                 ?sync

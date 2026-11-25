@@ -57,6 +57,7 @@ class _DailyTrafficCardState extends ConsumerState<DailyTrafficCard> {
   Widget build(BuildContext context) {
     final l = context.appLocalizations;
     final ledger = ref.watch(dailyTrafficProvider);
+    final forecast = ref.watch(currentQuotaForecastProvider);
     final colors = DashboardColors.of(context);
     final colorScheme = context.colorScheme;
 
@@ -149,6 +150,37 @@ class _DailyTrafficCardState extends ConsumerState<DailyTrafficCard> {
               ),
             ),
           ),
+          if (forecast != null &&
+              (forecast.avgDailyBytes > 0 ||
+                  forecast.status == QuotaBurnStatus.exhausted)) ...[
+            const SizedBox(height: 8),
+            Text(
+              forecast.status == QuotaBurnStatus.exhausted
+                  ? l.quotaExhaustedHint
+                  : (forecast.daysUntilExpiry != null &&
+                        forecast.estimatedDaysLeft != null &&
+                        forecast.estimatedDaysLeft! >=
+                            forecast.daysUntilExpiry!)
+                  ? l.quotaSafeUntilExpiry(
+                      dashboardTraffic(forecast.avgDailyBytes),
+                    )
+                  : forecast.estimatedDaysLeft != null
+                  ? l.quotaDaysEstimate(
+                      dashboardTraffic(forecast.avgDailyBytes),
+                      forecast.estimatedDaysLeft!,
+                    )
+                  : l.quotaAvgDaily(dashboardTraffic(forecast.avgDailyBytes)),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyle.footnote
+                  .of(context)
+                  .copyWith(
+                    color: forecast.status == QuotaBurnStatus.comfortable
+                        ? colorScheme.onSurfaceVariant
+                        : colors.warn,
+                  ),
+            ),
+          ],
         ],
       ),
     );

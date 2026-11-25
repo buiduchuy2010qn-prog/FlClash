@@ -1344,6 +1344,65 @@
   "subQuotaLowWarning": "Active subscription data is running low (~{percent}% left)",
   "subExpiringSoonWarning": "Active subscription expires in about {days} day(s)",
   "subExpiredOrExhaustedWarning": "Active subscription has expired or run out of data",
+  "activeDevices": "Active Devices",
+  "devicesShort": "{value} devices",
+  "devicesNotReported": "Not reported by plan",
+  "openPlanPortal": "Open Plan Management Portal",
+  "subDeviceLimitExceededWarning": "Active devices ({online}/{limit}) exceed your plan limit",
+  "quotaForecast": "Quota Forecast",
+  "quotaAvgDaily": "Avg {avg}/day",
+  "quotaDaysEstimate": "{avg}/day · ~{days}d left",
+  "quotaSafeUntilExpiry": "{avg}/day · Enough until expiry",
+  "quotaDailyBudget": "Safe budget ~{budget}/day",
+  "quotaExhaustedHint": "Subscription quota exhausted or expired",
+  "smartHubTitle": "Smart Hub",
+  "smartHubSubtitle": "Health score, 1-tap network self-heal, device monitor & modes",
+  "smartHealthTitle": "Connection Health",
+  "smartHealthExcellent": "Excellent",
+  "smartHealthStable": "Stable",
+  "smartHealthAttention": "Needs Attention",
+  "smartHealthStopped": "VPN Stopped",
+  "smartSelfHealTitle": "1-Tap Network Self-Heal",
+  "smartSelfHealDesc": "Flush stale DNS, verify active node, switch only if unresponsive",
+  "smartSelfHealRun": "Run Self-Heal",
+  "smartSelfHealRunning": "Healing...",
+  "smartHealStartVpnFirst": "Turn on VPN first to run self-heal",
+  "smartHealStepClean": "Step 1/4: Flushing DNS & closing stalled streams...",
+  "smartHealStepProbe": "Step 2/4: Checking active node...",
+  "smartHealStepFallback": "Step 3/4: Finding first responsive backup node...",
+  "smartHealStepVerify": "Step 4/4: Verifying session footprint...",
+  "smartHealDoneHealthy": "Active node {node} is healthy ({delay})",
+  "smartHealDoneSwitched": "Switched cleanly to responsive node {node}",
+  "smartHealDoneFailed": "Could not verify active node. Try refreshing your subscription.",
+  "smartFootprintTitle": "This Device Session",
+  "smartFootprintIdle": "Idle (VPN off)",
+  "smartFootprintSingle": "1 node ({node}) · {count} streams",
+  "smartFootprintMultiWarn": "{nodes} nodes active simultaneously ({count} streams)",
+  "smartFootprintCleanup": "Reset streams back to 1 active node",
+  "smartFootprintCleanedTip": "Closed old connections cleanly",
+  "smartModesSection": "Smart Protection Modes",
+  "smartModeSingleDevice": "Single-Device Strict Guard",
+  "smartModeSingleDeviceDesc": "Lock 1 active node, close old streams on switch, disable IPv6 racing",
+  "smartModeSingleDeviceApplied": "Single-Device Strict Guard applied",
+  "smartModePrivacyMax": "Privacy Max Shield",
+  "smartModePrivacyMaxDesc": "Mask IP displays and block Android Recents screenshots",
+  "smartModePrivacyMaxApplied": "Privacy Max Shield enabled",
+  "smartTopConsumers": "Top Session Usage",
+  "smartTopConsumersEmpty": "No active traffic streams yet",
+  "portalAccountSync": "Plan Portal Account Sync",
+  "portalConnectSubtitle": "Sign in to fetch live active devices",
+  "portalConnectedAs": "Synced: {email}",
+  "portalSessionExpired": "Session expired — tap to sign in again",
+  "portalOriginLabel": "Portal Website URL",
+  "portalEmailLabel": "Account Email",
+  "portalPasswordLabel": "Password",
+  "portalSecurityFooter": "Only an encrypted session token is stored locally; your password is never saved on device.",
+  "portalConnectedTip": "Plan portal account connected",
+  "portalDisconnect": "Disconnect Portal Account",
+  "portalDisconnectedTip": "Portal account disconnected",
+  "portalInvalidUrl": "Please enter a valid http/https website URL",
+  "portalInvalidEmail": "Please enter a valid email address",
+  "planName": "Plan Name",
   "@hotspotCopiedTip": {
     "placeholders": {
       "address": {}
@@ -1362,6 +1421,66 @@
   "@subExpiringSoonWarning": {
     "placeholders": {
       "days": {}
+    }
+  },
+  "@devicesShort": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@subDeviceLimitExceededWarning": {
+    "placeholders": {
+      "online": {},
+      "limit": {}
+    }
+  },
+  "@quotaAvgDaily": {
+    "placeholders": {
+      "avg": {}
+    }
+  },
+  "@quotaDaysEstimate": {
+    "placeholders": {
+      "avg": {},
+      "days": {}
+    }
+  },
+  "@quotaSafeUntilExpiry": {
+    "placeholders": {
+      "avg": {}
+    }
+  },
+  "@quotaDailyBudget": {
+    "placeholders": {
+      "budget": {}
+    }
+  },
+  "@smartHealDoneHealthy": {
+    "placeholders": {
+      "node": {},
+      "delay": {}
+    }
+  },
+  "@smartHealDoneSwitched": {
+    "placeholders": {
+      "node": {}
+    }
+  },
+  "@smartFootprintSingle": {
+    "placeholders": {
+      "node": {},
+      "count": {}
+    }
+  },
+  "@smartFootprintMultiWarn": {
+    "placeholders": {
+      "nodes": {},
+      "count": {}
+    }
+  },
+  "@portalConnectedAs": {
+    "placeholders": {
+      "email": {}
     }
   }
 }

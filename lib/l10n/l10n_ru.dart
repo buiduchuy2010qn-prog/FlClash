@@ -4208,4 +4208,211 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get subExpiredOrExhaustedWarning =>
       'Срок текущей подписки истёк или трафик исчерпан';
+
+  @override
+  String get activeDevices => 'Активные устройства';
+
+  @override
+  String devicesShort(Object value) {
+    return 'Устройств: $value';
+  }
+
+  @override
+  String get devicesNotReported => 'Не передаётся тарифом';
+
+  @override
+  String get openPlanPortal => 'Открыть портал управления тарифом';
+
+  @override
+  String subDeviceLimitExceededWarning(Object online, Object limit) {
+    return 'Активных устройств ($online/$limit) больше лимита тарифа';
+  }
+
+  @override
+  String get quotaForecast => 'Прогноз трафика';
+
+  @override
+  String quotaAvgDaily(Object avg) {
+    return 'В среднем $avg/день';
+  }
+
+  @override
+  String quotaDaysEstimate(Object avg, Object days) {
+    return '$avg/день · Хватит на ~$days дн.';
+  }
+
+  @override
+  String quotaSafeUntilExpiry(Object avg) {
+    return '$avg/день · Хватит до конца срока';
+  }
+
+  @override
+  String quotaDailyBudget(Object budget) {
+    return 'Безопасно до ~$budget/день';
+  }
+
+  @override
+  String get quotaExhaustedHint => 'Лимит трафика исчерпан или истёк срок';
+
+  @override
+  String get smartHubTitle => 'Умный центр';
+
+  @override
+  String get smartHubSubtitle =>
+      'Оценка сети, автовосстановление в 1 нажатие и контроль устройств';
+
+  @override
+  String get smartHealthTitle => 'Состояние подключения';
+
+  @override
+  String get smartHealthExcellent => 'Отлично';
+
+  @override
+  String get smartHealthStable => 'Стабильно';
+
+  @override
+  String get smartHealthAttention => 'Требует внимания';
+
+  @override
+  String get smartHealthStopped => 'VPN выключен';
+
+  @override
+  String get smartSelfHealTitle => 'Автовосстановление сети';
+
+  @override
+  String get smartSelfHealDesc =>
+      'Очистка DNS, проверка текущего узла и переключение только при сбое';
+
+  @override
+  String get smartSelfHealRun => 'Запустить';
+
+  @override
+  String get smartSelfHealRunning => 'Проверка...';
+
+  @override
+  String get smartHealStartVpnFirst =>
+      'Сначала включите VPN для запуска проверки';
+
+  @override
+  String get smartHealStepClean => 'Шаг 1/4: Очистка DNS и зависших потоков...';
+
+  @override
+  String get smartHealStepProbe => 'Шаг 2/4: Проверка активного узла...';
+
+  @override
+  String get smartHealStepFallback => 'Шаг 3/4: Поиск первого рабочего узла...';
+
+  @override
+  String get smartHealStepVerify => 'Шаг 4/4: Проверка сессии устройства...';
+
+  @override
+  String smartHealDoneHealthy(Object node, Object delay) {
+    return 'Узел $node работает исправно ($delay)';
+  }
+
+  @override
+  String smartHealDoneSwitched(Object node) {
+    return 'Выполнено переключение на узел $node';
+  }
+
+  @override
+  String get smartHealDoneFailed =>
+      'Не удалось проверить узел. Попробуйте обновить подписку.';
+
+  @override
+  String get smartFootprintTitle => 'Сессия этого устройства';
+
+  @override
+  String get smartFootprintIdle => 'Ожидание (VPN выключен)';
+
+  @override
+  String smartFootprintSingle(Object node, Object count) {
+    return '1 узел ($node) · Потоков: $count';
+  }
+
+  @override
+  String smartFootprintMultiWarn(Object nodes, Object count) {
+    return 'Активно узлов: $nodes (потоков: $count)';
+  }
+
+  @override
+  String get smartFootprintCleanup => 'Свести потоки к 1 узлу';
+
+  @override
+  String get smartFootprintCleanedTip => 'Старые соединения закрыты';
+
+  @override
+  String get smartModesSection => 'Умные режимы защиты';
+
+  @override
+  String get smartModeSingleDevice => 'Строгий режим 1 устройства';
+
+  @override
+  String get smartModeSingleDeviceDesc =>
+      '1 узел, закрытие старых потоков и отключение IPv6';
+
+  @override
+  String get smartModeSingleDeviceApplied =>
+      'Строгий режим 1 устройства применён';
+
+  @override
+  String get smartModePrivacyMax => 'Максимальная приватность';
+
+  @override
+  String get smartModePrivacyMaxDesc =>
+      'Скрытие IP в интерфейсе и защита экрана от снимков';
+
+  @override
+  String get smartModePrivacyMaxApplied => 'Максимальная приватность включена';
+
+  @override
+  String get smartTopConsumers => 'Крупнейшие потоки сессии';
+
+  @override
+  String get smartTopConsumersEmpty => 'Активных потоков пока нет';
+
+  @override
+  String get portalAccountSync => 'Синхронизация аккаунта тарифа';
+
+  @override
+  String get portalConnectSubtitle => 'Войдите для точного учёта устройств';
+
+  @override
+  String portalConnectedAs(Object email) {
+    return 'Синхронизировано: $email';
+  }
+
+  @override
+  String get portalSessionExpired => 'Сессия истекла — нажмите для входа';
+
+  @override
+  String get portalOriginLabel => 'Адрес сайта тарифа';
+
+  @override
+  String get portalEmailLabel => 'Email аккаунта';
+
+  @override
+  String get portalPasswordLabel => 'Пароль';
+
+  @override
+  String get portalSecurityFooter =>
+      'На устройстве сохраняется только токен сессии; пароль никогда не сохраняется.';
+
+  @override
+  String get portalConnectedTip => 'Аккаунт тарифа подключён';
+
+  @override
+  String get portalDisconnect => 'Отключить аккаунт';
+
+  @override
+  String get portalDisconnectedTip => 'Аккаунт тарифа отключён';
+
+  @override
+  String get portalInvalidUrl => 'Введите корректный http/https адрес';
+
+  @override
+  String get portalInvalidEmail => 'Введите корректный email';
+
+  @override
+  String get planName => 'Тариф';
 }

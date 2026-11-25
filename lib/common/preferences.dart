@@ -68,6 +68,8 @@ class Preferences {
   static const _privacyScreenShieldKey = 'privacy_screen_shield';
   static const _dailyTrafficEnabledKey = 'daily_traffic_enabled';
   static const _dailyTrafficHistoryKey = 'daily_traffic_history_v1';
+  static const _subscriptionInsightsKey = 'subscription_insights_v1';
+  static const _portalAccountsKey = 'portal_accounts_v1';
   static const _versionGateCacheKey = 'version_gate_cache_v1';
   static const _deviceHwidKey = 'device_hwid_v1';
   static final _hwidPattern = RegExp(r'^[0-9a-f]{32}$');
@@ -148,6 +150,17 @@ class Preferences {
 
   Future<void> setDailyTrafficHistory(String? value) =>
       _setString(_dailyTrafficHistoryKey, value);
+
+  Future<String?> getSubscriptionInsights() =>
+      _getString(_subscriptionInsightsKey);
+
+  Future<void> setSubscriptionInsights(String? value) =>
+      _setString(_subscriptionInsightsKey, value);
+
+  Future<String?> getPortalAccounts() => _getString(_portalAccountsKey);
+
+  Future<void> setPortalAccounts(String? value) =>
+      _setString(_portalAccountsKey, value);
 
   Future<String?> getVersionGateCache() => _getString(_versionGateCacheKey);
 

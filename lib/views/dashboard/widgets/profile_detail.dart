@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/features/features.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
@@ -149,6 +150,22 @@ class ProfileDetailSheet extends ConsumerStatefulWidget {
 
 class _ProfileDetailSheetState extends ConsumerState<ProfileDetailSheet>
     with ConfigCountsWatch<ProfileDetailSheet> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final profile = ref.read(currentProfileProvider);
+      if (profile != null) {
+        unawaited(
+          ref
+              .read(profilesActionProvider.notifier)
+              .refreshPortalStatus(profile),
+        );
+      }
+    });
+  }
+
   void _handlePreview(Profile profile) {
     unawaited(
       pushNestedPage<void>(context, PreviewProfileView(profile: profile)),
@@ -173,6 +190,34 @@ class _ProfileDetailSheetState extends ConsumerState<ProfileDetailSheet>
     );
     final appLocalizations = context.appLocalizations;
     final subscriptionInfo = profile.subscriptionInfo;
+    final deviceMeta = ref.watch(
+      effectiveProfileDeviceMetaProvider(profile.id),
+    );
+    final portalBinding = ref.watch(
+      portalAccountsProvider.select((s) => s[profile.id]),
+    );
+    final forecast = ref.watch(currentQuotaForecastProvider);
+    final colorScheme = context.colorScheme;
+    final hasSubDetails =
+        (subscriptionInfo != null && subscriptionInfo.total > 0) ||
+        deviceMeta != null ||
+        portalBinding != null ||
+        profile.type == ProfileType.url;
+    final deviceColor = deviceMeta == null
+        ? colorScheme.onSurfaceVariant
+        : deviceMeta.isOverLimit
+        ? colorScheme.error
+        : deviceMeta.isAtLimit
+        ? colorScheme.warning
+        : colorScheme.success;
+    final deviceLabel = deviceMeta?.badgeLabel != null
+        ? appLocalizations.devicesShort(deviceMeta!.badgeLabel!)
+        : appLocalizations.devicesNotReported;
+    final portalSubtitle = switch (portalBinding) {
+      null => appLocalizations.portalConnectSubtitle,
+      final b when b.authExpired => appLocalizations.portalSessionExpired,
+      final b => appLocalizations.portalConnectedAs(b.email),
+    };
     return Scaffold(
       title: profile.realLabel,
       iconActions: [
@@ -207,15 +252,75 @@ class _ProfileDetailSheetState extends ConsumerState<ProfileDetailSheet>
                       },
                       failed: configCountsFailed,
                     ),
-                    if (subscriptionInfo != null && subscriptionInfo.total > 0)
+                    if (hasSubDetails)
                       generateSection(
                         title: appLocalizations.subscriptionInfo,
                         items: [
+                          if (subscriptionInfo != null &&
+                              subscriptionInfo.total > 0)
+                            ListItem(
+                              title: SubscriptionInfoView(
+                                subscriptionInfo: subscriptionInfo,
+                              ),
+                            ),
+                          if (deviceMeta?.planName case final planName?)
+                            _InfoRow(
+                              label: appLocalizations.planName,
+                              value: Text(
+                                planName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          if (deviceMeta != null ||
+                              portalBinding != null ||
+                              profile.type == ProfileType.url)
+                            _InfoRow(
+                              label: appLocalizations.activeDevices,
+                              value: Text(
+                                deviceLabel,
+                                style: AppTextStyle.subheadline
+                                    .of(context, emphasized: true)
+                                    .copyWith(color: deviceColor),
+                              ),
+                            ),
+                          if (forecast != null && forecast.avgDailyBytes > 0)
+                            _InfoRow(
+                              label: appLocalizations.quotaForecast,
+                              value: Text(
+                                forecast.estimatedDaysLeft != null
+                                    ? appLocalizations.quotaDaysEstimate(
+                                        forecast.avgDailyBytes.traffic.show,
+                                        forecast.estimatedDaysLeft!,
+                                      )
+                                    : appLocalizations.quotaAvgDaily(
+                                        forecast.avgDailyBytes.traffic.show,
+                                      ),
+                              ),
+                            ),
                           ListItem(
-                            title: SubscriptionInfoView(
-                              subscriptionInfo: subscriptionInfo,
+                            leading: const GlyphIcon(AppGlyphs.account),
+                            title: Text(appLocalizations.portalAccountSync),
+                            subtitle: Text(
+                              portalSubtitle,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            trailing: const GlyphIcon(AppGlyphs.chevronForward),
+                            onTap: () => unawaited(
+                              showPortalConnectSheet(context, profile),
                             ),
                           ),
+                          if (deviceMeta?.portalUrl case final portalUrl?)
+                            ListItem(
+                              leading: const GlyphIcon(AppGlyphs.openExternal),
+                              title: Text(appLocalizations.openPlanPortal),
+                              trailing: const GlyphIcon(
+                                AppGlyphs.chevronForward,
+                              ),
+                              onTap: () =>
+                                  unawaited(dialogs.openUrl(portalUrl)),
+                            ),
                         ],
                       ),
                     generateSection(

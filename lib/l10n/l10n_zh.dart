@@ -3963,4 +3963,203 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get subExpiredOrExhaustedWarning => '当前订阅已过期或流量已耗尽';
+
+  @override
+  String get activeDevices => '在线设备数';
+
+  @override
+  String devicesShort(Object value) {
+    return '$value 台设备';
+  }
+
+  @override
+  String get devicesNotReported => '订阅未返回设备数';
+
+  @override
+  String get openPlanPortal => '打开套餐管理页面';
+
+  @override
+  String subDeviceLimitExceededWarning(Object online, Object limit) {
+    return '在线设备数（$online/$limit）已超出套餐上限';
+  }
+
+  @override
+  String get quotaForecast => '流量预测';
+
+  @override
+  String quotaAvgDaily(Object avg) {
+    return '日均 $avg';
+  }
+
+  @override
+  String quotaDaysEstimate(Object avg, Object days) {
+    return '日均 $avg · 预计可用 $days 天';
+  }
+
+  @override
+  String quotaSafeUntilExpiry(Object avg) {
+    return '日均 $avg · 足够用到期';
+  }
+
+  @override
+  String quotaDailyBudget(Object budget) {
+    return '建议每日不超过 $budget';
+  }
+
+  @override
+  String get quotaExhaustedHint => '套餐流量已耗尽或已到期';
+
+  @override
+  String get smartHubTitle => '智能中心';
+
+  @override
+  String get smartHubSubtitle => '连接健康评分、一键网络自愈、设备监控与场景模式';
+
+  @override
+  String get smartHealthTitle => '连接健康度';
+
+  @override
+  String get smartHealthExcellent => '极佳';
+
+  @override
+  String get smartHealthStable => '稳定';
+
+  @override
+  String get smartHealthAttention => '需要注意';
+
+  @override
+  String get smartHealthStopped => 'VPN 未运行';
+
+  @override
+  String get smartSelfHealTitle => '一键网络自愈';
+
+  @override
+  String get smartSelfHealDesc => '清理 DNS 缓存、仅探测当前节点，失联时再顺序切换';
+
+  @override
+  String get smartSelfHealRun => '立即自愈';
+
+  @override
+  String get smartSelfHealRunning => '正在修复...';
+
+  @override
+  String get smartHealStartVpnFirst => '请先开启 VPN 再执行网络自愈';
+
+  @override
+  String get smartHealStepClean => '步骤 1/4：清理 DNS 缓存并关闭卡死连接...';
+
+  @override
+  String get smartHealStepProbe => '步骤 2/4：正在检测当前节点...';
+
+  @override
+  String get smartHealStepFallback => '步骤 3/4：正在寻找首个可用备用节点...';
+
+  @override
+  String get smartHealStepVerify => '步骤 4/4：正在校验单设备会话...';
+
+  @override
+  String smartHealDoneHealthy(Object node, Object delay) {
+    return '当前节点 $node 状态良好（$delay）';
+  }
+
+  @override
+  String smartHealDoneSwitched(Object node) {
+    return '已平稳切换至可用节点 $node';
+  }
+
+  @override
+  String get smartHealDoneFailed => '无法验证当前节点，请尝试更新订阅配置';
+
+  @override
+  String get smartFootprintTitle => '本机当前会话';
+
+  @override
+  String get smartFootprintIdle => '空闲（VPN 已关闭）';
+
+  @override
+  String smartFootprintSingle(Object node, Object count) {
+    return '1 个节点（$node）· $count 条连接';
+  }
+
+  @override
+  String smartFootprintMultiWarn(Object nodes, Object count) {
+    return '$nodes 个节点同时活跃（$count 条连接）';
+  }
+
+  @override
+  String get smartFootprintCleanup => '收敛连接为单节点';
+
+  @override
+  String get smartFootprintCleanedTip => '已清理旧连接';
+
+  @override
+  String get smartModesSection => '一键智能防护模式';
+
+  @override
+  String get smartModeSingleDevice => '单设备严格防护';
+
+  @override
+  String get smartModeSingleDeviceDesc => '锁定单节点、切换关闭旧连接并禁用 IPv6 并发';
+
+  @override
+  String get smartModeSingleDeviceApplied => '已启用单设备严格防护';
+
+  @override
+  String get smartModePrivacyMax => '极致隐私护盾';
+
+  @override
+  String get smartModePrivacyMaxDesc => '隐藏界面 IP 并禁止系统多任务截屏预览';
+
+  @override
+  String get smartModePrivacyMaxApplied => '已开启极致隐私护盾';
+
+  @override
+  String get smartTopConsumers => '当前高流量消耗';
+
+  @override
+  String get smartTopConsumersEmpty => '暂无活跃流量记录';
+
+  @override
+  String get portalAccountSync => '套餐账户同步';
+
+  @override
+  String get portalConnectSubtitle => '登录以同步实时在线设备数';
+
+  @override
+  String portalConnectedAs(Object email) {
+    return '已同步：$email';
+  }
+
+  @override
+  String get portalSessionExpired => '登录已过期 — 点击重新登录';
+
+  @override
+  String get portalOriginLabel => '套餐网站地址';
+
+  @override
+  String get portalEmailLabel => '账户邮箱';
+
+  @override
+  String get portalPasswordLabel => '密码';
+
+  @override
+  String get portalSecurityFooter => '本地仅保存会话令牌，绝不保存您的明文密码。';
+
+  @override
+  String get portalConnectedTip => '已连接套餐账户';
+
+  @override
+  String get portalDisconnect => '断开账户同步';
+
+  @override
+  String get portalDisconnectedTip => '已断开套餐账户';
+
+  @override
+  String get portalInvalidUrl => '请输入有效的 http/https 网址';
+
+  @override
+  String get portalInvalidEmail => '请输入有效的邮箱地址';
+
+  @override
+  String get planName => '套餐名称';
 }

@@ -4095,4 +4095,203 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get subExpiredOrExhaustedWarning => '활성 구독이 만료되었거나 데이터를 모두 소진했습니다';
+
+  @override
+  String get activeDevices => '활성 기기 수';
+
+  @override
+  String devicesShort(Object value) {
+    return '$value대 기기';
+  }
+
+  @override
+  String get devicesNotReported => '요금제에서 미제공';
+
+  @override
+  String get openPlanPortal => '요금제 관리 페이지 열기';
+
+  @override
+  String subDeviceLimitExceededWarning(Object online, Object limit) {
+    return '활성 기기 수($online/$limit)가 제한을 초과했습니다';
+  }
+
+  @override
+  String get quotaForecast => '사용량 예측';
+
+  @override
+  String quotaAvgDaily(Object avg) {
+    return '일평균 $avg';
+  }
+
+  @override
+  String quotaDaysEstimate(Object avg, Object days) {
+    return '일평균 $avg · 약 $days일 남음';
+  }
+
+  @override
+  String quotaSafeUntilExpiry(Object avg) {
+    return '일평균 $avg · 만료까지 충분';
+  }
+
+  @override
+  String quotaDailyBudget(Object budget) {
+    return '권장 일일 한도 ~$budget';
+  }
+
+  @override
+  String get quotaExhaustedHint => '데이터 소진 또는 기간 만료';
+
+  @override
+  String get smartHubTitle => '스마트 허브';
+
+  @override
+  String get smartHubSubtitle => '연결 점수, 원탭 네트워크 복구, 기기 모니터 및 보호 모드';
+
+  @override
+  String get smartHealthTitle => '연결 상태 점수';
+
+  @override
+  String get smartHealthExcellent => '매우 좋음';
+
+  @override
+  String get smartHealthStable => '안정적';
+
+  @override
+  String get smartHealthAttention => '점검 필요';
+
+  @override
+  String get smartHealthStopped => 'VPN 꺼짐';
+
+  @override
+  String get smartSelfHealTitle => '원탭 네트워크 자동 복구';
+
+  @override
+  String get smartSelfHealDesc => 'DNS 정리 후 현재 노드만 점검하고 응답 없을 때만 전환';
+
+  @override
+  String get smartSelfHealRun => '복구 실행';
+
+  @override
+  String get smartSelfHealRunning => '복구 중...';
+
+  @override
+  String get smartHealStartVpnFirst => '먼저 VPN을 켜고 복구를 실행하세요';
+
+  @override
+  String get smartHealStepClean => '1/4단계: DNS 캐시 및 멈춘 연결 정리 중...';
+
+  @override
+  String get smartHealStepProbe => '2/4단계: 현재 노드 점검 중...';
+
+  @override
+  String get smartHealStepFallback => '3/4단계: 응답하는 예비 노드 찾는 중...';
+
+  @override
+  String get smartHealStepVerify => '4/4단계: 단일 기기 세션 확인 중...';
+
+  @override
+  String smartHealDoneHealthy(Object node, Object delay) {
+    return '현재 노드 $node 정상 ($delay)';
+  }
+
+  @override
+  String smartHealDoneSwitched(Object node) {
+    return '안정적인 노드 $node(으)로 전환했습니다';
+  }
+
+  @override
+  String get smartHealDoneFailed => '노드를 확인하지 못했습니다. 구독을 다시 동기화해 보세요.';
+
+  @override
+  String get smartFootprintTitle => '이 기기 세션';
+
+  @override
+  String get smartFootprintIdle => '대기 중 (VPN 꺼짐)';
+
+  @override
+  String smartFootprintSingle(Object node, Object count) {
+    return '1개 노드 ($node) · $count개 연결';
+  }
+
+  @override
+  String smartFootprintMultiWarn(Object nodes, Object count) {
+    return '$nodes개 노드 동시 활성 ($count개 연결)';
+  }
+
+  @override
+  String get smartFootprintCleanup => '연결을 1개 노드로 정리';
+
+  @override
+  String get smartFootprintCleanedTip => '이전 연결을 정리했습니다';
+
+  @override
+  String get smartModesSection => '스마트 보호 모드';
+
+  @override
+  String get smartModeSingleDevice => '단일 기기 엄격 보호';
+
+  @override
+  String get smartModeSingleDeviceDesc => '단일 노드 고정, 전환 시 기존 연결 종료, IPv6 경합 차단';
+
+  @override
+  String get smartModeSingleDeviceApplied => '단일 기기 엄격 보호가 적용되었습니다';
+
+  @override
+  String get smartModePrivacyMax => '최대 개인정보 보호막';
+
+  @override
+  String get smartModePrivacyMaxDesc => '화면 IP 가리기 및 Android 최근 앱 캡처 차단';
+
+  @override
+  String get smartModePrivacyMaxApplied => '최대 개인정보 보호막이 켜졌습니다';
+
+  @override
+  String get smartTopConsumers => '세션 상위 사용량';
+
+  @override
+  String get smartTopConsumersEmpty => '활성 트래픽 기록이 없습니다';
+
+  @override
+  String get portalAccountSync => '요금제 계정 동기화';
+
+  @override
+  String get portalConnectSubtitle => '로그인하여 실시간 활성 기기 수 동기화';
+
+  @override
+  String portalConnectedAs(Object email) {
+    return '동기화됨: $email';
+  }
+
+  @override
+  String get portalSessionExpired => '세션 만료 — 눌러서 다시 로그인';
+
+  @override
+  String get portalOriginLabel => '포털 웹사이트 주소';
+
+  @override
+  String get portalEmailLabel => '계정 이메일';
+
+  @override
+  String get portalPasswordLabel => '비밀번호';
+
+  @override
+  String get portalSecurityFooter => '로컬에는 세션 토큰만 저장되며 비밀번호는 절대 저장되지 않습니다.';
+
+  @override
+  String get portalConnectedTip => '요금제 계정이 연결되었습니다';
+
+  @override
+  String get portalDisconnect => '계정 연결 해제';
+
+  @override
+  String get portalDisconnectedTip => '요금제 계정 연결이 해제되었습니다';
+
+  @override
+  String get portalInvalidUrl => '올바른 http/https 주소를 입력하세요';
+
+  @override
+  String get portalInvalidEmail => '올바른 이메일 주소를 입력하세요';
+
+  @override
+  String get planName => '요금제 이름';
 }

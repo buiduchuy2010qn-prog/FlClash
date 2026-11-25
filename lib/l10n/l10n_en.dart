@@ -4212,4 +4212,212 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get subExpiredOrExhaustedWarning =>
       'Active subscription has expired or run out of data';
+
+  @override
+  String get activeDevices => 'Active Devices';
+
+  @override
+  String devicesShort(Object value) {
+    return '$value devices';
+  }
+
+  @override
+  String get devicesNotReported => 'Not reported by plan';
+
+  @override
+  String get openPlanPortal => 'Open Plan Management Portal';
+
+  @override
+  String subDeviceLimitExceededWarning(Object online, Object limit) {
+    return 'Active devices ($online/$limit) exceed your plan limit';
+  }
+
+  @override
+  String get quotaForecast => 'Quota Forecast';
+
+  @override
+  String quotaAvgDaily(Object avg) {
+    return 'Avg $avg/day';
+  }
+
+  @override
+  String quotaDaysEstimate(Object avg, Object days) {
+    return '$avg/day · ~${days}d left';
+  }
+
+  @override
+  String quotaSafeUntilExpiry(Object avg) {
+    return '$avg/day · Enough until expiry';
+  }
+
+  @override
+  String quotaDailyBudget(Object budget) {
+    return 'Safe budget ~$budget/day';
+  }
+
+  @override
+  String get quotaExhaustedHint => 'Subscription quota exhausted or expired';
+
+  @override
+  String get smartHubTitle => 'Smart Hub';
+
+  @override
+  String get smartHubSubtitle =>
+      'Health score, 1-tap network self-heal, device monitor & modes';
+
+  @override
+  String get smartHealthTitle => 'Connection Health';
+
+  @override
+  String get smartHealthExcellent => 'Excellent';
+
+  @override
+  String get smartHealthStable => 'Stable';
+
+  @override
+  String get smartHealthAttention => 'Needs Attention';
+
+  @override
+  String get smartHealthStopped => 'VPN Stopped';
+
+  @override
+  String get smartSelfHealTitle => '1-Tap Network Self-Heal';
+
+  @override
+  String get smartSelfHealDesc =>
+      'Flush stale DNS, verify active node, switch only if unresponsive';
+
+  @override
+  String get smartSelfHealRun => 'Run Self-Heal';
+
+  @override
+  String get smartSelfHealRunning => 'Healing...';
+
+  @override
+  String get smartHealStartVpnFirst => 'Turn on VPN first to run self-heal';
+
+  @override
+  String get smartHealStepClean =>
+      'Step 1/4: Flushing DNS & closing stalled streams...';
+
+  @override
+  String get smartHealStepProbe => 'Step 2/4: Checking active node...';
+
+  @override
+  String get smartHealStepFallback =>
+      'Step 3/4: Finding first responsive backup node...';
+
+  @override
+  String get smartHealStepVerify => 'Step 4/4: Verifying session footprint...';
+
+  @override
+  String smartHealDoneHealthy(Object node, Object delay) {
+    return 'Active node $node is healthy ($delay)';
+  }
+
+  @override
+  String smartHealDoneSwitched(Object node) {
+    return 'Switched cleanly to responsive node $node';
+  }
+
+  @override
+  String get smartHealDoneFailed =>
+      'Could not verify active node. Try refreshing your subscription.';
+
+  @override
+  String get smartFootprintTitle => 'This Device Session';
+
+  @override
+  String get smartFootprintIdle => 'Idle (VPN off)';
+
+  @override
+  String smartFootprintSingle(Object node, Object count) {
+    return '1 node ($node) · $count streams';
+  }
+
+  @override
+  String smartFootprintMultiWarn(Object nodes, Object count) {
+    return '$nodes nodes active simultaneously ($count streams)';
+  }
+
+  @override
+  String get smartFootprintCleanup => 'Reset streams back to 1 active node';
+
+  @override
+  String get smartFootprintCleanedTip => 'Closed old connections cleanly';
+
+  @override
+  String get smartModesSection => 'Smart Protection Modes';
+
+  @override
+  String get smartModeSingleDevice => 'Single-Device Strict Guard';
+
+  @override
+  String get smartModeSingleDeviceDesc =>
+      'Lock 1 active node, close old streams on switch, disable IPv6 racing';
+
+  @override
+  String get smartModeSingleDeviceApplied =>
+      'Single-Device Strict Guard applied';
+
+  @override
+  String get smartModePrivacyMax => 'Privacy Max Shield';
+
+  @override
+  String get smartModePrivacyMaxDesc =>
+      'Mask IP displays and block Android Recents screenshots';
+
+  @override
+  String get smartModePrivacyMaxApplied => 'Privacy Max Shield enabled';
+
+  @override
+  String get smartTopConsumers => 'Top Session Usage';
+
+  @override
+  String get smartTopConsumersEmpty => 'No active traffic streams yet';
+
+  @override
+  String get portalAccountSync => 'Plan Portal Account Sync';
+
+  @override
+  String get portalConnectSubtitle => 'Sign in to fetch live active devices';
+
+  @override
+  String portalConnectedAs(Object email) {
+    return 'Synced: $email';
+  }
+
+  @override
+  String get portalSessionExpired => 'Session expired — tap to sign in again';
+
+  @override
+  String get portalOriginLabel => 'Portal Website URL';
+
+  @override
+  String get portalEmailLabel => 'Account Email';
+
+  @override
+  String get portalPasswordLabel => 'Password';
+
+  @override
+  String get portalSecurityFooter =>
+      'Only an encrypted session token is stored locally; your password is never saved on device.';
+
+  @override
+  String get portalConnectedTip => 'Plan portal account connected';
+
+  @override
+  String get portalDisconnect => 'Disconnect Portal Account';
+
+  @override
+  String get portalDisconnectedTip => 'Portal account disconnected';
+
+  @override
+  String get portalInvalidUrl => 'Please enter a valid http/https website URL';
+
+  @override
+  String get portalInvalidEmail => 'Please enter a valid email address';
+
+  @override
+  String get planName => 'Plan Name';
 }

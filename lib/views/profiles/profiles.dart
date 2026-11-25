@@ -360,18 +360,18 @@ class ProfileItem extends ConsumerWidget {
   SubscriptionInfo? get _subscriptionInfo =>
       profile.type == ProfileType.url ? profile.subscriptionInfo : null;
 
-  String _subtitle(BuildContext context) {
+  String _subtitle(BuildContext context, {String? deviceBadge}) {
     final info = _subscriptionInfo;
-    if (info != null && info.usage != null) {
-      final used = info.upload + info.download;
-      return '${used.traffic.show} / ${info.total.traffic.show}';
-    }
     final appLocalizations = context.appLocalizations;
-    return switch (profile.type) {
-      ProfileType.url => appLocalizations.remote,
-      ProfileType.file => appLocalizations.local,
-      ProfileType.custom => appLocalizations.custom,
-    };
+    final base = (info != null && info.usage != null)
+        ? '${(info.upload + info.download).traffic.show} / ${info.total.traffic.show}'
+        : switch (profile.type) {
+            ProfileType.url => appLocalizations.remote,
+            ProfileType.file => appLocalizations.local,
+            ProfileType.custom => appLocalizations.custom,
+          };
+    if (deviceBadge == null) return base;
+    return '$base · ${appLocalizations.devicesShort(deviceBadge)}';
   }
 
   Widget _buildTrailing(BuildContext context, {required bool isUpdating}) {
@@ -534,6 +534,9 @@ class ProfileItem extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isUpdating = ref.watch(isUpdatingProvider(profile.updatingKey));
     final subscriptionInfo = _subscriptionInfo;
+    final deviceMeta = ref.watch(
+      effectiveProfileDeviceMetaProvider(profile.id),
+    );
     final isSelected = profile.id == groupValue;
     return ContextMenuRegion(
       menuItems: isUpdating ? null : _menuItems(context, ref),
@@ -562,7 +565,7 @@ class ProfileItem extends ConsumerWidget {
           title: _ProfileCardTitle(
             profile: profile,
             expire: subscriptionInfo?.expireDate,
-            subtitle: _subtitle(context),
+            subtitle: _subtitle(context, deviceBadge: deviceMeta?.badgeLabel),
           ),
         ),
       ),

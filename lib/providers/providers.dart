@@ -9,4 +9,5 @@ export 'on_demand.dart';
 export 'route_state.dart';
 export 'smart_proxy.dart';
 export 'state.dart';
+export 'subscription_insights.dart';
 export 'version_gate.dart';

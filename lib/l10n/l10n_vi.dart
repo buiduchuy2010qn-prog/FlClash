@@ -4205,4 +4205,214 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get subExpiredOrExhaustedWarning =>
       'Gói đăng ký hiện tại đã hết hạn hoặc hết dung lượng';
+
+  @override
+  String get activeDevices => 'Thiết bị đang hoạt động';
+
+  @override
+  String devicesShort(Object value) {
+    return '$value thiết bị';
+  }
+
+  @override
+  String get devicesNotReported => 'Gói chưa trả về số thiết bị';
+
+  @override
+  String get openPlanPortal => 'Mở trang quản lý gói VPN';
+
+  @override
+  String subDeviceLimitExceededWarning(Object online, Object limit) {
+    return 'Số thiết bị hoạt động ($online/$limit) đang vượt giới hạn gói';
+  }
+
+  @override
+  String get quotaForecast => 'Dự báo dung lượng';
+
+  @override
+  String quotaAvgDaily(Object avg) {
+    return 'TB $avg/ngày';
+  }
+
+  @override
+  String quotaDaysEstimate(Object avg, Object days) {
+    return '$avg/ngày · Còn ~$days ngày';
+  }
+
+  @override
+  String quotaSafeUntilExpiry(Object avg) {
+    return '$avg/ngày · Đủ dùng đến hết hạn';
+  }
+
+  @override
+  String quotaDailyBudget(Object budget) {
+    return 'Mức an toàn ~$budget/ngày';
+  }
+
+  @override
+  String get quotaExhaustedHint => 'Gói đã hết dung lượng hoặc hết hạn';
+
+  @override
+  String get smartHubTitle => 'Trung tâm thông minh';
+
+  @override
+  String get smartHubSubtitle =>
+      'Điểm ổn định, tự sửa mạng 1 chạm, giám sát thiết bị & chế độ nhanh';
+
+  @override
+  String get smartHealthTitle => 'Sức khỏe kết nối';
+
+  @override
+  String get smartHealthExcellent => 'Tuyệt vời';
+
+  @override
+  String get smartHealthStable => 'Ổn định';
+
+  @override
+  String get smartHealthAttention => 'Cần kiểm tra';
+
+  @override
+  String get smartHealthStopped => 'VPN đang tắt';
+
+  @override
+  String get smartSelfHealTitle => 'Tự sửa lỗi mạng 1 chạm';
+
+  @override
+  String get smartSelfHealDesc =>
+      'Xóa DNS cũ, kiểm tra đúng 1 node đang dùng và chuyển nếu mất kết nối';
+
+  @override
+  String get smartSelfHealRun => 'Chạy tự sửa mạng';
+
+  @override
+  String get smartSelfHealRunning => 'Đang xử lý...';
+
+  @override
+  String get smartHealStartVpnFirst => 'Hãy bật VPN trước khi chạy tự sửa mạng';
+
+  @override
+  String get smartHealStepClean =>
+      'Bước 1/4: Đang làm mới DNS & đóng luồng treo...';
+
+  @override
+  String get smartHealStepProbe => 'Bước 2/4: Đang kiểm tra node hiện tại...';
+
+  @override
+  String get smartHealStepFallback =>
+      'Bước 3/4: Đang tìm node dự phòng phản hồi đầu tiên...';
+
+  @override
+  String get smartHealStepVerify =>
+      'Bước 4/4: Đang xác minh trạng thái 1 thiết bị...';
+
+  @override
+  String smartHealDoneHealthy(Object node, Object delay) {
+    return 'Node $node đang hoạt động tốt ($delay)';
+  }
+
+  @override
+  String smartHealDoneSwitched(Object node) {
+    return 'Đã chuyển sang node ổn định $node';
+  }
+
+  @override
+  String get smartHealDoneFailed =>
+      'Chưa xác minh được node đang dùng. Hãy thử đồng bộ lại gói.';
+
+  @override
+  String get smartFootprintTitle => 'Phiên của máy này';
+
+  @override
+  String get smartFootprintIdle => 'Đang nghỉ (VPN tắt)';
+
+  @override
+  String smartFootprintSingle(Object node, Object count) {
+    return '1 node ($node) · $count luồng';
+  }
+
+  @override
+  String smartFootprintMultiWarn(Object nodes, Object count) {
+    return '$nodes node chạy song song ($count luồng)';
+  }
+
+  @override
+  String get smartFootprintCleanup => 'Thu gọn kết nối về 1 node duy nhất';
+
+  @override
+  String get smartFootprintCleanedTip => 'Đã đóng gọn các kết nối cũ';
+
+  @override
+  String get smartModesSection => 'Chế độ thông minh 1 chạm';
+
+  @override
+  String get smartModeSingleDevice => 'Khóa chuẩn 1 thiết bị';
+
+  @override
+  String get smartModeSingleDeviceDesc =>
+      'Giữ 1 node duy nhất, đóng luồng cũ khi đổi node và tắt đua IPv6';
+
+  @override
+  String get smartModeSingleDeviceApplied =>
+      'Đã kích hoạt chế độ chuẩn 1 thiết bị';
+
+  @override
+  String get smartModePrivacyMax => 'Khiên bảo mật tối đa';
+
+  @override
+  String get smartModePrivacyMaxDesc =>
+      'Ẩn địa chỉ IP hiển thị và chặn chụp màn hình đa nhiệm';
+
+  @override
+  String get smartModePrivacyMaxApplied => 'Đã bật Khiên bảo mật tối đa';
+
+  @override
+  String get smartTopConsumers => 'Ứng dụng / Tên miền dùng nhiều nhất';
+
+  @override
+  String get smartTopConsumersEmpty => 'Chưa ghi nhận lưu lượng phiên hiện tại';
+
+  @override
+  String get portalAccountSync => 'Đồng bộ tài khoản cổng gói';
+
+  @override
+  String get portalConnectSubtitle =>
+      'Đăng nhập để lấy số thiết bị chuẩn 100% như web';
+
+  @override
+  String portalConnectedAs(Object email) {
+    return 'Đã đồng bộ: $email';
+  }
+
+  @override
+  String get portalSessionExpired => 'Phiên hết hạn — chạm để đăng nhập lại';
+
+  @override
+  String get portalOriginLabel => 'Địa chỉ web gói VPN';
+
+  @override
+  String get portalEmailLabel => 'Email tài khoản';
+
+  @override
+  String get portalPasswordLabel => 'Mật khẩu';
+
+  @override
+  String get portalSecurityFooter =>
+      'Ứng dụng chỉ lưu token phiên cục bộ trên máy; tuyệt đối không lưu mật khẩu.';
+
+  @override
+  String get portalConnectedTip => 'Đã liên kết tài khoản cổng gói';
+
+  @override
+  String get portalDisconnect => 'Hủy liên kết tài khoản';
+
+  @override
+  String get portalDisconnectedTip => 'Đã gỡ liên kết tài khoản cổng gói';
+
+  @override
+  String get portalInvalidUrl => 'Vui lòng nhập địa chỉ web http/https hợp lệ';
+
+  @override
+  String get portalInvalidEmail => 'Vui lòng nhập email hợp lệ';
+
+  @override
+  String get planName => 'Tên gói cước';
 }

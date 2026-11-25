@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/features/features.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/widgets/widgets.dart';
@@ -74,6 +75,14 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
           ? appLocalizations.editDashboard
           : appLocalizations.dashboard,
       actions: [
+        if (!editing)
+          AppBarActionButton(
+            data: IconButtonData(
+              glyph: AppGlyphs.sparkle,
+              tooltip: appLocalizations.smartHubTitle,
+              onPressed: () => showSmartHubSheet(context),
+            ),
+          ),
         if (!editing) const LiveStatusButton(),
         if (editable && !editing)
           AppBarActionButton(
