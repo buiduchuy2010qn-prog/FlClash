@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:fl_clash/common/boot_record.dart';
 import 'package:fl_clash/common/common.dart';
@@ -27,6 +28,7 @@ class Preferences {
 
   @visibleForTesting
   Future<void> rebind() async {
+    _cachedDeviceHwid = null;
     _store = ResolveOnce(_open);
     await _store.value;
   }
@@ -67,6 +69,9 @@ class Preferences {
   static const _dailyTrafficEnabledKey = 'daily_traffic_enabled';
   static const _dailyTrafficHistoryKey = 'daily_traffic_history_v1';
   static const _versionGateCacheKey = 'version_gate_cache_v1';
+  static const _deviceHwidKey = 'device_hwid_v1';
+  static final _hwidPattern = RegExp(r'^[0-9a-f]{32}$');
+  String? _cachedDeviceHwid;
 
   Future<bool> _getBool(String key, bool fallback) async {
     final preferences = await _store.value;
@@ -148,6 +153,26 @@ class Preferences {
 
   Future<void> setVersionGateCache(String? value) =>
       _setString(_versionGateCacheKey, value);
+
+  Future<String> getOrCreateDeviceHwid() async {
+    final cached = _cachedDeviceHwid;
+    if (cached != null && _hwidPattern.hasMatch(cached)) {
+      return cached;
+    }
+    final stored = await _getString(_deviceHwidKey);
+    if (stored != null && _hwidPattern.hasMatch(stored)) {
+      _cachedDeviceHwid = stored;
+      return stored;
+    }
+    final random = Random.secure();
+    final generated = List.generate(
+      16,
+      (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0'),
+    ).join();
+    await _setString(_deviceHwidKey, generated);
+    _cachedDeviceHwid = generated;
+    return generated;
+  }
 
   Future<void> saveShareState(SharedState shareState) async {
     final preferences = await _store.value;
@@ -273,6 +298,7 @@ class Preferences {
   }
 
   Future<void> clearPreferences() async {
+    _cachedDeviceHwid = null;
     final sharedPreferencesIns = await _store.value;
     await sharedPreferencesIns?.clear();
   }

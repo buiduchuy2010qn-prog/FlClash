@@ -17,7 +17,9 @@ import (
 
 const (
 	smartFailoverTickInterval          = 15 * time.Second
-	smartFailoverPeriodicProbeInterval = 45 * time.Second
+	smartFailoverPeriodicProbeInterval = 180 * time.Second
+	smartFailoverSuspectProbeInterval  = 60 * time.Second
+	smartFailoverFastCandidateMs       = 1000
 	smartFailoverSlowDelayMs           = 1800
 	smartFailoverHysteresisMs          = 100
 	smartFailoverSwitchCooldown        = 20 * time.Second
@@ -25,7 +27,6 @@ const (
 	smartFailoverQuarantinePenaltyMs   = 1500
 	smartFailoverConfirmWait           = 500 * time.Millisecond
 	smartFailoverProbeTimeout          = 4 * time.Second
-	smartFailoverProbeConcurrency      = 6
 
 	stalledZeroDownAge        = 8 * time.Second
 	stalledZeroDownMinUpload  = 256
@@ -45,7 +46,7 @@ var (
 )
 
 func init() {
-	autoFailoverEnabled.Store(true)
+	autoFailoverEnabled.Store(false)
 }
 
 func SetAutoFailover(enabled bool) {
@@ -298,35 +299,55 @@ func probeLeafDelayMs(ctx context.Context, proxyName, probeURL string, timeout t
 	return int(delay)
 }
 
-func probeCandidatesConcurrent(ctx context.Context, candidates []string, probeURL string, timeout time.Duration) map[string]int {
-	results := make(map[string]int, len(candidates))
-	if len(candidates) == 0 {
-		return results
+func selectFailoverCandidateSequential(
+	ctx context.Context,
+	candidates []string,
+	currentPick string,
+	now time.Time,
+	probe func(ctx context.Context, name string) int,
+) (string, int) {
+	if len(candidates) == 0 || probe == nil {
+		return "", 0
 	}
-	var mu sync.Mutex
-	sem := make(chan struct{}, smartFailoverProbeConcurrency)
-	var wg sync.WaitGroup
+	var cleanCandidates []string
+	var quarantinedCandidates []string
 	for _, name := range candidates {
-		if ctx.Err() != nil {
-			break
+		if name == "" || name == currentPick {
+			continue
 		}
-		wg.Add(1)
-		go func(nodeName string) {
-			defer wg.Done()
-			select {
-			case sem <- struct{}{}:
-				defer func() { <-sem }()
-			case <-ctx.Done():
-				return
-			}
-			delay := probeLeafDelayMs(ctx, nodeName, probeURL, timeout)
-			mu.Lock()
-			results[nodeName] = delay
-			mu.Unlock()
-		}(name)
+		if isNodeQuarantined(name, now) {
+			quarantinedCandidates = append(quarantinedCandidates, name)
+		} else {
+			cleanCandidates = append(cleanCandidates, name)
+		}
 	}
-	wg.Wait()
-	return results
+
+	probePass := func(pool []string) (string, int) {
+		bestName := ""
+		bestDelay := 0
+		for _, name := range pool {
+			if ctx.Err() != nil {
+				break
+			}
+			delay := probe(ctx, name)
+			if delay <= 0 {
+				continue
+			}
+			if delay < smartFailoverFastCandidateMs {
+				return name, delay
+			}
+			if bestName == "" || delay < bestDelay {
+				bestName = name
+				bestDelay = delay
+			}
+		}
+		return bestName, bestDelay
+	}
+
+	if name, delay := probePass(cleanCandidates); name != "" {
+		return name, delay
+	}
+	return probePass(quarantinedCandidates)
 }
 
 func closeConnectionsForLeaf(leafName string) {
@@ -357,6 +378,7 @@ func evaluateSmartFailover(ctx context.Context) {
 	smartFailoverMu.Lock()
 	withinCooldown := !lastAutoSwitchAt.IsZero() && now.Sub(lastAutoSwitchAt) < smartFailoverSwitchCooldown
 	periodicDue := lastPeriodicProbeAt.IsZero() || now.Sub(lastPeriodicProbeAt) >= smartFailoverPeriodicProbeInterval
+	suspectDue := lastPeriodicProbeAt.IsZero() || now.Sub(lastPeriodicProbeAt) >= smartFailoverSuspectProbeInterval
 	smartFailoverMu.Unlock()
 	if withinCooldown {
 		return
@@ -368,55 +390,37 @@ func evaluateSmartFailover(ctx context.Context) {
 	}
 
 	stalledLeaf, stalled := detectStalledProxyInStats(currentPick, now)
-	if !stalled && (!periodicDue || handleGetConnectionCount() == 0) {
+	stalledSuspected := stalled && stalledLeaf == currentPick && suspectDue
+	if handleGetConnectionCount() == 0 || (!periodicDue && !stalledSuspected) {
 		return
 	}
 
+	smartFailoverMu.Lock()
+	lastPeriodicProbeAt = now
+	smartFailoverMu.Unlock()
+
 	probeURL := normalizeProbeURL(currentTestURL())
-	currentDelay := 0
+	firstDelay := probeLeafDelayMs(ctx, currentPick, probeURL, smartFailoverProbeTimeout)
+	if firstDelay > 0 {
+		return
+	}
 
-	if stalled && stalledLeaf == currentPick {
-		timer := time.NewTimer(smartFailoverConfirmWait)
-		select {
-		case <-ctx.Done():
-			timer.Stop()
-			return
-		case <-timer.C:
-		}
-		confirmLeaf, stillStalled := detectStalledProxyInStats(currentPick, time.Now())
-		if !stillStalled || confirmLeaf != currentPick {
-			return
-		}
-		quarantineNode(currentPick, time.Now())
-	} else {
-		smartFailoverMu.Lock()
-		lastPeriodicProbeAt = now
-		smartFailoverMu.Unlock()
-
-		firstDelay := probeLeafDelayMs(ctx, currentPick, probeURL, smartFailoverProbeTimeout)
-		if firstDelay > 0 && firstDelay < smartFailoverSlowDelayMs {
-			return
-		}
-		timer := time.NewTimer(smartFailoverConfirmWait)
-		select {
-		case <-ctx.Done():
-			timer.Stop()
-			return
-		case <-timer.C:
-		}
-		confirmedDelay := probeLeafDelayMs(ctx, currentPick, probeURL, smartFailoverProbeTimeout)
-		if confirmedDelay > 0 && confirmedDelay < smartFailoverSlowDelayMs {
-			return
-		}
-		currentDelay = confirmedDelay
-		if confirmedDelay <= 0 {
-			quarantineNode(currentPick, time.Now())
-		}
+	timer := time.NewTimer(smartFailoverConfirmWait)
+	select {
+	case <-ctx.Done():
+		timer.Stop()
+		return
+	case <-timer.C:
 	}
 
 	if ctx.Err() != nil || !isRunning.Load() || !IsAutoFailoverEnabled() {
 		return
 	}
+	confirmedDelay := probeLeafDelayMs(ctx, currentPick, probeURL, smartFailoverProbeTimeout)
+	if confirmedDelay > 0 {
+		return
+	}
+	quarantineNode(currentPick, time.Now())
 
 	rawProxies := group.Proxies()
 	candidates := make([]string, 0, len(rawProxies))
@@ -434,22 +438,27 @@ func evaluateSmartFailover(ctx context.Context) {
 		return
 	}
 
-	delays := probeCandidatesConcurrent(ctx, candidates, probeURL, smartFailoverProbeTimeout)
 	checkNow := time.Now()
-	bestName, bestRawDelay := selectBestCandidateFromDelays(delays, candidates, checkNow)
+	bestName, bestRawDelay := selectFailoverCandidateSequential(
+		ctx,
+		candidates,
+		currentPick,
+		checkNow,
+		func(probeCtx context.Context, name string) int {
+			return probeLeafDelayMs(probeCtx, name, probeURL, smartFailoverProbeTimeout)
+		},
+	)
 	if bestName == "" || bestName == currentPick {
 		return
 	}
-	if !stalled && currentDelay > 0 && bestRawDelay+smartFailoverHysteresisMs >= currentDelay {
-		return
-	}
 
+	closeConnectionsForLeaf(currentPick)
 	res := handleChangeProxy(&ChangeProxyParams{GroupName: groupName, ProxyName: bestName})
 	if res == nil || !res.Changed {
 		return
 	}
 	smartFailoverMu.Lock()
-	lastAutoSwitchAt = checkNow
+	lastAutoSwitchAt = time.Now()
 	smartFailoverMu.Unlock()
 
 	closeConnectionsForLeaf(currentPick)

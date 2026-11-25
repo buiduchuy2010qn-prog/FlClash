@@ -7,9 +7,14 @@ import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:fl_clash/common/constant.dart';
 import 'package:fl_clash/common/exception.dart';
+import 'package:fl_clash/common/package.dart';
+import 'package:fl_clash/common/preferences.dart';
 import 'package:fl_clash/common/release_asset.dart';
 import 'package:fl_clash/common/request.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+
+import '../helpers/preferences.dart';
 
 class _StalledHttpClient extends Fake implements HttpClient {
   @override
@@ -333,4 +338,136 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     await outcome;
   });
+
+  group('subscription device identity and routing', () {
+    test(
+      'getOrCreateDeviceHwid returns stable 32-hex ID across reloads',
+      () async {
+        await mockPreferences();
+        final first = await preferences.getOrCreateDeviceHwid();
+        expect(first, matches(RegExp(r'^[0-9a-f]{32}$')));
+
+        await preferences.rebind();
+        final second = await preferences.getOrCreateDeviceHwid();
+        expect(second, first);
+      },
+    );
+
+    test('PackageInfoExtension.ua stays stable across patch releases', () {
+      PackageInfo buildInfo(String ver) => PackageInfo(
+        appName: appName,
+        packageName: packageName,
+        version: ver,
+        buildNumber: '1',
+      );
+      final ua17 = buildInfo('0.9.17').ua;
+      final ua18 = buildInfo('0.9.18').ua;
+      final ua19 = buildInfo('0.9.19').ua;
+      expect(
+        ua17,
+        '$appName/v0.9 clash-verge Platform/${Platform.operatingSystem}',
+      );
+      expect(ua18, ua17);
+      expect(ua19, ua17);
+    });
+
+    test(
+      'getSubscriptionResponseForUrl uses directDio first and falls back to clashDio on network failure',
+      () async {
+        await mockPreferences();
+        final req = Request();
+        final capturedDirect = <Map<String, dynamic>>[];
+        final capturedClash = <Map<String, dynamic>>[];
+
+        req.directDio.httpClientAdapter = _CaptureAdapter((options) {
+          capturedDirect.add(Map<String, dynamic>.from(options.headers));
+          return ResponseBody.fromString('proxies: []', 200);
+        });
+        req.clashDio.httpClientAdapter = _CaptureAdapter((options) {
+          capturedClash.add(Map<String, dynamic>.from(options.headers));
+          return ResponseBody.fromString('proxies: []', 200);
+        });
+
+        final directRes = await req.getSubscriptionResponseForUrl(
+          'https://sub.example.com/profile',
+          hwid: '0123456789abcdef0123456789abcdef',
+        );
+        expect(utf8.decode(directRes.data!), 'proxies: []');
+        expect(capturedDirect, hasLength(1));
+        expect(capturedClash, isEmpty);
+        expect(
+          capturedDirect.single['x-hwid'],
+          '0123456789abcdef0123456789abcdef',
+        );
+        expect(capturedDirect.single['x-device-os'], Platform.operatingSystem);
+
+        req.allowProxyFallbackForTesting = true;
+        req.directDio.httpClientAdapter = _FailingAdapter(
+          DioExceptionType.connectionTimeout,
+        );
+        final fallbackRes = await req.getSubscriptionResponseForUrl(
+          'https://sub.example.com/profile',
+          hwid: '0123456789abcdef0123456789abcdef',
+        );
+        expect(utf8.decode(fallbackRes.data!), 'proxies: []');
+        expect(capturedClash, hasLength(1));
+        expect(
+          capturedClash.single['x-hwid'],
+          '0123456789abcdef0123456789abcdef',
+        );
+        expect(capturedClash.single['x-device-os'], Platform.operatingSystem);
+
+        final releaseHeaders = <Map<String, dynamic>>[];
+        req.dio.httpClientAdapter = _CaptureAdapter((options) {
+          releaseHeaders.add(Map<String, dynamic>.from(options.headers));
+          return ResponseBody.fromString(
+            '{"tag_name":"v1.0.0"}',
+            200,
+            headers: {
+              Headers.contentTypeHeader: [Headers.jsonContentType],
+            },
+          );
+        });
+        await req.latestRelease();
+        expect(releaseHeaders.single.containsKey('x-hwid'), isFalse);
+        expect(releaseHeaders.single.containsKey('x-device-os'), isFalse);
+      },
+    );
+  });
+}
+
+class _CaptureAdapter implements HttpClientAdapter {
+  _CaptureAdapter(this.onFetch);
+
+  final ResponseBody Function(RequestOptions options) onFetch;
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    return onFetch(options);
+  }
+
+  @override
+  void close({bool force = false}) {}
+}
+
+class _FailingAdapter implements HttpClientAdapter {
+  _FailingAdapter(this.type);
+
+  final DioExceptionType type;
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    throw DioException(requestOptions: options, type: type);
+  }
+
+  @override
+  void close({bool force = false}) {}
 }

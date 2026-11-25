@@ -17,6 +17,15 @@ class Request {
   late final Dio dio;
   late final Dio _clashDio;
 
+  @visibleForTesting
+  late final Dio directDio;
+
+  @visibleForTesting
+  Dio get clashDio => _clashDio;
+
+  @visibleForTesting
+  bool allowProxyFallbackForTesting = false;
+
   /// Refuses an untrusted certificate even with the certificate check turned
   /// off, because what it fetches is installed, on Windows as administrator.
   @visibleForTesting
@@ -42,6 +51,17 @@ class Request {
         return client;
       },
     );
+    directDio = Dio();
+    directDio.httpClientAdapter = IOHttpClientAdapter(
+      createHttpClient: () {
+        final client = HttpClient();
+        client.findProxy = (Uri _) {
+          client.userAgent = globalState.ua;
+          return 'DIRECT';
+        };
+        return client;
+      },
+    );
     releaseDio = Dio(BaseOptions(headers: {'User-Agent': browserUa}));
     releaseDio.httpClientAdapter = IOHttpClientAdapter(
       createHttpClient: () {
@@ -60,13 +80,21 @@ class Request {
     return FlClashHttpOverrides.findProxyForReader(read, uri);
   }
 
-  Future<Response<T>> _download<T>(String url, ResponseType responseType) {
+  Future<Response<T>> _downloadWithClient<T>(
+    Dio client,
+    String url,
+    ResponseType responseType, {
+    Map<String, Object> extraHeaders = const {},
+  }) {
     final target = downloadTarget(url);
+    final headers = extraHeaders.isEmpty
+        ? target.headers
+        : {...target.headers, ...extraHeaders};
     final cancelToken = CancelToken();
-    return _clashDio
+    return client
         .getUri<T>(
           target.uri,
-          options: Options(responseType: responseType, headers: target.headers),
+          options: Options(responseType: responseType, headers: headers),
           cancelToken: cancelToken,
         )
         .timeout(
@@ -79,6 +107,63 @@ class Request {
             );
           },
         );
+  }
+
+  Future<Response<T>> _download<T>(String url, ResponseType responseType) {
+    return _downloadWithClient<T>(_clashDio, url, responseType);
+  }
+
+  Future<Response<Uint8List>> getSubscriptionResponseForUrl(
+    String url, {
+    String? hwid,
+  }) async {
+    final target = downloadTarget(url);
+    final deviceHwid = hwid ?? await preferences.getOrCreateDeviceHwid();
+    final subHeaders = <String, Object>{
+      'x-hwid': deviceHwid,
+      'x-device-os': Platform.operatingSystem,
+    };
+    try {
+      return await _downloadWithClient<Uint8List>(
+        directDio,
+        url,
+        ResponseType.bytes,
+        extraHeaders: subHeaders,
+      );
+    } on DioException catch (e) {
+      final hasProxyFallback = _findProxy(target.uri) != 'DIRECT';
+      final isNetworkFailure =
+          e.type != DioExceptionType.badResponse &&
+          e.type != DioExceptionType.cancel;
+      if (!isNetworkFailure ||
+          (!hasProxyFallback && !allowProxyFallbackForTesting)) {
+        commonPrint.log(
+          'getSubscriptionResponseForUrl error ${compactError(e)}',
+          logLevel: LogLevel.warning,
+        );
+        rethrow;
+      }
+      try {
+        return await _downloadWithClient<Uint8List>(
+          _clashDio,
+          url,
+          ResponseType.bytes,
+          extraHeaders: subHeaders,
+        );
+      } catch (fallbackError) {
+        commonPrint.log(
+          'getSubscriptionResponseForUrl fallback error ${compactError(fallbackError)}',
+          logLevel: LogLevel.warning,
+        );
+        rethrow;
+      }
+    } catch (e) {
+      commonPrint.log(
+        'getSubscriptionResponseForUrl error ${compactError(e)}',
+        logLevel: LogLevel.warning,
+      );
+      rethrow;
+    }
   }
 
   Future<Response<Uint8List>> getFileResponseForUrl(String url) async {

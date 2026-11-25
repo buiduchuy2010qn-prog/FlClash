@@ -62,7 +62,7 @@ object ServiceController {
         NetworkObserver.start()
         val savedAutoFailover = GlobalState.application
             .getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
-            .getBoolean("flutter.smart_auto_failover", true)
+            .getBoolean("flutter.smart_auto_failover", false)
         runCatching { Core.setAutoFailover(savedAutoFailover) }
         suspendCancellableCoroutine { continuation ->
             Core.quickSetup(initParams, setupParams) { result ->

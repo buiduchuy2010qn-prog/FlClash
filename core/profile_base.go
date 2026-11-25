@@ -552,42 +552,15 @@ func optimizeProxyGroups(root *yaml.Node) {
 		return
 	}
 
-	var leafProxyNames []string
-	if proxiesNode := resolveAlias(mappingValue(root, "proxies")); proxiesNode != nil && proxiesNode.Kind == yaml.SequenceNode {
-		for _, item := range proxiesNode.Content {
-			if m := resolveAlias(item); m != nil && m.Kind == yaml.MappingNode {
-				if name := scalarString(m, "name"); name != "" {
-					leafProxyNames = append(leafProxyNames, name)
-				}
-			}
-		}
-	}
-
-	groupNames := make(map[string]bool, len(groupsNode.Content))
-	fallbackGroups := make(map[string]bool)
-	hasURLTest := false
-
 	for _, item := range groupsNode.Content {
 		group := resolveAlias(item)
 		if group == nil || group.Kind != yaml.MappingNode {
 			continue
 		}
-		name := scalarString(group, "name")
-		if name != "" {
-			groupNames[name] = true
-		}
 		groupType := strings.ToLower(scalarString(group, "type"))
-		switch groupType {
-		case "url-test":
-			hasURLTest = true
-		case "fallback":
-			if name != "" {
-				fallbackGroups[name] = true
-			}
-		}
 		if groupType == "fallback" || groupType == "url-test" || groupType == "load-balance" {
-			if interval, ok := scalarInt(group, "interval"); !ok || interval <= 0 || interval > 300 {
-				setMappingValue(group, "interval", intNode(180))
+			if interval, ok := scalarInt(group, "interval"); !ok || interval <= 0 || interval < 600 {
+				setMappingValue(group, "interval", intNode(600))
 			}
 			if lazyNode := resolveAlias(mappingValue(group, "lazy")); lazyNode == nil || isNull(lazyNode) {
 				setMappingValue(group, "lazy", boolNode(true))
@@ -609,58 +582,6 @@ func optimizeProxyGroups(root *yaml.Node) {
 				if tol := resolveAlias(mappingValue(group, "tolerance")); tol == nil || isNull(tol) {
 					setMappingValue(group, "tolerance", intNode(100))
 				}
-			}
-		}
-	}
-
-	if len(leafProxyNames) >= 2 && !hasURLTest && len(fallbackGroups) > 0 && !groupNames["Auto"] {
-		proxiesSeq := &yaml.Node{Kind: yaml.SequenceNode, Tag: "!!seq"}
-		for _, proxyName := range leafProxyNames {
-			proxiesSeq.Content = append(proxiesSeq.Content, strNode(proxyName))
-		}
-		autoGroup := &yaml.Node{
-			Kind: yaml.MappingNode,
-			Tag:  "!!map",
-			Content: []*yaml.Node{
-				strNode("name"), strNode("Auto"),
-				strNode("type"), strNode("url-test"),
-				strNode("url"), strNode("https://www.gstatic.com/generate_204"),
-				strNode("interval"), intNode(180),
-				strNode("timeout"), intNode(5000),
-				strNode("lazy"), boolNode(true),
-				strNode("tolerance"), intNode(100),
-				strNode("expected-status"), strNode("200-299"),
-				strNode("max-failed-times"), intNode(2),
-				strNode("proxies"), proxiesSeq,
-			},
-		}
-		groupsNode.Content = append(groupsNode.Content, autoGroup)
-
-		for _, item := range groupsNode.Content {
-			group := resolveAlias(item)
-			if group == nil || group.Kind != yaml.MappingNode {
-				continue
-			}
-			if strings.ToLower(scalarString(group, "type")) != "select" {
-				continue
-			}
-			seq := resolveAlias(mappingValue(group, "proxies"))
-			if seq == nil || seq.Kind != yaml.SequenceNode || len(seq.Content) == 0 {
-				continue
-			}
-			first := resolveAlias(seq.Content[0])
-			if first == nil || first.Kind != yaml.ScalarNode || !fallbackGroups[strings.TrimSpace(first.Value)] {
-				continue
-			}
-			hasAutoAlready := false
-			for _, entry := range seq.Content {
-				if r := resolveAlias(entry); r != nil && r.Kind == yaml.ScalarNode && strings.TrimSpace(r.Value) == "Auto" {
-					hasAutoAlready = true
-					break
-				}
-			}
-			if !hasAutoAlready {
-				seq.Content = append([]*yaml.Node{strNode("Auto")}, seq.Content...)
 			}
 		}
 	}

@@ -215,7 +215,14 @@ func TestDecodeShareLinksMobileCompat(t *testing.T) {
 	}
 
 	builtYAML, ok := buildClashConfigFromProxies(converted)
-	if !ok || !strings.Contains(string(builtYAML), "Fallback") || !strings.Contains(string(builtYAML), "200-299") {
-		t.Fatalf("buildClashConfigFromProxies missing Fallback/expected-status: %s", string(builtYAML))
+	if !ok {
+		t.Fatal("buildClashConfigFromProxies returned false")
+	}
+	rawBuilt, err := unmarshalRawConfig(builtYAML)
+	if err != nil {
+		t.Fatalf("unmarshalRawConfig(builtYAML): %v\n%s", err, string(builtYAML))
+	}
+	if len(rawBuilt.ProxyGroup) != 1 || rawBuilt.ProxyGroup[0]["name"] != "Proxy" || rawBuilt.ProxyGroup[0]["type"] != "select" {
+		t.Fatalf("unexpected proxy-groups in buildClashConfigFromProxies: %#v", rawBuilt.ProxyGroup)
 	}
 }

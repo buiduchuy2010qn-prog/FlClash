@@ -1,9 +1,10 @@
 # Changelog
 
-## Fork Modifications (v0.9.10 – v0.9.18, November 2026)
+## Fork Modifications (v0.9.10 – v0.9.19, November 2026)
 
 Modified fork maintained by **Bùi Đức Huy (`@buiduchuy2010qn-prog`)** under GNU GPL-3.0 (see [LICENSE](LICENSE), [NOTICE.md](NOTICE.md), and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)):
 
+- **2026-11-25 (`v0.9.19`)** — Enforced single-device connection discipline: prevented concurrent multi-node healthcheck storms at startup, on network switches, and during auto-generated proxy group setup; disabled premature smart-failover stream heuristics and replaced 6-way candidate scans with sequential early-exit probing only when the active node fails twice consecutively; added a persistent `x-hwid` device identifier, patch-stable `User-Agent`, and `DIRECT`-first subscription downloads; capped mobile automatic proxy probing to small early-exit batches.
 - **2026-11-25 (`v0.9.18`)** — Hardened untrusted configuration security in Go core (`sanitizeConfigSecurity`: loopback restriction, auto random secret, wildcard CORS stripping), added built-in network & DNS/IPv6 leak diagnostic sheet, added Android screen capture shield (`FLAG_SECURE`) and system Kill Switch shortcut, extended IP masking across LAN/hotspot displays, added 1-tap essential banking/public-service app VPN bypass, and added early low-quota / expiry subscription alerts.
 - **2026-11-25 (`v0.9.17`)** — Added native Go core primary `Selector` smart failover and stalled/throttled stream detection with node quarantine scoring, upgraded Android Auto-VPN to require validated non-captive Wi-Fi before stopping VPN, added dead-subscription recovery refresh and core-pick profile sync, and made the mobile optimization preset snapshot & cleanly restore previous settings when toggled off.
 - **2026-11-25 (`v0.9.16`)** — Restored automated GitHub Actions multi-platform OTA release publishing (Android `arm64` APK + Windows `amd64` installer/portable with SHA-256 verification), updated GPL-3.0 compliance & third-party notices ([NOTICE.md](NOTICE.md), [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)), and cleaned up repository module naming.
