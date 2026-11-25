@@ -1,6 +1,9 @@
 name: build
 
 on:
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 concurrency:
@@ -363,7 +366,7 @@ jobs:
 
   publish:
     name: Publish GitHub Release
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
     needs: [version, dart, build-android, build-windows]
     runs-on: ubuntu-latest
     steps:
@@ -395,14 +398,14 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.version.outputs.release_tag }}
-          name: FlClash Việt Hóa Lite ${{ needs.version.outputs.release_tag }}
+          name: FlClash ${{ needs.version.outputs.release_tag }}
           make_latest: true
           body: |
             <!-- flclash:changelog:begin -->
-            - 1 chạm chọn node mượt nhất ngay tại trang Proxy & trên thanh thông báo Android, kèm tùy chọn Tự đổi node khi rớt mạng (tự chuyển sang node sống ping thấp nhất khi node hiện tại timeout hoặc quá chậm).
-            - Nâng cấp thanh thông báo Android: hiển thị trực tiếp tên server đang kết nối kèm ping (ms / Timeout) và thêm nút Đổi mượt ngay ngoài màn hình thông báo.
-            - Tối ưu đo ping khi đổi sóng Wi-Fi / 4G: chỉ kiểm tra nhanh node đang dùng để tiết kiệm pin và tránh nghẽn 4G, chỉ quét lại cả nhóm nếu node đang dùng gặp lỗi.
-            - Bổ sung giao diện cài đặt Tiếng Việt cho trình cài đặt Windows (.exe) và cập nhật thông tin phát hành, hỗ trợ trạng thái đang cài đặt khi tự cập nhật trên Windows.
+            - Đồng bộ phát hành OTA đa nền tảng cho cả Android (`arm64`) và Windows (`setup.exe` cài đặt trực tiếp + `portable.zip`), kèm kiểm tra toàn vẹn mã băm SHA-256 tự động.
+            - Cải thiện độ ổn định nhận thông báo đẩy và tải widget màn hình chính của các ứng dụng khác khi bật VPN chạy nền trên Android (tối ưu TCP keepalive, tách xử lý miền thông báo đẩy hệ thống và dự phòng QUIC sang HTTPS/TCP).
+            - Tối ưu tiết kiệm pin, giảm nóng máy và tự động chuyển đổi dự phòng kết nối mượt mà hơn khi mạng di động không ổn định.
+            - Hoàn thiện tài liệu bản quyền mã nguồn mở GNU GPL-3.0, thông báo thành phần bên thứ ba và cấu trúc mã nguồn chuẩn hóa.
             <!-- flclash:changelog:end -->
 
             ### Hướng dẫn chọn file tải phù hợp:
