@@ -1,8 +1,10 @@
 # Changelog
 
-## Fork Modifications (v0.9.10 – v0.9.21, November 2026)
+## Fork Modifications (v0.9.10 – v0.9.22, November 2026)
 
 Modified fork maintained by **Bùi Đức Huy (`@buiduchuy2010qn-prog`)** under GNU GPL-3.0 (see [LICENSE](LICENSE), [NOTICE.md](NOTICE.md), and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)):
+
+- **2026-11-25 (`v0.9.22`)** — Fixed Plan Portal login and status synchronization when servers return JSON validation or credential error messages under HTTP 500/422 (`validateStatus < 600` + nested `errors` extraction), mapped null `alive_ip` with a valid device limit to `0/<limit>`, aligned Profile Detail quota forecast wording (`Đủ dùng đến hết hạn`) with Dashboard, and expanded portal status subtitles to two lines.
 
 - **2026-11-25 (`v0.9.21`)** — Added live VPN subscription active-device counter & limit monitoring (`online/limit` parsed from `subscription-userinfo`, standalone headers, informational plan nodes, AND optional direct Plan Portal account sync storing only a local session token for exact server-side online/limit telemetry, plan name, and portal shortcut), smart quota burn-rate & expiry forecasting integrated with daily traffic history, and the **Smart Hub** control center featuring passive connection health scoring (0–100), single-device-safe 1-tap network self-heal (DNS flush + single active node verify + early-exit fallback only when unresponsive), live local session footprint inspection & cleanup, top session consumers, and 1-tap protection presets (Single-Device Strict Guard, Privacy Max, and 4G & QUIC Optimizer).
 - **2026-11-25 (`v0.9.20`)** — Enforced strict single-node, single-IPv4 session discipline: neutralized provider-supplied `url-test`/`fallback`/`load-balance` background healthchecks and external `proxy-providers` `health-check` tasks into `select` groups unified behind the primary selector; forced single-stack `ip-version: ipv4` on non-IPv6 proxy servers, disabled `tcp-concurrent` and mobile default IPv6 racing; removed proxy-node DoH prewarm racing; closed previous-node streams (including long-lived push sockets) immediately on proxy change; defaulted `autoFailover` off across Dart, Kotlin, and Go core so VPN startup triggers zero automatic delay-test connections.

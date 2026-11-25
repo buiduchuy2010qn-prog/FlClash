@@ -3,7 +3,7 @@
 ## Scope & Supported Versions
 This repository provides an independent, GNU GPL-3.0-licensed fork of FlClash maintained for Vietnamese localization, mobile stability, push notification/widget reliability, and battery/thermal efficiency.
 
-- Latest supported release line: `v0.9.21+`
+- Latest supported release line: `v0.9.22+`
 - Only general-purpose open-source client code is distributed here; no external proxy servers, subscriptions, or user credentials are bundled.
 
 ## Reporting a Vulnerability

@@ -467,7 +467,7 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
                       final b when b.authExpired => l.portalSessionExpired,
                       final b => l.portalConnectedAs(b.email),
                     },
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   trailing: const GlyphIcon(AppGlyphs.chevronForward),
