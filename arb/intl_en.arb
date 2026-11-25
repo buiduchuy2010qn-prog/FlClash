@@ -1322,9 +1322,46 @@
   "versionGateDefaultDesc": "This version is no longer supported. Please update FlClash to continue.",
   "versionGateDownload": "Download update",
   "versionGateRetry": "Check again",
+  "securitySectionTitle": "Security & Privacy",
+  "securitySectionFooter": "Controller API listens only on local loopback with random secret protection. Screen shield blocks recent-task previews and screenshots on Android.",
+  "privacyScreenShield": "Screen Capture Shield",
+  "privacyScreenShieldDesc": "Block screenshots and hide app preview in Android Recents (FLAG_SECURE)",
+  "systemKillSwitch": "System VPN Kill Switch",
+  "systemKillSwitchDesc": "Open Android VPN settings to enable Always-on VPN and Block connections without VPN",
+  "leakCheckTitle": "Network & Leak Check",
+  "leakCheckDesc": "Compare direct vs tunnel IP addresses, encrypted DNS, and IPv6 exposure",
+  "leakCheckProtected": "Protected (Tunnel active)",
+  "leakCheckExposed": "Not isolated / Direct exit",
+  "leakCheckDirectIp": "Direct ISP IP",
+  "leakCheckTunnelIp": "VPN Exit IP",
+  "leakCheckDnsStatus": "Encrypted DNS / Fake-IP",
+  "leakCheckDnsSafe": "Active (Protected)",
+  "leakCheckDnsWarn": "Unencrypted or Disabled",
+  "leakCheckIpv6Safe": "No IPv6 leak detected",
+  "leakCheckIpv6Warn": "IPv6 matches direct exit",
+  "bypassEssentialApps": "Bypass Banking & Gov Apps",
+  "bypassEssentialAppsTip": "Applied VPN bypass to {count} essential banking/public apps",
+  "subQuotaLowWarning": "Active subscription data is running low (~{percent}% left)",
+  "subExpiringSoonWarning": "Active subscription expires in about {days} day(s)",
+  "subExpiredOrExhaustedWarning": "Active subscription has expired or run out of data",
   "@hotspotCopiedTip": {
     "placeholders": {
       "address": {}
+    }
+  },
+  "@bypassEssentialAppsTip": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@subQuotaLowWarning": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
+  "@subExpiringSoonWarning": {
+    "placeholders": {
+      "days": {}
     }
   }
 }

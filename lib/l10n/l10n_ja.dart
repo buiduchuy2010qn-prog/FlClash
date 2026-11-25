@@ -3943,4 +3943,79 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get versionGateRetry => '再確認';
+
+  @override
+  String get securitySectionTitle => 'セキュリティとプライバシー';
+
+  @override
+  String get securitySectionFooter =>
+      '制御APIはローカルのみ待機しランダム鍵で保護されます。画面保護はマルチタスクのプレビューを隠します。';
+
+  @override
+  String get privacyScreenShield => 'スクリーンショット保護';
+
+  @override
+  String get privacyScreenShieldDesc =>
+      '画面キャプチャを禁止し、履歴プレビューを非表示にします (FLAG_SECURE)';
+
+  @override
+  String get systemKillSwitch => 'システム VPN キルスイッチ';
+
+  @override
+  String get systemKillSwitchDesc =>
+      'Android の VPN 設定を開き、常時接続と VPN なしの接続をブロックを有効化します';
+
+  @override
+  String get leakCheckTitle => 'ネットワーク・リーク診断';
+
+  @override
+  String get leakCheckDesc => '直接 IP と VPN 出口 IP、暗号化 DNS、IPv6 漏れを確認します';
+
+  @override
+  String get leakCheckProtected => '保護済み（VPN 経由）';
+
+  @override
+  String get leakCheckExposed => '未隔離 / 直接接続';
+
+  @override
+  String get leakCheckDirectIp => '直接接続 IP';
+
+  @override
+  String get leakCheckTunnelIp => 'VPN 出口 IP';
+
+  @override
+  String get leakCheckDnsStatus => '暗号化 DNS / Fake-IP';
+
+  @override
+  String get leakCheckDnsSafe => '有効（安全）';
+
+  @override
+  String get leakCheckDnsWarn => '未暗号化または無効';
+
+  @override
+  String get leakCheckIpv6Safe => 'IPv6 リークなし';
+
+  @override
+  String get leakCheckIpv6Warn => '警告：IPv6 が直接 IP と一致しています';
+
+  @override
+  String get bypassEssentialApps => '銀行・行政アプリをバイパス';
+
+  @override
+  String bypassEssentialAppsTip(Object count) {
+    return '$count 個の主要銀行・行政アプリに VPN バイパスを適用しました';
+  }
+
+  @override
+  String subQuotaLowWarning(Object percent) {
+    return 'サブスクリプションの残量が少なくなっています（残り約 $percent%）';
+  }
+
+  @override
+  String subExpiringSoonWarning(Object days) {
+    return '現在のサブスクリプションは約 $days 日で期限切れになります';
+  }
+
+  @override
+  String get subExpiredOrExhaustedWarning => '現在のサブスクリプションは期限切れまたは上限に達しました';
 }

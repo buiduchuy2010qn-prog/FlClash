@@ -41,6 +41,9 @@ class IntranetIpCard extends ConsumerWidget {
     final allowLan = ref.watch(
       patchClashConfigProvider.select((state) => state.allowLan),
     );
+    final hideIp = ref.watch(
+      appSettingProvider.select((state) => state.hideIp),
+    );
     final port = ref.watch(
       patchClashConfigProvider.select((state) => state.mixedPort),
     );
@@ -109,7 +112,10 @@ class IntranetIpCard extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                   style: style.copyWith(color: colorScheme.onSurfaceVariant),
                 ),
-                final ip => DashboardFitText(ip, style: style),
+                final ip => DashboardFitText(
+                  maskIfHidden(ip, hideIp: hideIp),
+                  style: style,
+                ),
               },
             ),
           ),

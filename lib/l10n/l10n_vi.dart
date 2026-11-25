@@ -4128,4 +4128,81 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get versionGateRetry => 'Kiểm tra lại';
+
+  @override
+  String get securitySectionTitle => 'Bảo mật & Quyền riêng tư';
+
+  @override
+  String get securitySectionFooter =>
+      'Cổng điều khiển chỉ lắng nghe nội bộ kèm khóa ngẫu nhiên. Chống chụp màn hình giúp ẩn nội dung nhạy cảm trong đa nhiệm Android.';
+
+  @override
+  String get privacyScreenShield => 'Chống chụp màn hình & Đa nhiệm';
+
+  @override
+  String get privacyScreenShieldDesc =>
+      'Chặn chụp ảnh màn hình và che xem trước ứng dụng trong đa nhiệm (FLAG_SECURE)';
+
+  @override
+  String get systemKillSwitch => 'Khóa chống rò rỉ VPN hệ thống';
+
+  @override
+  String get systemKillSwitchDesc =>
+      'Mở cài đặt VPN Android để bật Luôn bật VPN & Chặn kết nối không qua VPN';
+
+  @override
+  String get leakCheckTitle => 'Kiểm tra độ kín & Rò rỉ mạng';
+
+  @override
+  String get leakCheckDesc =>
+      'Đối chiếu IP gốc, IP qua VPN, DNS mã hóa và rò rỉ IPv6';
+
+  @override
+  String get leakCheckProtected => 'Đã bảo vệ (Đang qua VPN)';
+
+  @override
+  String get leakCheckExposed => 'Chưa cách ly / Đang đi trực tiếp';
+
+  @override
+  String get leakCheckDirectIp => 'IP trực tiếp (Chưa qua VPN)';
+
+  @override
+  String get leakCheckTunnelIp => 'IP qua đường hầm VPN';
+
+  @override
+  String get leakCheckDnsStatus => 'DNS mã hóa / Fake-IP';
+
+  @override
+  String get leakCheckDnsSafe => 'Đang bật (An toàn)';
+
+  @override
+  String get leakCheckDnsWarn => 'Chưa bật DNS mã hóa';
+
+  @override
+  String get leakCheckIpv6Safe => 'Không phát hiện rò rỉ IPv6';
+
+  @override
+  String get leakCheckIpv6Warn => 'Cảnh báo: IPv6 trùng với IP gốc';
+
+  @override
+  String get bypassEssentialApps => 'Bỏ qua app Ngân hàng & Dịch vụ công';
+
+  @override
+  String bypassEssentialAppsTip(Object count) {
+    return 'Đã tách $count ứng dụng ngân hàng/dịch vụ công đi trực tiếp không qua VPN';
+  }
+
+  @override
+  String subQuotaLowWarning(Object percent) {
+    return 'Dung lượng gói đăng ký sắp hết (còn khoảng $percent%)';
+  }
+
+  @override
+  String subExpiringSoonWarning(Object days) {
+    return 'Gói đăng ký hiện tại sắp hết hạn (còn khoảng $days ngày)';
+  }
+
+  @override
+  String get subExpiredOrExhaustedWarning =>
+      'Gói đăng ký hiện tại đã hết hạn hoặc hết dung lượng';
 }

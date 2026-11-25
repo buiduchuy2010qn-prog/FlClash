@@ -165,6 +165,30 @@ class _AccessViewState extends ConsumerState<AccessView>
     });
   }
 
+  Future<void> _bypassEssentialApps() async {
+    var packages = ref.read(packagesProvider);
+    if (packages.isEmpty) {
+      packages =
+          await globalState.loadingRun<List<Package>>(
+            ref.read(systemActionProvider.notifier).getPackages,
+            tag: LoadingTag.access,
+          ) ??
+          const [];
+    }
+    if (!mounted) return;
+    final res = applyEssentialAppsBypass(
+      ref.read(accessControlStateProvider),
+      packages.map((item) => item.packageName),
+    );
+    if (res.matchedCount > 0) {
+      _update((_) => res.props);
+    }
+    dialogs.showBanner(
+      context.appLocalizations.bypassEssentialAppsTip(res.matchedCount),
+      level: res.matchedCount > 0 ? BannerLevel.success : BannerLevel.info,
+    );
+  }
+
   void _handleSelected(String packageName) {
     ref.read(accessControlStateProvider.notifier).update((state) {
       final newSet = Set<String>.from(state.currentList)
@@ -308,6 +332,11 @@ class _AccessViewState extends ConsumerState<AccessView>
             glyph: AppGlyphs.sparkle,
             label: appLocalizations.intelligentSelected,
             onPressed: _intelligentSelected,
+          ),
+          PopupMenuItem(
+            glyph: AppGlyphs.verified,
+            label: appLocalizations.bypassEssentialApps,
+            onPressed: _bypassEssentialApps,
           ),
           PopupMenuItem(
             glyph: AppGlyphs.copy,

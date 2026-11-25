@@ -7249,6 +7249,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Check again'**
   String get versionGateRetry;
+
+  /// No description provided for @securitySectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Security & Privacy'**
+  String get securitySectionTitle;
+
+  /// No description provided for @securitySectionFooter.
+  ///
+  /// In en, this message translates to:
+  /// **'Controller API listens only on local loopback with random secret protection. Screen shield blocks recent-task previews and screenshots on Android.'**
+  String get securitySectionFooter;
+
+  /// No description provided for @privacyScreenShield.
+  ///
+  /// In en, this message translates to:
+  /// **'Screen Capture Shield'**
+  String get privacyScreenShield;
+
+  /// No description provided for @privacyScreenShieldDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Block screenshots and hide app preview in Android Recents (FLAG_SECURE)'**
+  String get privacyScreenShieldDesc;
+
+  /// No description provided for @systemKillSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'System VPN Kill Switch'**
+  String get systemKillSwitch;
+
+  /// No description provided for @systemKillSwitchDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Android VPN settings to enable Always-on VPN and Block connections without VPN'**
+  String get systemKillSwitchDesc;
+
+  /// No description provided for @leakCheckTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Network & Leak Check'**
+  String get leakCheckTitle;
+
+  /// No description provided for @leakCheckDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare direct vs tunnel IP addresses, encrypted DNS, and IPv6 exposure'**
+  String get leakCheckDesc;
+
+  /// No description provided for @leakCheckProtected.
+  ///
+  /// In en, this message translates to:
+  /// **'Protected (Tunnel active)'**
+  String get leakCheckProtected;
+
+  /// No description provided for @leakCheckExposed.
+  ///
+  /// In en, this message translates to:
+  /// **'Not isolated / Direct exit'**
+  String get leakCheckExposed;
+
+  /// No description provided for @leakCheckDirectIp.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct ISP IP'**
+  String get leakCheckDirectIp;
+
+  /// No description provided for @leakCheckTunnelIp.
+  ///
+  /// In en, this message translates to:
+  /// **'VPN Exit IP'**
+  String get leakCheckTunnelIp;
+
+  /// No description provided for @leakCheckDnsStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted DNS / Fake-IP'**
+  String get leakCheckDnsStatus;
+
+  /// No description provided for @leakCheckDnsSafe.
+  ///
+  /// In en, this message translates to:
+  /// **'Active (Protected)'**
+  String get leakCheckDnsSafe;
+
+  /// No description provided for @leakCheckDnsWarn.
+  ///
+  /// In en, this message translates to:
+  /// **'Unencrypted or Disabled'**
+  String get leakCheckDnsWarn;
+
+  /// No description provided for @leakCheckIpv6Safe.
+  ///
+  /// In en, this message translates to:
+  /// **'No IPv6 leak detected'**
+  String get leakCheckIpv6Safe;
+
+  /// No description provided for @leakCheckIpv6Warn.
+  ///
+  /// In en, this message translates to:
+  /// **'IPv6 matches direct exit'**
+  String get leakCheckIpv6Warn;
+
+  /// No description provided for @bypassEssentialApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Bypass Banking & Gov Apps'**
+  String get bypassEssentialApps;
+
+  /// No description provided for @bypassEssentialAppsTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Applied VPN bypass to {count} essential banking/public apps'**
+  String bypassEssentialAppsTip(Object count);
+
+  /// No description provided for @subQuotaLowWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Active subscription data is running low (~{percent}% left)'**
+  String subQuotaLowWarning(Object percent);
+
+  /// No description provided for @subExpiringSoonWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Active subscription expires in about {days} day(s)'**
+  String subExpiringSoonWarning(Object days);
+
+  /// No description provided for @subExpiredOrExhaustedWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Active subscription has expired or run out of data'**
+  String get subExpiredOrExhaustedWarning;
 }
 
 class _AppLocalizationsDelegate

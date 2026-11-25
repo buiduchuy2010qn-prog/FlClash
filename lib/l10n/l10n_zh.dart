@@ -3891,4 +3891,76 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get versionGateRetry => '重新检查';
+
+  @override
+  String get securitySectionTitle => '安全与隐私';
+
+  @override
+  String get securitySectionFooter => '控制接口仅绑定本地回环并使用随机密钥。防截屏可在系统多任务中隐藏敏感内容。';
+
+  @override
+  String get privacyScreenShield => '防截屏与隐私保护';
+
+  @override
+  String get privacyScreenShieldDesc => '禁止截屏并在系统多任务列表中隐藏界面预览 (FLAG_SECURE)';
+
+  @override
+  String get systemKillSwitch => '系统 VPN 断网锁 (Kill Switch)';
+
+  @override
+  String get systemKillSwitchDesc => '打开系统 VPN 设置以启用“始终开启的 VPN”和“阻止无 VPN 的连接”';
+
+  @override
+  String get leakCheckTitle => '网络泄漏检测';
+
+  @override
+  String get leakCheckDesc => '对比直连与代理出口 IP、加密 DNS 与 IPv6 泄漏状态';
+
+  @override
+  String get leakCheckProtected => '已保护（通过代理）';
+
+  @override
+  String get leakCheckExposed => '未隔离 / 直连出口';
+
+  @override
+  String get leakCheckDirectIp => '直连出口 IP';
+
+  @override
+  String get leakCheckTunnelIp => 'VPN 出口 IP';
+
+  @override
+  String get leakCheckDnsStatus => '加密 DNS / Fake-IP';
+
+  @override
+  String get leakCheckDnsSafe => '已启用（安全）';
+
+  @override
+  String get leakCheckDnsWarn => '未启用加密 DNS';
+
+  @override
+  String get leakCheckIpv6Safe => '未检测到 IPv6 泄漏';
+
+  @override
+  String get leakCheckIpv6Warn => '警告：IPv6 与直连出口相同';
+
+  @override
+  String get bypassEssentialApps => '银行与政务应用直连';
+
+  @override
+  String bypassEssentialAppsTip(Object count) {
+    return '已将 $count 个常用银行/政务应用设为绕过 VPN';
+  }
+
+  @override
+  String subQuotaLowWarning(Object percent) {
+    return '当前订阅剩余流量不足（约剩 $percent%）';
+  }
+
+  @override
+  String subExpiringSoonWarning(Object days) {
+    return '当前订阅将在约 $days 天内到期';
+  }
+
+  @override
+  String get subExpiredOrExhaustedWarning => '当前订阅已过期或流量已耗尽';
 }

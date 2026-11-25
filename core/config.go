@@ -126,7 +126,7 @@ func withPlatformLimits(cfg *config.Config) *config.Config {
 		log.Warnln("ntp write-to-system ignored: Android does not let apps set the system time")
 		cfg.NTP.WriteToSystem = false
 	}
-	return cfg
+	return sanitizeConfigSecurity(cfg)
 }
 
 func runningConfigPath() string {
@@ -309,6 +309,13 @@ func patchController(params *UpdateParams) {
 	if params.Secret != nil {
 		secret = *params.Secret
 	}
+	forceLoopback := runtime.GOOS == "android" || (currentConfig.General != nil && !currentConfig.General.AllowLan)
+	address = sanitizeControllerAddress(address, forceLoopback)
+	hasController := address != "" ||
+		controller.ExternalControllerTLS != "" ||
+		controller.ExternalControllerUnix != "" ||
+		controller.ExternalControllerPipe != ""
+	secret = ensureControllerSecret(secret, hasController)
 	if address == controller.ExternalController && secret == controller.Secret {
 		return
 	}

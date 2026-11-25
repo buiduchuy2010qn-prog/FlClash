@@ -4020,4 +4020,79 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get versionGateRetry => '다시 확인';
+
+  @override
+  String get securitySectionTitle => '보안 및 개인정보';
+
+  @override
+  String get securitySectionFooter =>
+      '제어 API는 로컬 루프백으로 제한되며 무작위 키로 보호됩니다. 화면 보호는 최근 앱 미리보기를 가립니다.';
+
+  @override
+  String get privacyScreenShield => '화면 캡처 방지';
+
+  @override
+  String get privacyScreenShieldDesc =>
+      '스크린샷을 차단하고 최근 앱 미리보기를 숨깁니다 (FLAG_SECURE)';
+
+  @override
+  String get systemKillSwitch => '시스템 VPN 킬 스위치';
+
+  @override
+  String get systemKillSwitchDesc =>
+      'Android VPN 설정을 열어 항상 사용 및 VPN 없이 연결 차단을 활성화합니다';
+
+  @override
+  String get leakCheckTitle => '네트워크 및 유출 검사';
+
+  @override
+  String get leakCheckDesc => '직접 IP와 VPN 출구 IP, 암호화 DNS 및 IPv6 유출 여부를 확인합니다';
+
+  @override
+  String get leakCheckProtected => '보호됨 (VPN 터널 활성)';
+
+  @override
+  String get leakCheckExposed => '격리되지 않음 / 직접 연결';
+
+  @override
+  String get leakCheckDirectIp => '직접 연결 IP';
+
+  @override
+  String get leakCheckTunnelIp => 'VPN 출구 IP';
+
+  @override
+  String get leakCheckDnsStatus => '암호화 DNS / Fake-IP';
+
+  @override
+  String get leakCheckDnsSafe => '활성 (안전)';
+
+  @override
+  String get leakCheckDnsWarn => '비암호화 또는 비활성';
+
+  @override
+  String get leakCheckIpv6Safe => 'IPv6 유출 없음';
+
+  @override
+  String get leakCheckIpv6Warn => '경고: IPv6가 직접 IP와 동일합니다';
+
+  @override
+  String get bypassEssentialApps => '금융·공공 앱 VPN 우회';
+
+  @override
+  String bypassEssentialAppsTip(Object count) {
+    return '주요 금융/공공 앱 $count개를 VPN 우회로 설정했습니다';
+  }
+
+  @override
+  String subQuotaLowWarning(Object percent) {
+    return '활성 구독 데이터가 부족합니다 (약 $percent% 남음)';
+  }
+
+  @override
+  String subExpiringSoonWarning(Object days) {
+    return '활성 구독이 약 $days일 후 만료됩니다';
+  }
+
+  @override
+  String get subExpiredOrExhaustedWarning => '활성 구독이 만료되었거나 데이터를 모두 소진했습니다';
 }

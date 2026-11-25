@@ -301,6 +301,27 @@ class App {
     return methodChannel.invokeMethod<bool>('openAppSettings');
   }
 
+  Future<bool> openVpnSettings() async {
+    if (!Platform.isAndroid) return false;
+    try {
+      return await methodChannel.invokeMethod<bool>('openVpnSettings') ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> setSecureScreen(bool enabled) async {
+    if (!Platform.isAndroid) return false;
+    try {
+      return await methodChannel.invokeMethod<bool>('setSecureScreen', {
+            'enabled': enabled,
+          }) ??
+          false;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<({bool user, bool system, bool root})> locateCaCertificate(
     List<int> der,
   ) async {

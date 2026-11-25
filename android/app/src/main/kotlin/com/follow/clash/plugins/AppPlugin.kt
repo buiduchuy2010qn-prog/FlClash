@@ -23,6 +23,7 @@ import android.os.Looper
 import android.provider.MediaStore
 import android.provider.Settings
 import android.security.KeyChain
+import android.view.WindowManager
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -172,6 +173,8 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
 
     private var floatingIme = false
 
+    private var secureScreenEnabled = false
+
     // A TV keyboard floats over the app and reports a zero-height IME inset.
     private val imeInsetsListener = OnApplyWindowInsetsListener { view, insets ->
         val ime = WindowInsetsCompat.Type.ime()
@@ -276,6 +279,19 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
 
             "openAppSettings" -> {
                 result.success(openAppSettings())
+            }
+
+            "openVpnSettings" -> {
+                onMainThread { result.success(openVpnSettings()) }
+            }
+
+            "setSecureScreen" -> {
+                val enabled = call.argument<Boolean>("enabled") == true
+                onMainThread {
+                    secureScreenEnabled = enabled
+                    applySecureScreen()
+                    result.success(true)
+                }
             }
 
             "getLastExitInfo" -> reply(result) {
@@ -726,6 +742,24 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
         }
     }
 
+    private fun openVpnSettings(): Boolean {
+        val intents = listOf(
+            Intent(Settings.ACTION_VPN_SETTINGS),
+            Intent(Settings.ACTION_WIRELESS_SETTINGS),
+            Intent(Settings.ACTION_SETTINGS),
+        )
+        return intents.any(::startSettings)
+    }
+
+    private fun applySecureScreen() {
+        val win = activity?.window ?: return
+        if (secureScreenEnabled) {
+            win.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        } else {
+            win.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
+
     @Suppress("DEPRECATION")
     private fun updateExcludeFromRecents(value: Boolean?) {
         val taskId = activity?.taskId ?: return
@@ -924,6 +958,7 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
         detachFromActivity()
         activityBinding = binding
         activity = binding.activity
+        applySecureScreen()
         binding.addActivityResultListener(activityResultListener)
         binding.addRequestPermissionsResultListener(permissionsResultListener)
         if (isTelevision) {

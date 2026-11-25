@@ -10,6 +10,7 @@ import 'package:flutter/widgets.dart';
 
 import 'ip_quality_text.dart';
 import 'labels.dart';
+import 'leak_check_sheet.dart';
 
 Future<void> showIpQualitySheet(BuildContext context, {required String ip}) {
   return showNestedSheet<void>(
@@ -134,7 +135,15 @@ class _IpQualityDetail extends ConsumerWidget {
           ),
         generateSection(
           title: localizations.other,
-          items: const [_HideIpItem()],
+          items: [
+            const _HideIpItem(),
+            ListItem(
+              title: Text(localizations.leakCheckTitle),
+              subtitle: Text(localizations.leakCheckDesc),
+              trailing: const GlyphIcon(AppGlyphs.chevronForward),
+              onTap: () => showLeakCheckSheet(context),
+            ),
+          ],
         ),
       ],
     );
