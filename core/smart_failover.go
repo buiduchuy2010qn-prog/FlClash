@@ -359,10 +359,7 @@ func closeConnectionsForLeaf(leafName string) {
 		if info == nil || len(info.Chain) == 0 {
 			return true
 		}
-		if info.Metadata != nil && isPushNotificationPort(info.Metadata.DstPort) {
-			return true
-		}
-		if info.Chain[0] == leafName {
+		if slices.Contains(info.Chain, leafName) {
 			_ = c.Close()
 		}
 		return true

@@ -139,6 +139,9 @@ class ProxiesAction extends _$ProxiesAction {
   }
 
   void _scheduleAutoPing() {
+    if (!ref.read(autoFailoverProvider)) {
+      return;
+    }
     _autoPingTimer?.cancel();
     _autoPingTimer = Timer(const Duration(milliseconds: 600), () {
       unawaited(_autoTestActiveGroup());

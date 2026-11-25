@@ -402,10 +402,10 @@ jobs:
           make_latest: true
           body: |
             <!-- flclash:changelog:begin -->
-            - Giảm tối đa kết nối song song để một máy không bị hệ thống đăng ký tính thành nhiều thiết bị: bỏ tự động quét ngầm toàn bộ máy chủ khi bật VPN hoặc khi chuyển mạng 4G/Wi-Fi
-            - Sửa cơ chế tự động chuyển server để không hiểu nhầm kết nối chờ dài (WebSocket/keep-alive) và chỉ dò tuần tự từng node đến khi gặp node phản hồi tốt
-            - Bổ sung mã nhận diện thiết bị cố định x-hwid gửi kèm khi cập nhật gói đăng ký, giữ nguyên User-Agent qua các bản vá và ưu tiên tải gói trực tiếp
-            - Giới hạn số luồng đo ping tự động trên di động và bỏ qua bước quét lại toàn bộ nhóm khi node hiện tại chưa xác định
+            - Vô hiệu hóa quét sức khỏe ngầm của các nhóm Tự động / Dự phòng do gói đăng ký cấu hình sẵn và hợp nhất luồng qua nhóm chính để 1 máy chỉ kết nối 1 máy chủ duy nhất
+            - Ép kết nối đơn luồng qua IPv4 (tắt đua song song IPv4/IPv6 và tcp-concurrent) tránh 1 điện thoại bị đếm thành nhiều IP online cùng lúc
+            - Đóng toàn bộ phiên cũ ngay khi đổi node (kể cả kết nối giữ phiên dài) và bỏ quét DoH ngẫu nhiên qua proxy
+            - Đặt mặc định Tắt tự động đo ping / đổi node lúc khởi động VPN để giữ dấu vết đúng 1 thiết bị thực tế
             <!-- flclash:changelog:end -->
 
             ### Hướng dẫn chọn file tải phù hợp:

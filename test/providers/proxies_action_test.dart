@@ -1198,6 +1198,7 @@ void main() {
         () => buildContainer(profile: _selectedProfile('HK-Slow')),
       );
       container.listen(patchClashConfigProvider, (_, _) {});
+      container.read(autoFailoverProvider.notifier).setEnabled(true);
       container.read(coreStatusProvider.notifier).value = CoreStatus.connected;
       container.read(groupsProvider.notifier).value = [
         _group('Proxy', const [
@@ -1278,6 +1279,7 @@ void main() {
           () => buildContainer(profile: _selectedProfile('HK-Slow')),
         );
         container.listen(patchClashConfigProvider, (_, _) {});
+        container.read(autoFailoverProvider.notifier).setEnabled(true);
         container.read(coreStatusProvider.notifier).value =
             CoreStatus.connected;
         container.read(groupsProvider.notifier).value = [
@@ -1493,11 +1495,39 @@ void main() {
         final container = _delayContainer(
           () => buildContainer(profile: _selectedProfile('DIRECT')),
         );
+        container.read(autoFailoverProvider.notifier).setEnabled(true);
         container.read(coreStatusProvider.notifier).value =
             CoreStatus.connected;
         container.read(groupsProvider.notifier).value = [
           _group('Proxy', const [
             Proxy(name: 'DIRECT', type: 'direct'),
+            Proxy(name: 'N1', type: 'ss'),
+            Proxy(name: 'N2', type: 'ss'),
+          ]).copyWith(hidden: false),
+        ];
+        actionOf(container);
+
+        container.read(runTimeProvider.notifier).value = 1;
+        await tester.pump(const Duration(milliseconds: 650));
+
+        verifyNever(() => core.testDelay(any()));
+      },
+    );
+
+    testWidgets(
+      'auto-ping stays disabled by default when autoFailover is off',
+      (tester) async {
+        when(() => core.testDelay(any())).thenAnswer(
+          (_) async => const Delay(name: 'N1', url: _testUrl, value: 50),
+        );
+        final container = _delayContainer(
+          () => buildContainer(profile: _selectedProfile('N1')),
+        );
+        expect(container.read(autoFailoverProvider), isFalse);
+        container.read(coreStatusProvider.notifier).value =
+            CoreStatus.connected;
+        container.read(groupsProvider.notifier).value = [
+          _group('Proxy', const [
             Proxy(name: 'N1', type: 'ss'),
             Proxy(name: 'N2', type: 'ss'),
           ]).copyWith(hidden: false),

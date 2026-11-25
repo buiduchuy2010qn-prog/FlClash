@@ -445,8 +445,8 @@ func TestOptimizeConfigDocumentPersistsToConfigYaml(t *testing.T) {
 	if err != nil {
 		t.Fatalf("loadConfigWithBase = %v", err)
 	}
-	if !cfg.General.UnifiedDelay || !cfg.General.TCPConcurrent {
-		t.Errorf("UnifiedDelay=%t TCPConcurrent=%t, want both true", cfg.General.UnifiedDelay, cfg.General.TCPConcurrent)
+	if !cfg.General.UnifiedDelay || cfg.General.TCPConcurrent {
+		t.Errorf("UnifiedDelay=%t TCPConcurrent=%t, want true/false", cfg.General.UnifiedDelay, cfg.General.TCPConcurrent)
 	}
 	if !strings.EqualFold(cfg.General.FindProcessMode.String(), "off") {
 		t.Errorf("FindProcessMode = %s, want off when no process rules exist", cfg.General.FindProcessMode)
@@ -456,8 +456,8 @@ func TestOptimizeConfigDocumentPersistsToConfigYaml(t *testing.T) {
 	if err != nil {
 		t.Fatalf("readRawConfig = %v", err)
 	}
-	if !raw.UnifiedDelay || !raw.TCPConcurrent {
-		t.Errorf("disk config UnifiedDelay=%t TCPConcurrent=%t, want both persisted", raw.UnifiedDelay, raw.TCPConcurrent)
+	if !raw.UnifiedDelay || raw.TCPConcurrent {
+		t.Errorf("disk config UnifiedDelay=%t TCPConcurrent=%t, want true/false persisted", raw.UnifiedDelay, raw.TCPConcurrent)
 	}
 	if !strings.EqualFold(raw.FindProcessMode.String(), "off") {
 		t.Errorf("disk FindProcessMode = %s, want off", raw.FindProcessMode)
@@ -484,12 +484,15 @@ func TestOptimizeConfigDocumentPersistsToConfigYaml(t *testing.T) {
 	if vlessProxy["client-fingerprint"] != "chrome" {
 		t.Errorf("proxy b client-fingerprint = %#v, want chrome", vlessProxy["client-fingerprint"])
 	}
+	if vlessProxy["ip-version"] != "ipv4" {
+		t.Errorf("proxy b ip-version = %#v, want ipv4", vlessProxy["ip-version"])
+	}
 
 	reloaded, err := loadConfig(configPath)
 	if err != nil {
 		t.Fatalf("loadConfig = %v", err)
 	}
-	if !reloaded.General.UnifiedDelay || !reloaded.General.TCPConcurrent || !strings.EqualFold(reloaded.General.FindProcessMode.String(), "off") {
+	if !reloaded.General.UnifiedDelay || reloaded.General.TCPConcurrent || !strings.EqualFold(reloaded.General.FindProcessMode.String(), "off") {
 		t.Errorf("reloaded flags not preserved: unified=%t concurrent=%t proc=%s", reloaded.General.UnifiedDelay, reloaded.General.TCPConcurrent, reloaded.General.FindProcessMode)
 	}
 

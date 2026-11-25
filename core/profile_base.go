@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/netip"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -151,6 +152,14 @@ func optimizeProxyNodes(root *yaml.Node) {
 					setMappingValue(item, "client-fingerprint", strNode("chrome"))
 				}
 			}
+		}
+		server := scalarString(item, "server")
+		isIPv6Addr := false
+		if addr, err := netip.ParseAddr(server); err == nil && addr.Is6() {
+			isIPv6Addr = true
+		}
+		if !isIPv6Addr && mappingValue(item, "ip-version") == nil {
+			setMappingValue(item, "ip-version", strNode("ipv4"))
 		}
 	}
 }
@@ -355,10 +364,16 @@ func optimizeConfigDocument(document, profile *yaml.Node) {
 	if mappingValue(defaultsSource, "unified-delay") == nil {
 		setMappingValue(root, "unified-delay", boolNode(true))
 	}
-	if mappingValue(defaultsSource, "tcp-concurrent") == nil {
-		setMappingValue(root, "tcp-concurrent", boolNode(true))
+	if isAndroidRuntime {
+		setMappingValue(root, "tcp-concurrent", boolNode(false))
+		if mappingValue(defaultsSource, "ipv6") == nil {
+			setMappingValue(root, "ipv6", boolNode(false))
+		}
+	} else if mappingValue(defaultsSource, "tcp-concurrent") == nil {
+		setMappingValue(root, "tcp-concurrent", boolNode(false))
 	}
 	optimizeProxyNodes(root)
+	optimizeProxyProviders(root)
 	optimizeProxyGroups(root)
 	if !isAndroidRuntime {
 		return
@@ -512,6 +527,9 @@ func ensureAndroidDNSDefaults(dnsNode *yaml.Node) {
 	if node := resolveAlias(mappingValue(dnsNode, "use-hosts")); node == nil || isNull(node) {
 		setMappingValue(dnsNode, "use-hosts", boolNode(true))
 	}
+	if node := resolveAlias(mappingValue(dnsNode, "ipv6")); node == nil || isNull(node) {
+		setMappingValue(dnsNode, "ipv6", boolNode(false))
+	}
 	modeNode := resolveAlias(mappingValue(dnsNode, "fake-ip-filter-mode"))
 	if modeNode == nil || (!strings.EqualFold(modeNode.Value, "whitelist") && !strings.EqualFold(modeNode.Value, "rule")) {
 		ensureSequenceStrings(dnsNode, "fake-ip-filter", androidFakeIPBypass...)
@@ -546,44 +564,143 @@ func scalarInt(mapping *yaml.Node, key string) (int, bool) {
 	return val, true
 }
 
+func optimizeProxyProviders(root *yaml.Node) {
+	providersNode := resolveAlias(mappingValue(root, "proxy-providers"))
+	if providersNode == nil || providersNode.Kind != yaml.MappingNode {
+		return
+	}
+	for i := 0; i+1 < len(providersNode.Content); i += 2 {
+		providerMap := resolveAlias(providersNode.Content[i+1])
+		if providerMap == nil || providerMap.Kind != yaml.MappingNode {
+			continue
+		}
+		if hc := resolveAlias(mappingValue(providerMap, "health-check")); hc != nil && hc.Kind == yaml.MappingNode {
+			setMappingValue(hc, "enable", boolNode(false))
+			deleteMappingKey(hc, "interval")
+		}
+	}
+}
+
+func isBuiltinProxyTarget(name string) bool {
+	switch name {
+	case "DIRECT", "REJECT", "REJECT-DROP", "PASS", "COMPATIBLE":
+		return true
+	default:
+		return false
+	}
+}
+
 func optimizeProxyGroups(root *yaml.Node) {
 	groupsNode := resolveAlias(mappingValue(root, "proxy-groups"))
 	if groupsNode == nil || groupsNode.Kind != yaml.SequenceNode {
 		return
 	}
 
+	leafSet := make(map[string]bool)
+	if proxiesNode := resolveAlias(mappingValue(root, "proxies")); proxiesNode != nil && proxiesNode.Kind == yaml.SequenceNode {
+		for _, item := range proxiesNode.Content {
+			if m := resolveAlias(item); m != nil && m.Kind == yaml.MappingNode {
+				if name := scalarString(m, "name"); name != "" {
+					leafSet[name] = true
+				}
+			}
+		}
+	}
+
+	convertedAuto := make(map[string]bool)
+	var primaryGroup *yaml.Node
+	primaryName := ""
+
 	for _, item := range groupsNode.Content {
 		group := resolveAlias(item)
 		if group == nil || group.Kind != yaml.MappingNode {
 			continue
 		}
+		name := scalarString(group, "name")
 		groupType := strings.ToLower(scalarString(group, "type"))
-		if groupType == "fallback" || groupType == "url-test" || groupType == "load-balance" {
-			if interval, ok := scalarInt(group, "interval"); !ok || interval <= 0 || interval < 600 {
-				setMappingValue(group, "interval", intNode(600))
-			}
-			if lazyNode := resolveAlias(mappingValue(group, "lazy")); lazyNode == nil || isNull(lazyNode) {
-				setMappingValue(group, "lazy", boolNode(true))
-			}
-			if timeoutVal, ok := scalarInt(group, "timeout"); !ok || timeoutVal <= 0 || timeoutVal > 10000 {
-				setMappingValue(group, "timeout", intNode(5000))
-			}
-			if scalarString(group, "expected-status") == "" {
-				setMappingValue(group, "expected-status", strNode("200-299"))
-			}
-			if maxFailed, ok := scalarInt(group, "max-failed-times"); !ok || maxFailed <= 0 {
-				setMappingValue(group, "max-failed-times", intNode(2))
-			}
-			rawURL := strings.ToLower(scalarString(group, "url"))
-			if rawURL == "" || strings.HasPrefix(rawURL, "http://cp.cloudflare.com") {
-				setMappingValue(group, "url", strNode("https://www.gstatic.com/generate_204"))
-			}
-			if groupType == "url-test" {
-				if tol := resolveAlias(mappingValue(group, "tolerance")); tol == nil || isNull(tol) {
-					setMappingValue(group, "tolerance", intNode(100))
+
+		if groupType == "select" && primaryGroup == nil {
+			if seq := resolveAlias(mappingValue(group, "proxies")); seq != nil && seq.Kind == yaml.SequenceNode {
+				for _, entry := range seq.Content {
+					if r := resolveAlias(entry); r != nil && r.Kind == yaml.ScalarNode && leafSet[strings.TrimSpace(r.Value)] {
+						primaryGroup = group
+						primaryName = name
+						break
+					}
 				}
 			}
 		}
+
+		deleteMappingKey(group, "interval")
+		if mappingValue(group, "use") != nil {
+			deleteMappingKey(group, "url")
+		}
+		if groupType == "fallback" || groupType == "url-test" || groupType == "load-balance" {
+			if name != "" {
+				convertedAuto[name] = true
+			}
+			setMappingValue(group, "type", strNode("select"))
+			deleteMappingKey(group, "tolerance")
+			deleteMappingKey(group, "strategy")
+		}
+	}
+
+	if primaryGroup == nil || primaryName == "" || len(leafSet) == 0 {
+		return
+	}
+
+	primarySeq := resolveAlias(mappingValue(primaryGroup, "proxies"))
+	if primarySeq == nil || primarySeq.Kind != yaml.SequenceNode {
+		return
+	}
+	var keptLeaves []*yaml.Node
+	var keptBuiltins []*yaml.Node
+	for _, entry := range primarySeq.Content {
+		r := resolveAlias(entry)
+		if r == nil || r.Kind != yaml.ScalarNode {
+			continue
+		}
+		val := strings.TrimSpace(r.Value)
+		if leafSet[val] {
+			keptLeaves = append(keptLeaves, strNode(val))
+		} else if isBuiltinProxyTarget(val) {
+			keptBuiltins = append(keptBuiltins, strNode(val))
+		}
+	}
+	filteredPrimary := append(keptLeaves, keptBuiltins...)
+	if len(filteredPrimary) == 0 {
+		return
+	}
+	primarySeq.Content = filteredPrimary
+
+	for _, item := range groupsNode.Content {
+		group := resolveAlias(item)
+		if group == nil || group.Kind != yaml.MappingNode || group == primaryGroup {
+			continue
+		}
+		name := scalarString(group, "name")
+		if convertedAuto[name] && mappingValue(group, "hidden") == nil {
+			setMappingValue(group, "hidden", boolNode(true))
+		}
+		seq := resolveAlias(mappingValue(group, "proxies"))
+		if seq == nil || seq.Kind != yaml.SequenceNode || len(seq.Content) == 0 {
+			continue
+		}
+		if first := resolveAlias(seq.Content[0]); first != nil && first.Kind == yaml.ScalarNode {
+			firstVal := strings.TrimSpace(first.Value)
+			if firstVal == "DIRECT" || firstVal == "REJECT" || firstVal == "REJECT-DROP" || firstVal == "PASS" {
+				continue
+			}
+		}
+		updated := make([]*yaml.Node, 0, len(seq.Content)+1)
+		updated = append(updated, strNode(primaryName))
+		for _, entry := range seq.Content {
+			if r := resolveAlias(entry); r != nil && r.Kind == yaml.ScalarNode && strings.TrimSpace(r.Value) == primaryName {
+				continue
+			}
+			updated = append(updated, entry)
+		}
+		seq.Content = updated
 	}
 }
 

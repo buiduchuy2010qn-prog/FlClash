@@ -58,7 +58,7 @@ class Preferences {
     await preferences?.setInt('upgradeVersion', version);
   }
 
-  static const _autoFailoverKey = 'smart_auto_failover';
+  static const _autoFailoverKey = 'smart_auto_failover_v2';
   static const _autoVpnOnCellularKey = 'auto_vpn_on_cellular';
   static const _autoVpnOffWifiKey = 'auto_vpn_off_wifi';
   static const _autoStartOnBootKey = 'auto_start_on_boot';
@@ -97,7 +97,7 @@ class Preferences {
     }
   }
 
-  Future<bool> getAutoFailover() => _getBool(_autoFailoverKey, true);
+  Future<bool> getAutoFailover() => _getBool(_autoFailoverKey, false);
 
   Future<void> setAutoFailover(bool value) => _setBool(_autoFailoverKey, value);
 

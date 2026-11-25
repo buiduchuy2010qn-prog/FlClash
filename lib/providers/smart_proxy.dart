@@ -15,18 +15,23 @@ typedef ActiveProxyTarget = ({String proxyName, String testUrl});
 
 class AutoFailoverNotifier extends Notifier<bool> {
   var _disposed = false;
+  var _overridden = false;
 
   @override
   bool build() {
     _disposed = false;
+    _overridden = false;
     ref.onDispose(() => _disposed = true);
     unawaited(_hydrate());
-    return true;
+    return false;
   }
 
   Future<void> _hydrate() async {
     final saved = await preferences.getAutoFailover();
-    if (!_disposed && state != saved) {
+    if (_disposed || _overridden) {
+      return;
+    }
+    if (state != saved) {
       state = saved;
     }
     unawaited(service?.setAutoFailover(saved));
@@ -35,6 +40,7 @@ class AutoFailoverNotifier extends Notifier<bool> {
   void toggle() => setEnabled(!state);
 
   void setEnabled(bool value) {
+    _overridden = true;
     state = value;
     unawaited(preferences.setAutoFailover(value));
     unawaited(service?.setAutoFailover(value));
