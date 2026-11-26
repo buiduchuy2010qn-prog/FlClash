@@ -669,7 +669,12 @@ func TestGlobalSelectorAutoBindsToPrimaryGroupInsteadOfDirect(t *testing.T) {
 	}
 
 	patchSelectGroup(map[string]string{globalProxyName: "DIRECT"})
-	if got := globalGroup.Now(); got != "DIRECT" {
-		t.Fatalf("explicit GLOBAL=DIRECT was overridden, got %q", got)
+	if got := globalGroup.Now(); got != "MainSelect" {
+		t.Fatalf("stale GLOBAL=DIRECT was not healed to MainSelect, got %q", got)
+	}
+
+	patchSelectGroup(map[string]string{globalProxyName: "NodeA"})
+	if got := globalGroup.Now(); got != "NodeA" {
+		t.Fatalf("explicit GLOBAL=NodeA was overridden, got %q", got)
 	}
 }

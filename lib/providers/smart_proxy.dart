@@ -59,9 +59,10 @@ final activeProxyTargetProvider = Provider<ActiveProxyTarget?>((ref) {
   final defaultTestUrl = ref.watch(
     patchClashConfigProvider.select((state) => state.testUrl),
   );
-  final primary =
+  final visiblePrimary =
       groups.firstWhereOrNull((g) => g.type == GroupType.Selector) ??
       groups.first;
+  final primary = allGroups.getGroup(visiblePrimary.name) ?? visiblePrimary;
   final selected = primary.getCurrentSelectedName(
     selectedMap[primary.name] ?? '',
   );

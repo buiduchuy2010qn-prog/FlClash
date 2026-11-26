@@ -239,8 +239,10 @@ func defaultGlobalGroupTarget(proxies map[string]constant.Proxy, nameList []stri
 }
 
 func ensureGlobalSelectorTargetLocked(selectedMap map[string]string) {
-	if selectedMap != nil && selectedMap[globalProxyName] != "" {
-		return
+	if selectedMap != nil {
+		if picked := selectedMap[globalProxyName]; picked != "" && picked != "DIRECT" && picked != "COMPATIBLE" {
+			return
+		}
 	}
 	proxies := tunnel.AllProxies()
 	globalProxy := proxies[globalProxyName]
