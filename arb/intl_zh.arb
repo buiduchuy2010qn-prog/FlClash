@@ -1317,5 +1317,9 @@
   "homeWidgetAddTitle": "添加桌面小组件",
   "homeWidgetAddDesc": "在桌面直接查看网速、设备数、到期时间与安全状态并一键开关",
   "homeWidgetPinRequested": "请在桌面弹窗中确认添加 FlClash 小组件",
-  "homeWidgetPinFallback": "请长按桌面空白处 → 选择微件/小组件 → 将 FlClash 拖到桌面"
+  "homeWidgetPinFallback": "请长按桌面空白处 → 选择微件/小组件 → 将 FlClash 拖到桌面",
+  "smartMultiWebTitle": "多网站连通与延迟检测",
+  "smartMultiWebRunning": "正在检测多个网站...",
+  "smartMultiWebDesc": "同时测试 Google、YouTube、TikTok、ChatGPT、GitHub 与 Discord",
+  "smartMultiWebSummary": "{ok}/{total} 个网站畅通 · 平均 {avgMs}ms"
 }

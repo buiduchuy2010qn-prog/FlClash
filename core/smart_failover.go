@@ -20,7 +20,9 @@ const (
 	smartFailoverPeriodicProbeInterval = 180 * time.Second
 	smartFailoverSuspectProbeInterval  = 60 * time.Second
 	smartFailoverFastCandidateMs       = 1000
-	smartFailoverSlowDelayMs           = 1800
+	smartFailoverSlowDelayMs           = 1200
+	smartFailoverFastEnoughMs          = 650
+	smartFailoverDegradedImproveMs     = 300
 	smartFailoverHysteresisMs          = 100
 	smartFailoverSwitchCooldown        = 20 * time.Second
 	smartFailoverQuarantineTTL         = 3 * time.Minute
@@ -259,16 +261,37 @@ func findPrimarySelectorGroup() (groupName string, group outboundgroup.ProxyGrou
 
 	if tunnel.Mode() == tunnel.Global {
 		if name, pg, now, matched := inspect(globalProxyName, false); matched {
-			return name, pg, now, true
+			return resolveSelectorLeafGroup(name, pg, now, inspect)
 		}
 	}
 
 	for _, name := range config.GetProxyNameList() {
 		if gName, pg, now, matched := inspect(name, true); matched {
-			return gName, pg, now, true
+			return resolveSelectorLeafGroup(gName, pg, now, inspect)
 		}
 	}
 	return "", nil, "", false
+}
+
+func resolveSelectorLeafGroup(
+	groupName string,
+	group outboundgroup.ProxyGroup,
+	currentPick string,
+	inspect func(string, bool) (string, outboundgroup.ProxyGroup, string, bool),
+) (string, outboundgroup.ProxyGroup, string, bool) {
+	visited := map[string]bool{groupName: true}
+	for range 8 {
+		if currentPick == "" || visited[currentPick] {
+			break
+		}
+		visited[currentPick] = true
+		nextName, nextPg, nextPick, matched := inspect(currentPick, false)
+		if !matched {
+			break
+		}
+		groupName, group, currentPick = nextName, nextPg, nextPick
+	}
+	return groupName, group, currentPick, true
 }
 
 func isLeafSwitchTarget(name string) bool {
@@ -366,6 +389,18 @@ func closeConnectionsForLeaf(leafName string) {
 	})
 }
 
+func shouldSwitchForDegradedPing(confirmedDelay, bestRawDelay int, stalledSuspected bool) bool {
+	if stalledSuspected || confirmedDelay <= 0 {
+		return true
+	}
+	if confirmedDelay < smartFailoverSlowDelayMs {
+		return false
+	}
+	return bestRawDelay > 0 &&
+		bestRawDelay < smartFailoverFastEnoughMs &&
+		bestRawDelay+smartFailoverDegradedImproveMs <= confirmedDelay
+}
+
 func evaluateSmartFailover(ctx context.Context) {
 	if ctx.Err() != nil || !isRunning.Load() || !IsAutoFailoverEnabled() {
 		return
@@ -398,7 +433,7 @@ func evaluateSmartFailover(ctx context.Context) {
 
 	probeURL := normalizeProbeURL(currentTestURL())
 	firstDelay := probeLeafDelayMs(ctx, currentPick, probeURL, smartFailoverProbeTimeout)
-	if firstDelay > 0 {
+	if firstDelay > 0 && firstDelay < smartFailoverSlowDelayMs && !stalledSuspected {
 		return
 	}
 
@@ -414,10 +449,12 @@ func evaluateSmartFailover(ctx context.Context) {
 		return
 	}
 	confirmedDelay := probeLeafDelayMs(ctx, currentPick, probeURL, smartFailoverProbeTimeout)
-	if confirmedDelay > 0 {
+	if confirmedDelay > 0 && confirmedDelay < smartFailoverSlowDelayMs && !stalledSuspected {
 		return
 	}
-	quarantineNode(currentPick, time.Now())
+	if confirmedDelay <= 0 || stalledSuspected {
+		quarantineNode(currentPick, time.Now())
+	}
 
 	rawProxies := group.Proxies()
 	candidates := make([]string, 0, len(rawProxies))
@@ -426,7 +463,7 @@ func evaluateSmartFailover(ctx context.Context) {
 			continue
 		}
 		name := p.Name()
-		if !isLeafSwitchTarget(name) {
+		if !isLeafSwitchTarget(name) || isDummyInfoProxyName(name) {
 			continue
 		}
 		candidates = append(candidates, name)
@@ -446,6 +483,9 @@ func evaluateSmartFailover(ctx context.Context) {
 		},
 	)
 	if bestName == "" || bestName == currentPick {
+		return
+	}
+	if !shouldSwitchForDegradedPing(confirmedDelay, bestRawDelay, stalledSuspected) {
 		return
 	}
 

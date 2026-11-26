@@ -1317,5 +1317,9 @@
   "homeWidgetAddTitle": "Añadir widget de inicio",
   "homeWidgetAddDesc": "Velocidad, interruptor rápido, dispositivos, vencimiento y escudo en inicio",
   "homeWidgetPinRequested": "Confirma añadir el widget de FlClash a tu pantalla de inicio",
-  "homeWidgetPinFallback": "Mantén pulsado el inicio → Widgets → arrastra FlClash"
+  "homeWidgetPinFallback": "Mantén pulsado el inicio → Widgets → arrastra FlClash",
+  "smartMultiWebTitle": "Prueba multi-web y ping",
+  "smartMultiWebRunning": "Comprobando varios sitios...",
+  "smartMultiWebDesc": "Prueba simultánea de Google, YouTube, TikTok, ChatGPT, GitHub y Discord",
+  "smartMultiWebSummary": "{ok}/{total} sitios activos · media {avgMs}ms"
 }

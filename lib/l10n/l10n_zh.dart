@@ -4328,4 +4328,19 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get homeWidgetPinFallback => '请长按桌面空白处 → 选择微件/小组件 → 将 FlClash 拖到桌面';
+
+  @override
+  String get smartMultiWebTitle => '多网站连通与延迟检测';
+
+  @override
+  String get smartMultiWebRunning => '正在检测多个网站...';
+
+  @override
+  String get smartMultiWebDesc =>
+      '同时测试 Google、YouTube、TikTok、ChatGPT、GitHub 与 Discord';
+
+  @override
+  String smartMultiWebSummary(Object ok, Object total, Object avgMs) {
+    return '$ok/$total 个网站畅通 · 平均 ${avgMs}ms';
+  }
 }

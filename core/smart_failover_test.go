@@ -200,3 +200,21 @@ func TestSelectFailoverCandidateSequentialEarlyExitsOnFirstFastNode(t *testing.T
 		t.Fatalf("expected quarantined node to be skipped when clean node responds, probed=%v", slowProbed)
 	}
 }
+
+func TestShouldSwitchForDegradedPing(t *testing.T) {
+	if shouldSwitchForDegradedPing(350, 90, false) {
+		t.Fatal("should not switch when current delay is healthy (<1200ms)")
+	}
+	if shouldSwitchForDegradedPing(1450, 900, false) {
+		t.Fatal("should not switch when best candidate is also slow (>=650ms)")
+	}
+	if shouldSwitchForDegradedPing(1300, 1050, false) {
+		t.Fatal("should not switch when improvement is below threshold")
+	}
+	if !shouldSwitchForDegradedPing(1400, 180, false) {
+		t.Fatal("expected switch when current ping is >=1200ms and fast node <650ms exists")
+	}
+	if !shouldSwitchForDegradedPing(0, 0, false) {
+		t.Fatal("expected switch on dead node")
+	}
+}

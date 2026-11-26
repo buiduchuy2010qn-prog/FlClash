@@ -8023,6 +8023,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Long press your home screen, choose Widgets, and drag FlClash onto the screen'**
   String get homeWidgetPinFallback;
+
+  /// No description provided for @smartMultiWebTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-website & ping check'**
+  String get smartMultiWebTitle;
+
+  /// No description provided for @smartMultiWebRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking multiple websites...'**
+  String get smartMultiWebRunning;
+
+  /// No description provided for @smartMultiWebDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Test Google, YouTube, TikTok, ChatGPT, GitHub & Discord simultaneously'**
+  String get smartMultiWebDesc;
+
+  /// No description provided for @smartMultiWebSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{ok}/{total} websites reachable · Avg {avgMs}ms'**
+  String smartMultiWebSummary(Object ok, Object total, Object avgMs);
 }
 
 class _AppLocalizationsDelegate

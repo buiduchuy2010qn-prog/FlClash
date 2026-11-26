@@ -4659,4 +4659,19 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get homeWidgetPinFallback =>
       'Appui long sur l\'écran d\'accueil → Widgets → glissez FlClash';
+
+  @override
+  String get smartMultiWebTitle => 'Test multi-sites et ping';
+
+  @override
+  String get smartMultiWebRunning => 'Test de plusieurs sites en cours...';
+
+  @override
+  String get smartMultiWebDesc =>
+      'Tester simultanément Google, YouTube, TikTok, ChatGPT, GitHub et Discord';
+
+  @override
+  String smartMultiWebSummary(Object ok, Object total, Object avgMs) {
+    return '$ok/$total sites accessibles · moy. ${avgMs}ms';
+  }
 }

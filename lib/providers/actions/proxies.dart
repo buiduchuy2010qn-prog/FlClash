@@ -26,9 +26,11 @@ class _DelayTestJob {
 @Riverpod(keepAlive: true)
 class ProxiesAction extends _$ProxiesAction {
   static const _builtinNames = {'DIRECT', 'REJECT', 'REJECT-DROP', 'PASS'};
-  static const _failoverSlowDelayMs = 1800;
+  static const _failoverSlowDelayMs = 1200;
+  static const _failoverFastEnoughMs = 650;
+  static const _failoverDegradedImproveMs = 300;
   static const _autoFastCandidateDelayMs = 800;
-  static const _autoProbeBatchSize = 2;
+  static const _autoProbeBatchSize = 1;
   static const _foregroundWatchdogInterval = Duration(seconds: 60);
   static const _backgroundWatchdogInterval = Duration(seconds: 180);
   static const _resumeCheckCooldown = Duration(seconds: 30);
@@ -37,6 +39,10 @@ class ProxiesAction extends _$ProxiesAction {
   static const _quarantineDuration = Duration(minutes: 3);
   static const _quarantinePenaltyMs = 1500;
   static const _autoSubRefreshCooldown = Duration(minutes: 15);
+  static final _infoBannerProxyRegex = RegExp(
+    r'(剩余流量|套餐到期|距离下次重置|官网|群组|频道|traffic\s*[:：]|expire\s*[:：]|dung\s*lượng\s*[:：]|hạn\s*dùng\s*[:：])',
+    caseSensitive: false,
+  );
   CoreController get _core => ref.read(coreHandlerProvider);
 
   final TaskPool _delayTestPool = TaskPool(
@@ -164,19 +170,42 @@ class ProxiesAction extends _$ProxiesAction {
     });
   }
 
+  static bool isInfoBannerProxyName(String name) {
+    final trimmed = name.trim();
+    return trimmed.isNotEmpty && _infoBannerProxyRegex.hasMatch(trimmed);
+  }
+
+  Group? _resolvePrimaryLeafSelectorGroup() {
+    final visible = ref.read(visibleGroupsStateProvider).value;
+    if (visible.isEmpty) return null;
+    final allGroups = ref.read(groupsProvider);
+    final selectedMap = ref.read(
+      currentProfileProvider.select((state) => state?.selectedMap ?? {}),
+    );
+    var current =
+        visible.firstWhereOrNull((g) => g.type == GroupType.Selector) ??
+        visible.first;
+    final visited = <String>{current.name};
+    for (var i = 0; i < 8; i++) {
+      final pick = current.getCurrentSelectedName(
+        selectedMap[current.name] ?? '',
+      );
+      if (pick.isEmpty || visited.contains(pick)) break;
+      final next = allGroups.getGroup(pick);
+      if (next == null || next.type != GroupType.Selector) break;
+      visited.add(pick);
+      current = next;
+    }
+    return current;
+  }
+
   Future<void> _autoTestActiveGroup() async {
     if (ref.read(runTimeProvider) == null ||
         ref.read(coreStatusProvider) != CoreStatus.connected) {
       return;
     }
-    final visible = ref.read(visibleGroupsStateProvider).value;
-    if (visible.isEmpty) {
-      return;
-    }
-    final primary =
-        visible.firstWhereOrNull((g) => g.type == GroupType.Selector) ??
-        visible.first;
-    if (primary.all.isEmpty) {
+    final primary = _resolvePrimaryLeafSelectorGroup();
+    if (primary == null || primary.all.isEmpty) {
       return;
     }
     _lastAutoCheckAt = DateTime.now();
@@ -220,7 +249,7 @@ class ProxiesAction extends _$ProxiesAction {
       selectedMap: currentSelectedMap,
       delayMap: delayMap,
     ).delay;
-    if (activeDelay <= 0 &&
+    if ((activeDelay <= 0 || activeDelay >= _failoverSlowDelayMs) &&
         primary.type == GroupType.Selector &&
         ref.read(autoFailoverProvider)) {
       await Future<void>.delayed(_failoverConfirmDelay);
@@ -245,10 +274,12 @@ class ProxiesAction extends _$ProxiesAction {
         ),
         delayMap: ref.read(delayDataSourceProvider),
       ).delay;
-      if (confirmedDelay <= 0) {
-        _quarantinedUntil[leafProxy.name] = DateTime.now().add(
-          _quarantineDuration,
-        );
+      if (confirmedDelay <= 0 || confirmedDelay >= _failoverSlowDelayMs) {
+        if (confirmedDelay <= 0) {
+          _quarantinedUntil[leafProxy.name] = DateTime.now().add(
+            _quarantineDuration,
+          );
+        }
         await selectFastestProxy(primary.name, automatic: true);
       }
     }
@@ -289,11 +320,8 @@ class ProxiesAction extends _$ProxiesAction {
   }
 
   Future<void> selectFastestActiveGroup({bool automatic = false}) async {
-    final visible = ref.read(visibleGroupsStateProvider).value;
-    if (visible.isEmpty) return;
-    final primary =
-        visible.firstWhereOrNull((g) => g.type == GroupType.Selector) ??
-        visible.first;
+    final primary = _resolvePrimaryLeafSelectorGroup();
+    if (primary == null) return;
     await selectFastestProxy(primary.name, automatic: automatic);
   }
 
@@ -322,7 +350,13 @@ class ProxiesAction extends _$ProxiesAction {
         for (final proxy in nonBuiltin)
           if (!groupNames.contains(proxy.name)) proxy,
       ];
-      final candidates = leafOnly.isNotEmpty
+      final nonBannerLeaves = [
+        for (final proxy in leafOnly)
+          if (!isInfoBannerProxyName(proxy.name)) proxy,
+      ];
+      final candidates = nonBannerLeaves.isNotEmpty
+          ? nonBannerLeaves
+          : leafOnly.isNotEmpty
           ? leafOnly
           : (nonBuiltin.isNotEmpty ? nonBuiltin : group.all);
       final probedCandidates = <Proxy>[];
@@ -467,8 +501,12 @@ class ProxiesAction extends _$ProxiesAction {
             selectedMap: selectedMap,
             delayMap: delayMap,
           ).delay;
-          if (currentDelay > 0 &&
-              currentDelay < _failoverSlowDelayMs &&
+          if (currentDelay >= _failoverSlowDelayMs) {
+            if (bestDelay >= _failoverFastEnoughMs ||
+                bestDelay + _failoverDegradedImproveMs > currentDelay) {
+              return;
+            }
+          } else if (currentDelay > 0 &&
               bestDelay + _autoSwitchHysteresisMs >= currentDelay) {
             return;
           }

@@ -4387,4 +4387,19 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get homeWidgetPinFallback => 'ホーム画面を長押し → ウィジェット → FlClash を配置してください';
+
+  @override
+  String get smartMultiWebTitle => '複数サイト接続・Ping診断';
+
+  @override
+  String get smartMultiWebRunning => '複数サイトを診断中...';
+
+  @override
+  String get smartMultiWebDesc =>
+      'Google・YouTube・TikTok・ChatGPT・GitHub・Discord を同時確認';
+
+  @override
+  String smartMultiWebSummary(Object ok, Object total, Object avgMs) {
+    return '$ok/$total サイト接続可 · 平均 ${avgMs}ms';
+  }
 }

@@ -427,7 +427,7 @@ void main() {
       expect(props.systemProxy, true);
       expect(props.bypassDomain, defaultBypassDomain);
       expect(props.bypassPrivateRoute, true);
-      expect(props.appendSystemDns, false);
+      expect(props.appendSystemDns, true);
     });
 
     test('round-trip with custom values', () {

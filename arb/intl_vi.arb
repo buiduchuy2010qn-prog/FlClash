@@ -1329,5 +1329,9 @@
   "homeWidgetAddTitle": "Thêm Widget màn hình chính",
   "homeWidgetAddDesc": "Xem tốc độ, bật/tắt 1 chạm, thiết bị, hạn dùng & khiên bảo mật ngay ngoài màn hình",
   "homeWidgetPinRequested": "Hãy xác nhận thêm widget FlClash trên màn hình chính của bạn",
-  "homeWidgetPinFallback": "Nhấn giữ màn hình chính → chọn Tiện ích (Widgets) → kéo FlClash ra màn hình"
+  "homeWidgetPinFallback": "Nhấn giữ màn hình chính → chọn Tiện ích (Widgets) → kéo FlClash ra màn hình",
+  "smartMultiWebTitle": "Kiểm tra đa trang web & ping",
+  "smartMultiWebRunning": "Đang đo tốc độ nhiều trang web...",
+  "smartMultiWebDesc": "Kiểm tra đồng thời Google, YouTube, TikTok, ChatGPT, GitHub & Discord",
+  "smartMultiWebSummary": "{ok}/{total} trang web mượt · Ping TB {avgMs}ms"
 }

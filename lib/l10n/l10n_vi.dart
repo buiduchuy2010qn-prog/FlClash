@@ -4603,4 +4603,19 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get homeWidgetPinFallback =>
       'Nhấn giữ màn hình chính → chọn Tiện ích (Widgets) → kéo FlClash ra màn hình';
+
+  @override
+  String get smartMultiWebTitle => 'Kiểm tra đa trang web & ping';
+
+  @override
+  String get smartMultiWebRunning => 'Đang đo tốc độ nhiều trang web...';
+
+  @override
+  String get smartMultiWebDesc =>
+      'Kiểm tra đồng thời Google, YouTube, TikTok, ChatGPT, GitHub & Discord';
+
+  @override
+  String smartMultiWebSummary(Object ok, Object total, Object avgMs) {
+    return '$ok/$total trang web mượt · Ping TB ${avgMs}ms';
+  }
 }

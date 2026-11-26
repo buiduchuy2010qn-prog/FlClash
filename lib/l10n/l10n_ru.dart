@@ -4603,4 +4603,19 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get homeWidgetPinFallback =>
       'Удерживайте главный экран → Виджеты → перетащите FlClash';
+
+  @override
+  String get smartMultiWebTitle => 'Проверка сайтов и пинга';
+
+  @override
+  String get smartMultiWebRunning => 'Проверка нескольких сайтов...';
+
+  @override
+  String get smartMultiWebDesc =>
+      'Одновременный тест Google, YouTube, TikTok, ChatGPT, GitHub и Discord';
+
+  @override
+  String smartMultiWebSummary(Object ok, Object total, Object avgMs) {
+    return '$ok/$total сайтов доступны · ср. ${avgMs}ms';
+  }
 }
