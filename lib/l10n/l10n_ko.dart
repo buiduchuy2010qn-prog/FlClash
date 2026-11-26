@@ -4439,14 +4439,15 @@ class AppLocalizationsKo extends AppLocalizations {
       'DoH/DoT 암호화가 없어 DNS 조회 내역이 기록될 수 있습니다.';
 
   @override
-  String get speedBoostPreset => '네트워크 속도 부스트 (BBRv3)';
+  String get speedBoostPreset => '최대 네트워크 속도 부스트';
 
   @override
   String get speedBoostPresetDesc =>
-      'BBRv3 혼잡 제어, Fake-IP DoH 및 연결 유지 최적화 (1대 제한 안전 유지)';
+      'Mixed 커널 TCP 스택, MTU 9000, 직접 시스템 프록시 및 고대역 QUIC 윈도우 최적화 (1대 제한 안전 유지)';
 
   @override
-  String get speedBoostAppliedTip => '네트워크 속도 부스트 (BBRv3)가 적용되었습니다';
+  String get speedBoostAppliedTip =>
+      '최대 네트워크 속도 부스트 (Mixed + MTU 9000)가 적용되었습니다';
 
   @override
   String get expiryAlertsToggle => '만료 및 보안 알림';

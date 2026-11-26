@@ -678,3 +678,84 @@ func TestGlobalSelectorAutoBindsToPrimaryGroupInsteadOfDirect(t *testing.T) {
 		t.Fatalf("explicit GLOBAL=NodeA was overridden, got %q", got)
 	}
 }
+
+func TestOptimizeProxyNodesUnlocksHysteria2CapAndHighBDPWindows(t *testing.T) {
+	previousAndroid := isAndroidRuntime
+	isAndroidRuntime = true
+	t.Cleanup(func() { isAndroidRuntime = previousAndroid })
+
+	const input = `proxies:
+  - name: Hy2-TemplateCap
+    type: hysteria2
+    server: hy2.example.net
+    port: 443
+    password: secret
+    up: 50 Mbps
+    down: 100 Mbps
+  - name: Hy2-HighExplicit
+    type: hysteria2
+    server: hy2fast.example.net
+    port: 443
+    password: secret
+    up: 500 Mbps
+    down: 1000 Mbps
+  - name: Vless-Main
+    type: vless
+    server: vless.example.net
+    port: 443
+    uuid: 11111111-1111-1111-1111-111111111111
+    tls: true
+  - name: Tuic-Main
+    type: tuic
+    server: tuic.example.net
+    port: 443
+`
+	var doc yaml.Node
+	if err := yaml.Unmarshal([]byte(input), &doc); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	optimizeConfigDocument(&doc, nil)
+
+	out, err := yaml.Marshal(&doc)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	var parsed struct {
+		Proxies []map[string]any `yaml:"proxies"`
+	}
+	if err := yaml.Unmarshal(out, &parsed); err != nil {
+		t.Fatalf("decode: %v\n%s", err, string(out))
+	}
+	if len(parsed.Proxies) != 4 {
+		t.Fatalf("proxies len = %d, want 4", len(parsed.Proxies))
+	}
+
+	hyCap := parsed.Proxies[0]
+	if _, hasUp := hyCap["up"]; hasUp {
+		t.Errorf("expected template up cap to be stripped, got %#v", hyCap)
+	}
+	if _, hasDown := hyCap["down"]; hasDown {
+		t.Errorf("expected template down cap to be stripped, got %#v", hyCap)
+	}
+	if hyCap["initial-stream-receive-window"] != quicInitStreamRecvWin ||
+		hyCap["max-stream-receive-window"] != quicMaxStreamRecvWin ||
+		hyCap["initial-connection-receive-window"] != quicInitConnRecvWin ||
+		hyCap["max-connection-receive-window"] != quicMaxConnRecvWin {
+		t.Errorf("unexpected hysteria2 QUIC windows: %#v", hyCap)
+	}
+
+	hyHigh := parsed.Proxies[1]
+	if hyHigh["up"] != "500 Mbps" || hyHigh["down"] != "1000 Mbps" {
+		t.Errorf("expected high explicit caps >300Mbps to stay, got up=%v down=%v", hyHigh["up"], hyHigh["down"])
+	}
+
+	vless := parsed.Proxies[2]
+	if vless["udp"] != true || vless["packet-encoding"] != "xudp" {
+		t.Errorf("expected udp=true and packet-encoding=xudp on vless, got %#v", vless)
+	}
+
+	tuic := parsed.Proxies[3]
+	if tuic["recv-window-conn"] != quicMaxStreamRecvWin || tuic["recv-window"] != quicMaxConnRecvWin {
+		t.Errorf("expected QUIC windows on tuic, got %#v", tuic)
+	}
+}

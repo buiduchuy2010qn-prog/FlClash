@@ -16,6 +16,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/metacubex/mihomo/common/utils"
 	"github.com/metacubex/mihomo/component/age"
 	"github.com/metacubex/mihomo/config"
 	"go.yaml.in/yaml/v3"
@@ -128,10 +129,45 @@ func isExplicitBool(node *yaml.Node, want bool) bool {
 	return strings.EqualFold(strings.TrimSpace(resolved.Value), target)
 }
 
+const (
+	maxTemplateBrutalCapBps = 300 * 1000 * 1000 / 8
+	quicInitStreamRecvWin   = 8 * 1024 * 1024
+	quicMaxStreamRecvWin    = 16 * 1024 * 1024
+	quicInitConnRecvWin     = 24 * 1024 * 1024
+	quicMaxConnRecvWin      = 48 * 1024 * 1024
+)
+
+func ensureIntDefaults(item *yaml.Node, defaults []struct {
+	key string
+	val int
+}) {
+	for _, entry := range defaults {
+		if mappingValue(item, entry.key) == nil {
+			setMappingValue(item, entry.key, intNode(entry.val))
+		}
+	}
+}
+
 func optimizeProxyNodes(root *yaml.Node) {
 	proxiesNode := resolveAlias(mappingValue(root, "proxies"))
 	if proxiesNode == nil || proxiesNode.Kind != yaml.SequenceNode {
 		return
+	}
+	hy2Windows := []struct {
+		key string
+		val int
+	}{
+		{"initial-stream-receive-window", quicInitStreamRecvWin},
+		{"max-stream-receive-window", quicMaxStreamRecvWin},
+		{"initial-connection-receive-window", quicInitConnRecvWin},
+		{"max-connection-receive-window", quicMaxConnRecvWin},
+	}
+	tuicWindows := []struct {
+		key string
+		val int
+	}{
+		{"recv-window-conn", quicMaxStreamRecvWin},
+		{"recv-window", quicMaxConnRecvWin},
 	}
 	for _, node := range proxiesNode.Content {
 		item := resolveAlias(node)
@@ -142,17 +178,34 @@ func optimizeProxyNodes(root *yaml.Node) {
 		if typeNode == nil || typeNode.Kind != yaml.ScalarNode {
 			continue
 		}
-		switch strings.ToLower(strings.TrimSpace(typeNode.Value)) {
-		case "vless", "vmess", "trojan":
+		proxyType := strings.ToLower(strings.TrimSpace(typeNode.Value))
+		switch proxyType {
+		case "vless", "vmess", "trojan", "ss":
 			if mappingValue(item, "udp") == nil {
 				setMappingValue(item, "udp", boolNode(true))
 			}
-			if isExplicitBool(mappingValue(item, "tls"), true) {
+			if (proxyType == "vless" || proxyType == "vmess") &&
+				mappingValue(item, "packet-encoding") == nil &&
+				!isExplicitBool(mappingValue(item, "udp"), false) {
+				setMappingValue(item, "packet-encoding", strNode("xudp"))
+			}
+			if proxyType != "ss" && isExplicitBool(mappingValue(item, "tls"), true) {
 				fpNode := resolveAlias(mappingValue(item, "client-fingerprint"))
 				if fpNode == nil || fpNode.Kind != yaml.ScalarNode || strings.TrimSpace(fpNode.Value) == "" {
 					setMappingValue(item, "client-fingerprint", strNode("chrome"))
 				}
 			}
+		case "hysteria2":
+			upBps := utils.StringToBps(scalarString(item, "up"))
+			downBps := utils.StringToBps(scalarString(item, "down"))
+			if (upBps > 0 && upBps <= maxTemplateBrutalCapBps) ||
+				(downBps > 0 && downBps <= maxTemplateBrutalCapBps) {
+				deleteMappingKey(item, "up")
+				deleteMappingKey(item, "down")
+			}
+			ensureIntDefaults(item, hy2Windows)
+		case "tuic":
+			ensureIntDefaults(item, tuicWindows)
 		}
 		server := scalarString(item, "server")
 		isIPv6Addr := false

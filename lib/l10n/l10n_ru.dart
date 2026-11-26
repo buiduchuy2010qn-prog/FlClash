@@ -4573,14 +4573,15 @@ class AppLocalizationsRu extends AppLocalizations {
       'Пользовательский DNS без DoH/DoT позволяет отслеживать запросы доменов.';
 
   @override
-  String get speedBoostPreset => 'Ускорение сети (BBRv3)';
+  String get speedBoostPreset => 'Максимальное ускорение сети';
 
   @override
   String get speedBoostPresetDesc =>
-      'BBRv3, Fake-IP DoH и keep-alive без многопоточного сканирования устройств';
+      'Стек Mixed (TCP ядра), MTU 9000, прямой системный прокси и широкие окна QUIC (безопасно для 1 устройства)';
 
   @override
-  String get speedBoostAppliedTip => 'Режим ускорения сети (BBRv3) применён';
+  String get speedBoostAppliedTip =>
+      'Включено максимальное ускорение сети (Mixed + MTU 9000)';
 
   @override
   String get expiryAlertsToggle => 'Уведомления об истечении и угрозах';

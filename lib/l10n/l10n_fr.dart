@@ -4629,14 +4629,15 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ce DNS sans DoH/DoT permet de journaliser les requêtes de domaines.';
 
   @override
-  String get speedBoostPreset => 'Accélération réseau (BBRv3)';
+  String get speedBoostPreset => 'Accélération réseau maximale';
 
   @override
   String get speedBoostPresetDesc =>
-      'Contrôle BBRv3, Fake-IP DoH et keep-alive (sécurité appareil unique préservée)';
+      'Pile Mixed TCP noyau, MTU 9000, proxy système direct et fenêtres QUIC élargies (sécurité appareil unique préservée)';
 
   @override
-  String get speedBoostAppliedTip => 'Accélération réseau (BBRv3) activée';
+  String get speedBoostAppliedTip =>
+      'Accélération réseau maximale (Mixed + MTU 9000) activée';
 
   @override
   String get expiryAlertsToggle => 'Alertes d\'expiration et sécurité';

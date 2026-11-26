@@ -4302,14 +4302,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get securityFindingPlainDnsDesc => '自定义 DNS 未使用 DoH/DoT 加密，域名请求可能被记录。';
 
   @override
-  String get speedBoostPreset => '网络加速优化 (BBRv3)';
+  String get speedBoostPreset => '极致网络加速';
 
   @override
   String get speedBoostPresetDesc =>
-      '开启 BBRv3 拥塞控制、Fake-IP DoH 与保活调优（保持单设备并发安全）';
+      '开启 Mixed 内核 TCP 栈、MTU 9000、直连系统代理与大窗口 QUIC 优化（保持单设备安全）';
 
   @override
-  String get speedBoostAppliedTip => '已启用网络加速优化 (BBRv3)';
+  String get speedBoostAppliedTip => '已启用极致网络加速 (Mixed 内核 + MTU 9000)';
 
   @override
   String get expiryAlertsToggle => '套餐到期与安全通知';

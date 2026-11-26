@@ -4361,14 +4361,14 @@ class AppLocalizationsJa extends AppLocalizations {
       'DoH/DoT 暗号化がないためアクセス先ドメインが記録される恐れがあります。';
 
   @override
-  String get speedBoostPreset => 'ネットワーク高速化 (BBRv3)';
+  String get speedBoostPreset => '最大ネットワーク高速化';
 
   @override
   String get speedBoostPresetDesc =>
-      'BBRv3輻輳制御・Fake-IP DoH・Keep-Alive最適化（単一端末制限を保護）';
+      'MixedカーネルTCP・MTU 9000・直接System Proxy・高帯域QUICウィンドウ最適化（単一端末制限を保護）';
 
   @override
-  String get speedBoostAppliedTip => 'ネットワーク高速化 (BBRv3) を適用しました';
+  String get speedBoostAppliedTip => '最大ネットワーク高速化 (Mixed + MTU 9000) を適用しました';
 
   @override
   String get expiryAlertsToggle => '期限切れ・セキュリティ通知';
