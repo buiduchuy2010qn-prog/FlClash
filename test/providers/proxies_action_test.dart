@@ -1540,6 +1540,19 @@ void main() {
         verifyNever(() => core.testDelay(any()));
       },
     );
+
+    test('filters subscription info banners from fastest-node candidates', () {
+      expect(ProxiesAction.isInfoBannerProxyName('剩余流量：120 GB'), isTrue);
+      expect(
+        ProxiesAction.isInfoBannerProxyName('Dung lượng: 2400 GB'),
+        isTrue,
+      );
+      expect(
+        ProxiesAction.isInfoBannerProxyName('Hạn dùng: 2026-12-23'),
+        isTrue,
+      );
+      expect(ProxiesAction.isInfoBannerProxyName('Singapore-01'), isFalse);
+    });
   });
 }
 

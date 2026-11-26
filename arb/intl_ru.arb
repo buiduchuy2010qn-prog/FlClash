@@ -1317,5 +1317,9 @@
   "homeWidgetAddTitle": "Добавить виджет на экран",
   "homeWidgetAddDesc": "Скорость, переключатель, устройства, срок и щит на рабочем столе",
   "homeWidgetPinRequested": "Подтвердите добавление виджета FlClash на рабочий стол",
-  "homeWidgetPinFallback": "Удерживайте главный экран → Виджеты → перетащите FlClash"
+  "homeWidgetPinFallback": "Удерживайте главный экран → Виджеты → перетащите FlClash",
+  "smartMultiWebTitle": "Проверка сайтов и пинга",
+  "smartMultiWebRunning": "Проверка нескольких сайтов...",
+  "smartMultiWebDesc": "Одновременный тест Google, YouTube, TikTok, ChatGPT, GitHub и Discord",
+  "smartMultiWebSummary": "{ok}/{total} сайтов доступны · ср. {avgMs}ms"
 }

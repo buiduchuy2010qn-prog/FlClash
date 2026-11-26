@@ -1317,5 +1317,9 @@
   "homeWidgetAddTitle": "ホーム画面ウィジェットを追加",
   "homeWidgetAddDesc": "ホーム画面で速度・ワンタップ切替・端末数・期限・安全状態を確認",
   "homeWidgetPinRequested": "ホーム画面への FlClash ウィジェット追加を承認してください",
-  "homeWidgetPinFallback": "ホーム画面を長押し → ウィジェット → FlClash を配置してください"
+  "homeWidgetPinFallback": "ホーム画面を長押し → ウィジェット → FlClash を配置してください",
+  "smartMultiWebTitle": "複数サイト接続・Ping診断",
+  "smartMultiWebRunning": "複数サイトを診断中...",
+  "smartMultiWebDesc": "Google・YouTube・TikTok・ChatGPT・GitHub・Discord を同時確認",
+  "smartMultiWebSummary": "{ok}/{total} サイト接続可 · 平均 {avgMs}ms"
 }

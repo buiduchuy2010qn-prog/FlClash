@@ -1317,5 +1317,9 @@
   "homeWidgetAddTitle": "홈 화면 위젯 추가",
   "homeWidgetAddDesc": "홈 화면에서 속도, 원터치 토글, 기기 수, 만료 및 보안 상태 확인",
   "homeWidgetPinRequested": "홈 화면에 FlClash 위젯 추가를 확인해 주세요",
-  "homeWidgetPinFallback": "홈 화면을 길게 누르고 위젯에서 FlClash를 끌어다 놓으세요"
+  "homeWidgetPinFallback": "홈 화면을 길게 누르고 위젯에서 FlClash를 끌어다 놓으세요",
+  "smartMultiWebTitle": "다중 웹사이트 및 핑 진단",
+  "smartMultiWebRunning": "여러 웹사이트 확인 중...",
+  "smartMultiWebDesc": "Google, YouTube, TikTok, ChatGPT, GitHub, Discord 동시 점검",
+  "smartMultiWebSummary": "{ok}/{total}개 사이트 원활 · 평균 {avgMs}ms"
 }

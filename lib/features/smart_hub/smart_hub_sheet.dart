@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:collection/collection.dart';
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/common/service_probe.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/features/ip_quality/leak_check_sheet.dart';
 import 'package:fl_clash/features/smart_hub/portal_connect_sheet.dart';
@@ -28,6 +29,15 @@ class SmartHubSheet extends ConsumerStatefulWidget {
 
 class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
   static const _builtinNames = {'DIRECT', 'REJECT', 'REJECT-DROP', 'PASS'};
+  static const _selfHealSlowThresholdMs = 700;
+  static const _multiWebTargets = [
+    ServiceTarget.google,
+    ServiceTarget.youtube,
+    ServiceTarget.tiktok,
+    ServiceTarget.chatgpt,
+    ServiceTarget.github,
+    ServiceTarget.discord,
+  ];
 
   bool _footprintLoading = false;
   SessionFootprint? _footprint;
@@ -35,6 +45,8 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
   int _healStep = 0;
   String? _healSummary;
   bool _healSuccess = true;
+  bool _checkingWebs = false;
+  Map<ServiceTarget, ServiceCheck>? _webResults;
 
   @override
   void initState() {
@@ -139,7 +151,10 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
         activeDelay = _readActiveDelayMs();
       }
 
-      if ((activeDelay == null || activeDelay <= 0) &&
+      if ((leaf == null ||
+              activeDelay == null ||
+              activeDelay <= 0 ||
+              activeDelay >= _selfHealSlowThresholdMs) &&
           ref.read(isStartProvider)) {
         setState(() => _healStep = 3);
         await proxiesAction.selectFastestActiveGroup(automatic: true);
@@ -209,6 +224,7 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
           .read(patchClashConfigProvider.notifier)
           .update((state) => state.copyWith(ipv6: false));
     }
+    await ref.read(setupActionProvider.notifier).applyPresetAndSyncTunnel();
     if (ref.read(coreStatusProvider) == CoreStatus.connected) {
       await ref.read(coreActionProvider.notifier).closeConnections();
       await _refreshFootprint();
@@ -238,12 +254,15 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
     final notifier = ref.read(optimize4gPresetProvider.notifier);
     if (enable) {
       await notifier.enablePreset();
-      dialogs.showBanner(l.optimize4gAppliedTip);
     } else {
       await notifier.disablePresetAndRestore();
     }
     if (!mounted) return;
-    ref.read(setupActionProvider.notifier).applyProfileDebounce(force: true);
+    await ref.read(setupActionProvider.notifier).applyPresetAndSyncTunnel();
+    if (!mounted) return;
+    if (enable) {
+      dialogs.showBanner(l.optimize4gAppliedTip);
+    }
   }
 
   Future<void> _toggleSpeedBoost(bool enable) async {
@@ -251,12 +270,79 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
     final notifier = ref.read(speedBoostPresetProvider.notifier);
     if (enable) {
       await notifier.enablePreset();
-      dialogs.showBanner(l.speedBoostAppliedTip, level: BannerLevel.success);
     } else {
       await notifier.disablePresetAndRestore();
     }
     if (!mounted) return;
-    ref.read(setupActionProvider.notifier).applyProfileDebounce(force: true);
+    await ref.read(setupActionProvider.notifier).applyPresetAndSyncTunnel();
+    if (!mounted) return;
+    if (enable) {
+      dialogs.showBanner(l.speedBoostAppliedTip, level: BannerLevel.success);
+    }
+  }
+
+  Future<void> _runMultiWebCheck() async {
+    if (_checkingWebs) return;
+    final l = context.appLocalizations;
+    if (!ref.read(isStartProvider)) {
+      dialogs.showBanner(l.smartHealStartVpnFirst, level: BannerLevel.warning);
+      return;
+    }
+    setState(() => _checkingWebs = true);
+    try {
+      final results = await checkServices(
+        ref.read(coreHandlerProvider),
+        targets: _multiWebTargets,
+        timeout: const Duration(seconds: 5),
+      );
+      if (!mounted) return;
+      setState(() {
+        _webResults = results;
+        _checkingWebs = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _checkingWebs = false);
+      dialogs.showBanner(l.serviceFailed, level: BannerLevel.warning);
+    }
+  }
+
+  String _multiWebSummaryText(BuildContext context) {
+    final l = context.appLocalizations;
+    final results = _webResults;
+    if (results == null || results.isEmpty) {
+      return l.smartMultiWebDesc;
+    }
+    var okCount = 0;
+    var delaySum = 0;
+    var delayCount = 0;
+    final perSite = <String>[];
+    for (final target in _multiWebTargets) {
+      final item = results[target];
+      if (item == null) continue;
+      if (item.status == ServiceProbeStatus.available) {
+        okCount++;
+        if (item.delay != null && item.delay! > 0) {
+          delaySum += item.delay!;
+          delayCount++;
+          perSite.add('${target.label} ${item.delay}ms');
+        } else {
+          perSite.add('${target.label} OK');
+        }
+      } else {
+        final issue = item.status == ServiceProbeStatus.timeout
+            ? l.timeout
+            : l.serviceFailed;
+        perSite.add('${target.label} ($issue)');
+      }
+    }
+    final avgMs = delayCount > 0 ? (delaySum ~/ delayCount) : 0;
+    final headline = l.smartMultiWebSummary(
+      okCount,
+      _multiWebTargets.length,
+      avgMs,
+    );
+    return perSite.isEmpty ? headline : '$headline\n${perSite.join(' · ')}';
   }
 
   Future<void> _pinHomeWidget() async {
@@ -445,6 +531,23 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
                 ),
                 trailing: const GlyphIcon(AppGlyphs.chevronForward),
                 onTap: _healing ? null : () => unawaited(_runSelfHeal()),
+              ),
+              ListItem(
+                leading: _checkingWebs
+                    ? const ActivityIndicator(size: 18)
+                    : const GlyphIcon(AppGlyphs.radar),
+                title: Text(
+                  _checkingWebs ? l.smartMultiWebRunning : l.smartMultiWebTitle,
+                ),
+                subtitle: Text(
+                  _multiWebSummaryText(context),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: const GlyphIcon(AppGlyphs.chevronForward),
+                onTap: _checkingWebs
+                    ? null
+                    : () => unawaited(_runMultiWebCheck()),
               ),
             ],
           ),

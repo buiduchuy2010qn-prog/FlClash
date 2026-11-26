@@ -342,7 +342,10 @@ final expiryAlertsEnabledProvider =
     );
 
 class SpeedBoostPresetNotifier extends _PersistedBoolNotifier {
-  static const _speedTunOverrideKeys = {TunOverrideKey.congestionController};
+  static final _speedTunOverrideKeys = {
+    TunOverrideKey.congestionController,
+    if (system.isAndroid) TunOverrideKey.mtu,
+  };
   static const _speedGeneralOverrideKeys = {
     GeneralOverrideKey.unifiedDelay,
     GeneralOverrideKey.tcpConcurrent,
@@ -350,6 +353,7 @@ class SpeedBoostPresetNotifier extends _PersistedBoolNotifier {
   static const _speedDnsOverrideKeys = {
     DnsOverrideKey.enable,
     DnsOverrideKey.ipv6,
+    DnsOverrideKey.preferH3,
     DnsOverrideKey.useHosts,
     DnsOverrideKey.respectRules,
     DnsOverrideKey.enhancedMode,
@@ -414,6 +418,7 @@ class SpeedBoostPresetNotifier extends _PersistedBoolNotifier {
               mtu: savedClash.tun.mtu,
               congestionController: savedClash.tun.congestionController,
             ),
+            tunOverride: savedClash.tunOverride,
             tunOverrideKeys: savedClash.tunOverrideKeys,
             dns: savedClash.dns,
             dnsOverrideKeys: savedClash.dnsOverrideKeys,
@@ -448,6 +453,10 @@ class SpeedBoostPresetNotifier extends _PersistedBoolNotifier {
           mtu: defaultTunMtu,
           congestionController: defaultCongestionController,
         ),
+        tunOverride: state.tunOverride.copyWith(
+          mtu: defaultTunMtu,
+          congestionController: defaultCongestionController,
+        ),
         tunOverrideKeys: {
           for (final key in state.tunOverrideKeys)
             if (!_speedTunOverrideKeys.contains(key) &&
@@ -469,7 +478,7 @@ class SpeedBoostPresetNotifier extends _PersistedBoolNotifier {
     if (_disposed) return;
     const dnsResolvers = [
       'https://1.1.1.1/dns-query',
-      'https://dns.google/dns-query',
+      'https://8.8.8.8/dns-query',
       'tcp://1.1.1.1:53',
       'tcp://8.8.8.8:53',
     ];
@@ -493,14 +502,15 @@ class SpeedBoostPresetNotifier extends _PersistedBoolNotifier {
           congestionController: 'bbr3',
           mtu: system.isAndroid ? 1400 : state.tun.mtu,
         ),
-        tunOverrideKeys: {
-          ...state.tunOverrideKeys,
-          ..._speedTunOverrideKeys,
-          if (system.isAndroid) TunOverrideKey.mtu,
-        },
+        tunOverride: state.tunOverride.copyWith(
+          congestionController: 'bbr3',
+          mtu: system.isAndroid ? 1400 : state.tunOverride.mtu,
+        ),
+        tunOverrideKeys: {...state.tunOverrideKeys, ..._speedTunOverrideKeys},
         dns: state.dns.copyWith(
           enable: true,
           ipv6: false,
+          preferH3: false,
           useHosts: true,
           respectRules: true,
           enhancedMode: DnsMode.fakeIp,

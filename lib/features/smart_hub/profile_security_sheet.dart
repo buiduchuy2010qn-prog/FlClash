@@ -61,16 +61,20 @@ class _ProfileSecuritySheetState extends ConsumerState<ProfileSecuritySheet> {
     try {
       const hardDns = [
         'https://1.1.1.1/dns-query',
-        'https://dns.google/dns-query',
+        'https://8.8.8.8/dns-query',
+        'tcp://1.1.1.1:53',
+        'tcp://8.8.8.8:53',
       ];
       ref.read(patchClashConfigProvider.notifier).update((state) {
         return state.copyWith(
           allowLan: false,
           externalController: ExternalControllerStatus.close,
+          hosts: const {},
           dns: state.dns.copyWith(
             enable: true,
             ipv6: false,
-            useHosts: false,
+            preferH3: false,
+            useHosts: true,
             respectRules: true,
             enhancedMode: DnsMode.fakeIp,
             nameserver: hardDns,
@@ -82,6 +86,7 @@ class _ProfileSecuritySheetState extends ConsumerState<ProfileSecuritySheet> {
             ...state.dnsOverrideKeys,
             DnsOverrideKey.enable,
             DnsOverrideKey.ipv6,
+            DnsOverrideKey.preferH3,
             DnsOverrideKey.useHosts,
             DnsOverrideKey.respectRules,
             DnsOverrideKey.enhancedMode,
@@ -115,7 +120,7 @@ class _ProfileSecuritySheetState extends ConsumerState<ProfileSecuritySheet> {
           }
         }
       }
-      ref.read(setupActionProvider.notifier).applyProfileDebounce(force: true);
+      await ref.read(setupActionProvider.notifier).applyPresetAndSyncTunnel();
       await ref
           .read(profileSecurityProvider.notifier)
           .scanProfile(widget.profile);

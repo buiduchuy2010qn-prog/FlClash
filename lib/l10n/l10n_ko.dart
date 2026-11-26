@@ -4465,4 +4465,19 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get homeWidgetPinFallback => '홈 화면을 길게 누르고 위젯에서 FlClash를 끌어다 놓으세요';
+
+  @override
+  String get smartMultiWebTitle => '다중 웹사이트 및 핑 진단';
+
+  @override
+  String get smartMultiWebRunning => '여러 웹사이트 확인 중...';
+
+  @override
+  String get smartMultiWebDesc =>
+      'Google, YouTube, TikTok, ChatGPT, GitHub, Discord 동시 점검';
+
+  @override
+  String smartMultiWebSummary(Object ok, Object total, Object avgMs) {
+    return '$ok/$total개 사이트 원활 · 평균 ${avgMs}ms';
+  }
 }

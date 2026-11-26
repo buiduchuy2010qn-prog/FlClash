@@ -11,6 +11,7 @@ import (
 	"net/netip"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -295,6 +296,8 @@ var androidDoTHosts = []struct {
 var androidFakeIPBypass = []string{
 	"+.lan",
 	"+.local",
+	"localhost",
+	"+.localhost",
 	"1dot1dot1dot1.cloudflare-dns.com",
 	"one.one.one.one",
 	"dns.cloudflare.com",
@@ -311,7 +314,14 @@ var androidFakeIPBypass = []string{
 	"connectivitycheck.android.com",
 	"www.gstatic.com",
 	"captive.apple.com",
+	"+.captive.apple.com",
 	"connectivitycheck.platform.hicloud.com",
+	"msftconnecttest.com",
+	"+.msftconnecttest.com",
+	"msftncsi.com",
+	"+.msftncsi.com",
+	"connect.rom.miui.com",
+	"lens.l.google.com",
 	"clients1.google.com",
 	"clients3.google.com",
 	"android.clients.google.com",
@@ -332,6 +342,12 @@ var androidFakeIPBypass = []string{
 	"time.*.com",
 	"time.android.com",
 	"time.google.com",
+	"stun.*.*",
+	"stun.*.*.*",
+	"+.stun.*.*",
+	"+.stun.*.*.*",
+	"+.stun.*.*.*.*",
+	"+.turn.*.*",
 }
 
 var androidTCPDNSResolvers = []string{
@@ -372,6 +388,7 @@ func optimizeConfigDocument(document, profile *yaml.Node) {
 	} else if mappingValue(defaultsSource, "tcp-concurrent") == nil {
 		setMappingValue(root, "tcp-concurrent", boolNode(false))
 	}
+	sanitizeUntrustedHosts(root)
 	optimizeProxyNodes(root)
 	optimizeProxyProviders(root)
 	optimizeProxyGroups(root)
@@ -424,6 +441,132 @@ func ensureSequenceStrings(parent *yaml.Node, key string, additions ...string) {
 		existing.Content = append(existing.Content, strNode(entry))
 		seen[entry] = struct{}{}
 	}
+}
+
+var dummyProxyNamePattern = regexp.MustCompile(`(?i)(剩余流量|套餐到期|距离下次重置|官网|群组|频道|traffic\s*[:：]|expire\s*[:：]|dung\s*lượng\s*[:：]|hạn\s*dùng\s*[:：])`)
+
+var sensitiveHostKeywords = []string{
+	"vietcombank",
+	"techcombank",
+	"mbbank",
+	"bidv",
+	"vpbank",
+	"acb",
+	"tpbank",
+	"vib",
+	"sacombank",
+	"agribank",
+	"momo",
+	"zalopay",
+	"vnpay",
+	"vneid",
+	"dichvucong",
+	"gov.vn",
+	"paypal",
+	"binance",
+	"okx",
+	"coinbase",
+	"google.com",
+	"accounts.google",
+	"icloud.com",
+	"appleid.apple.com",
+	"apple.com",
+	"microsoft.com",
+	"live.com",
+	"facebook.com",
+	"telegram.org",
+	"zalo.me",
+	"github.com",
+}
+
+func isDummyInfoProxyName(name string) bool {
+	trimmed := strings.TrimSpace(name)
+	return trimmed != "" && dummyProxyNamePattern.MatchString(trimmed)
+}
+
+func isDummyInfoProxyMapping(m *yaml.Node) bool {
+	if isDummyInfoProxyName(scalarString(m, "name")) {
+		return true
+	}
+	server := strings.ToLower(scalarString(m, "server"))
+	switch server {
+	case "127.0.0.1", "0.0.0.0", "::", "::1", "localhost", "example.com":
+		return true
+	}
+	if port, ok := scalarInt(m, "port"); ok && port <= 1 {
+		return true
+	}
+	return false
+}
+
+func isSensitiveHostDomain(domain string) bool {
+	lower := strings.ToLower(strings.TrimSpace(domain))
+	if lower == "" || lower == "localhost" || strings.HasSuffix(lower, ".local") || strings.HasSuffix(lower, ".lan") {
+		return false
+	}
+	for _, entry := range androidDoTHosts {
+		if lower == entry.host {
+			return false
+		}
+	}
+	for _, kw := range sensitiveHostKeywords {
+		if strings.Contains(lower, kw) {
+			return true
+		}
+	}
+	return false
+}
+
+func isSafeLoopbackHostValue(val *yaml.Node) bool {
+	resolved := resolveAlias(val)
+	if resolved == nil {
+		return false
+	}
+	isSafeScalar := func(s string) bool {
+		switch strings.ToLower(strings.TrimSpace(s)) {
+		case "127.0.0.1", "::1", "0.0.0.0", "localhost":
+			return true
+		default:
+			return false
+		}
+	}
+	switch resolved.Kind {
+	case yaml.ScalarNode:
+		return isSafeScalar(resolved.Value)
+	case yaml.SequenceNode:
+		if len(resolved.Content) == 0 {
+			return false
+		}
+		for _, item := range resolved.Content {
+			r := resolveAlias(item)
+			if r == nil || r.Kind != yaml.ScalarNode || !isSafeScalar(r.Value) {
+				return false
+			}
+		}
+		return true
+	default:
+		return false
+	}
+}
+
+func sanitizeUntrustedHosts(root *yaml.Node) {
+	hostsNode := resolveAlias(mappingValue(root, "hosts"))
+	if hostsNode == nil || hostsNode.Kind != yaml.MappingNode || len(hostsNode.Content) == 0 {
+		return
+	}
+	kept := make([]*yaml.Node, 0, len(hostsNode.Content))
+	for i := 0; i+1 < len(hostsNode.Content); i += 2 {
+		keyNode, valNode := hostsNode.Content[i], hostsNode.Content[i+1]
+		domain := ""
+		if resolvedKey := resolveAlias(keyNode); resolvedKey != nil && resolvedKey.Kind == yaml.ScalarNode {
+			domain = resolvedKey.Value
+		}
+		if isSensitiveHostDomain(domain) && !isSafeLoopbackHostValue(valNode) {
+			continue
+		}
+		kept = append(kept, keyNode, valNode)
+	}
+	hostsNode.Content = kept
 }
 
 func ensureAndroidHosts(root *yaml.Node) {
@@ -597,11 +740,15 @@ func optimizeProxyGroups(root *yaml.Node) {
 	}
 
 	leafSet := make(map[string]bool)
+	dummyLeafSet := make(map[string]bool)
 	if proxiesNode := resolveAlias(mappingValue(root, "proxies")); proxiesNode != nil && proxiesNode.Kind == yaml.SequenceNode {
 		for _, item := range proxiesNode.Content {
 			if m := resolveAlias(item); m != nil && m.Kind == yaml.MappingNode {
 				if name := scalarString(m, "name"); name != "" {
 					leafSet[name] = true
+					if isDummyInfoProxyMapping(m) {
+						dummyLeafSet[name] = true
+					}
 				}
 			}
 		}
@@ -653,7 +800,8 @@ func optimizeProxyGroups(root *yaml.Node) {
 	if primarySeq == nil || primarySeq.Kind != yaml.SequenceNode {
 		return
 	}
-	var keptLeaves []*yaml.Node
+	var realLeaves []*yaml.Node
+	var infoLeaves []*yaml.Node
 	var keptBuiltins []*yaml.Node
 	for _, entry := range primarySeq.Content {
 		r := resolveAlias(entry)
@@ -662,11 +810,16 @@ func optimizeProxyGroups(root *yaml.Node) {
 		}
 		val := strings.TrimSpace(r.Value)
 		if leafSet[val] {
-			keptLeaves = append(keptLeaves, strNode(val))
+			if dummyLeafSet[val] {
+				infoLeaves = append(infoLeaves, strNode(val))
+			} else {
+				realLeaves = append(realLeaves, strNode(val))
+			}
 		} else if isBuiltinProxyTarget(val) {
 			keptBuiltins = append(keptBuiltins, strNode(val))
 		}
 	}
+	keptLeaves := append(realLeaves, infoLeaves...)
 	filteredPrimary := append(keptLeaves, keptBuiltins...)
 	if len(filteredPrimary) == 0 {
 		return

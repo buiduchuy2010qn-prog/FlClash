@@ -1317,5 +1317,9 @@
   "homeWidgetAddTitle": "Ajouter le widget d'accueil",
   "homeWidgetAddDesc": "Débit, bouton rapide, appareils, expiration et sécurité sur l'écran d'accueil",
   "homeWidgetPinRequested": "Confirmez l'ajout du widget FlClash sur l'écran d'accueil",
-  "homeWidgetPinFallback": "Appui long sur l'écran d'accueil → Widgets → glissez FlClash"
+  "homeWidgetPinFallback": "Appui long sur l'écran d'accueil → Widgets → glissez FlClash",
+  "smartMultiWebTitle": "Test multi-sites et ping",
+  "smartMultiWebRunning": "Test de plusieurs sites en cours...",
+  "smartMultiWebDesc": "Tester simultanément Google, YouTube, TikTok, ChatGPT, GitHub et Discord",
+  "smartMultiWebSummary": "{ok}/{total} sites accessibles · moy. {avgMs}ms"
 }

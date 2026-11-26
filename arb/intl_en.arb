@@ -1583,5 +1583,16 @@
     "placeholders": {
       "count": {}
     }
+  },
+  "smartMultiWebTitle": "Multi-website & ping check",
+  "smartMultiWebRunning": "Checking multiple websites...",
+  "smartMultiWebDesc": "Test Google, YouTube, TikTok, ChatGPT, GitHub & Discord simultaneously",
+  "smartMultiWebSummary": "{ok}/{total} websites reachable · Avg {avgMs}ms",
+  "@smartMultiWebSummary": {
+    "placeholders": {
+      "ok": {},
+      "total": {},
+      "avgMs": {}
+    }
   }
 }

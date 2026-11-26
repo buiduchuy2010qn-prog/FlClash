@@ -219,6 +219,9 @@ func updateConfig(params *UpdateParams) error {
 		}
 		general.Mode = *params.Mode
 		tunnel.SetMode(general.Mode)
+		if *params.Mode == tunnel.Global {
+			ensureGlobalSelectorTarget(nil)
+		}
 	}
 	if params.LogLevel != nil {
 		general.LogLevel = *params.LogLevel
