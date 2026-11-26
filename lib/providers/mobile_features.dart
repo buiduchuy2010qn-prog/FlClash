@@ -204,6 +204,7 @@ class Optimize4gPresetNotifier extends _PersistedBoolNotifier {
             generalOverrideKeys: savedClash.generalOverrideKeys,
             tun: state.tun.copyWith(
               enable: savedClash.tun.enable,
+              stack: savedClash.tun.stack,
               mtu: savedClash.tun.mtu,
             ),
             dns: savedClash.dns,
@@ -241,7 +242,7 @@ class Optimize4gPresetNotifier extends _PersistedBoolNotifier {
           for (final key in state.generalOverrideKeys)
             if (key != GeneralOverrideKey.ipv6) key,
         },
-        tun: state.tun.copyWith(mtu: defaultTunMtu),
+        tun: state.tun.copyWith(stack: TunStack.mips, mtu: defaultTunMtu),
         dnsOverrideKeys: {
           for (final key in state.dnsOverrideKeys)
             if (!_presetDnsOverrideKeys.contains(key)) key,
@@ -270,6 +271,7 @@ class Optimize4gPresetNotifier extends _PersistedBoolNotifier {
       'tcp://8.8.8.8:53',
     ];
     const systemBootstrap = ['system'];
+    final speedBoostOn = ref.read(speedBoostPresetProvider);
     ref.read(patchClashConfigProvider.notifier).update((state) {
       return state.copyWith(
         mode: Mode.global,
@@ -280,7 +282,8 @@ class Optimize4gPresetNotifier extends _PersistedBoolNotifier {
         },
         tun: state.tun.copyWith(
           enable: system.isDesktop ? true : state.tun.enable,
-          mtu: 1400,
+          stack: TunStack.mixed,
+          mtu: speedBoostOn ? defaultTunMtu : 1400,
         ),
         dns: state.dns.copyWith(
           enable: true,
@@ -303,7 +306,7 @@ class Optimize4gPresetNotifier extends _PersistedBoolNotifier {
           .update(
             (state) => state.copyWith(
               enable: true,
-              systemProxy: false,
+              systemProxy: true,
               ipv6: false,
               dnsHijacking: true,
               allowBypass: false,
@@ -342,10 +345,7 @@ final expiryAlertsEnabledProvider =
     );
 
 class SpeedBoostPresetNotifier extends _PersistedBoolNotifier {
-  static final _speedTunOverrideKeys = {
-    TunOverrideKey.congestionController,
-    if (system.isAndroid) TunOverrideKey.mtu,
-  };
+  static const _speedTunOverrideKeys = {TunOverrideKey.mtu};
   static const _speedGeneralOverrideKeys = {
     GeneralOverrideKey.unifiedDelay,
     GeneralOverrideKey.tcpConcurrent,
@@ -381,6 +381,7 @@ class SpeedBoostPresetNotifier extends _PersistedBoolNotifier {
       if (_disposed) return;
       final snapshot = json.encode({
         'clash': ref.read(patchClashConfigProvider).toJson(),
+        'vpn': ref.read(vpnSettingProvider).toJson(),
         'network': ref.read(networkSettingProvider).toJson(),
       });
       await preferences.setSpeedBoostSnapshot(snapshot);
@@ -424,6 +425,17 @@ class SpeedBoostPresetNotifier extends _PersistedBoolNotifier {
             dnsOverrideKeys: savedClash.dnsOverrideKeys,
           );
         });
+        if (decoded['vpn'] case final Map rawVpn when system.isAndroid) {
+          final savedVpn = VpnProps.fromJson(Map<String, Object?>.from(rawVpn));
+          ref.read(vpnSettingProvider.notifier).update((state) {
+            return state.copyWith(
+              enable: savedVpn.enable,
+              systemProxy: savedVpn.systemProxy,
+              ipv6: savedVpn.ipv6,
+              dnsHijacking: savedVpn.dnsHijacking,
+            );
+          });
+        }
         ref.read(networkSettingProvider.notifier).update((state) {
           return state.copyWith(
             bypassPrivateRoute: savedNetwork.bypassPrivateRoute,
@@ -450,6 +462,7 @@ class SpeedBoostPresetNotifier extends _PersistedBoolNotifier {
               key,
         },
         tun: state.tun.copyWith(
+          stack: TunStack.mips,
           mtu: defaultTunMtu,
           congestionController: defaultCongestionController,
         ),
@@ -460,6 +473,7 @@ class SpeedBoostPresetNotifier extends _PersistedBoolNotifier {
         tunOverrideKeys: {
           for (final key in state.tunOverrideKeys)
             if (!_speedTunOverrideKeys.contains(key) &&
+                key != TunOverrideKey.congestionController &&
                 key != TunOverrideKey.mtu)
               key,
         },
@@ -498,13 +512,13 @@ class SpeedBoostPresetNotifier extends _PersistedBoolNotifier {
           if (system.isAndroid) GeneralOverrideKey.ipv6,
         },
         tun: state.tun.copyWith(
-          stack: TunStack.mips,
-          congestionController: 'bbr3',
-          mtu: system.isAndroid ? 1400 : state.tun.mtu,
+          stack: TunStack.mixed,
+          congestionController: defaultCongestionController,
+          mtu: defaultTunMtu,
         ),
         tunOverride: state.tunOverride.copyWith(
-          congestionController: 'bbr3',
-          mtu: system.isAndroid ? 1400 : state.tunOverride.mtu,
+          congestionController: defaultCongestionController,
+          mtu: defaultTunMtu,
         ),
         tunOverrideKeys: {...state.tunOverrideKeys, ..._speedTunOverrideKeys},
         dns: state.dns.copyWith(
@@ -522,6 +536,18 @@ class SpeedBoostPresetNotifier extends _PersistedBoolNotifier {
         dnsOverrideKeys: {...state.dnsOverrideKeys, ..._speedDnsOverrideKeys},
       );
     });
+    if (system.isAndroid) {
+      ref
+          .read(vpnSettingProvider.notifier)
+          .update(
+            (state) => state.copyWith(
+              enable: true,
+              systemProxy: true,
+              ipv6: false,
+              dnsHijacking: true,
+            ),
+          );
+    }
     ref
         .read(networkSettingProvider.notifier)
         .update((state) => state.copyWith(bypassPrivateRoute: true));

@@ -7973,19 +7973,19 @@ abstract class AppLocalizations {
   /// No description provided for @speedBoostPreset.
   ///
   /// In en, this message translates to:
-  /// **'Network Speed Boost (BBRv3)'**
+  /// **'Max Network Speed Boost'**
   String get speedBoostPreset;
 
   /// No description provided for @speedBoostPresetDesc.
   ///
   /// In en, this message translates to:
-  /// **'Mips BBRv3 TUN, Fake-IP DoH & keep-alive tuning while keeping single-device safety'**
+  /// **'Mixed kernel TCP stack, MTU 9000, direct System Proxy & high-BDP QUIC windows (single-device safe)'**
   String get speedBoostPresetDesc;
 
   /// No description provided for @speedBoostAppliedTip.
   ///
   /// In en, this message translates to:
-  /// **'Network Speed Boost (BBRv3) applied'**
+  /// **'Max Network Speed Boost (Mixed + MTU 9000) applied'**
   String get speedBoostAppliedTip;
 
   /// No description provided for @expiryAlertsToggle.

@@ -4578,14 +4578,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Custom DNS lacks DoH/DoT encryption, allowing third parties to log DNS lookups.';
 
   @override
-  String get speedBoostPreset => 'Network Speed Boost (BBRv3)';
+  String get speedBoostPreset => 'Max Network Speed Boost';
 
   @override
   String get speedBoostPresetDesc =>
-      'Mips BBRv3 TUN, Fake-IP DoH & keep-alive tuning while keeping single-device safety';
+      'Mixed kernel TCP stack, MTU 9000, direct System Proxy & high-BDP QUIC windows (single-device safe)';
 
   @override
-  String get speedBoostAppliedTip => 'Network Speed Boost (BBRv3) applied';
+  String get speedBoostAppliedTip =>
+      'Max Network Speed Boost (Mixed + MTU 9000) applied';
 
   @override
   String get expiryAlertsToggle => 'Expiry & Security Notifications';

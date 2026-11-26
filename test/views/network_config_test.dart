@@ -418,38 +418,42 @@ void main() {
   });
 
   group('speed boost preset', () {
-    test('sets bbr3 on tunOverride and preferH3=false then restores', () async {
-      SharedPreferences.setMockInitialValues({});
-      await preferences.rebind();
+    test(
+      'sets Mixed stack and MTU 9000 with preferH3=false then restores',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        await preferences.rebind();
 
-      final presetContainer = ProviderContainer(
-        overrides: [profilesProvider.overrideWith(TestProfiles.new)],
-      );
-      addTearDown(presetContainer.dispose);
-      presetContainer.listen(patchClashConfigProvider, (_, _) {});
-      presetContainer.listen(networkSettingProvider, (_, _) {});
+        final presetContainer = ProviderContainer(
+          overrides: [profilesProvider.overrideWith(TestProfiles.new)],
+        );
+        addTearDown(presetContainer.dispose);
+        presetContainer.listen(patchClashConfigProvider, (_, _) {});
+        presetContainer.listen(networkSettingProvider, (_, _) {});
 
-      final notifier = presetContainer.read(speedBoostPresetProvider.notifier);
-      await notifier.enablePreset();
+        final notifier = presetContainer.read(
+          speedBoostPresetProvider.notifier,
+        );
+        await notifier.enablePreset();
 
-      final enabled = presetContainer.read(patchClashConfigProvider);
-      expect(presetContainer.read(speedBoostPresetProvider), isTrue);
-      expect(enabled.tun.congestionController, 'bbr3');
-      expect(enabled.tunOverride.congestionController, 'bbr3');
-      expect(enabled.tcpConcurrent, isFalse);
-      expect(enabled.dns.preferH3, isFalse);
-      expect(enabled.dnsOverrideKeys, contains(DnsOverrideKey.preferH3));
+        final enabled = presetContainer.read(patchClashConfigProvider);
+        expect(presetContainer.read(speedBoostPresetProvider), isTrue);
+        expect(enabled.tun.stack, TunStack.mixed);
+        expect(enabled.tun.mtu, defaultTunMtu);
+        expect(enabled.tunOverride.mtu, defaultTunMtu);
+        expect(enabled.tcpConcurrent, isFalse);
+        expect(enabled.dns.preferH3, isFalse);
+        expect(enabled.dnsOverrideKeys, contains(DnsOverrideKey.preferH3));
 
-      await notifier.disablePresetAndRestore();
+        await notifier.disablePresetAndRestore();
 
-      final restored = presetContainer.read(patchClashConfigProvider);
-      expect(presetContainer.read(speedBoostPresetProvider), isFalse);
-      expect(
-        restored.tunOverride.congestionController,
-        defaultCongestionController,
-      );
-      expect(restored.dnsOverrideKeys, isEmpty);
-    });
+        final restored = presetContainer.read(patchClashConfigProvider);
+        expect(presetContainer.read(speedBoostPresetProvider), isFalse);
+        expect(restored.tun.stack, TunStack.mips);
+        expect(restored.tunOverride.mtu, defaultTunMtu);
+        expect(restored.dnsOverrideKeys, isEmpty);
+      },
+    );
   });
 }
 

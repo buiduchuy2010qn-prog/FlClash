@@ -4573,14 +4573,15 @@ class AppLocalizationsVi extends AppLocalizations {
       'DNS không dùng DoH/DoT mã hóa, tên miền truy cập có thể bị theo dõi.';
 
   @override
-  String get speedBoostPreset => 'Tăng tốc mạng (BBRv3)';
+  String get speedBoostPreset => 'Tăng tốc mạng tối đa';
 
   @override
   String get speedBoostPresetDesc =>
-      'Bật kiểm soát tắc nghẽn BBRv3, Fake-IP DoH & giữ ổn định kết nối (vẫn an toàn 1 thiết bị)';
+      'Luồng Mixed Kernel TCP, MTU 9000, System Proxy trực tiếp & mở rộng cửa sổ QUIC (vẫn an toàn 1 thiết bị)';
 
   @override
-  String get speedBoostAppliedTip => 'Đã bật chế độ Tăng tốc mạng (BBRv3)';
+  String get speedBoostAppliedTip =>
+      'Đã bật Tăng tốc mạng tối đa (Mixed Kernel + MTU 9000)';
 
   @override
   String get expiryAlertsToggle => 'Thông báo sắp hết hạn & bảo mật';
