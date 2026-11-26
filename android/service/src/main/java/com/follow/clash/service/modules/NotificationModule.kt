@@ -12,6 +12,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.getSystemService
 import com.follow.clash.common.Components
 import com.follow.clash.common.GlobalState
+import com.follow.clash.common.LiveTelemetry
 import com.follow.clash.common.QuickAction
 import com.follow.clash.common.R as CommonR
 import com.follow.clash.common.ensureNotificationChannel
@@ -131,6 +132,7 @@ internal class NotificationModule(
     }
 
     private fun update(params: ExtendedNotificationParams) {
+        LiveTelemetry.updateSpeed(params.contentText)
         val notification = with(notificationBuilder) {
             setContentTitle(params.title)
             setContentText(params.contentText)
@@ -158,6 +160,7 @@ internal class NotificationModule(
     @Suppress("DEPRECATION")
     override fun stop() {
         foregroundStarted = false
+        LiveTelemetry.clear()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             service.stopForeground(STOP_FOREGROUND_REMOVE)
         } else {

@@ -72,6 +72,10 @@ class Preferences {
   static const _portalAccountsKey = 'portal_accounts_v1';
   static const _versionGateCacheKey = 'version_gate_cache_v1';
   static const _deviceHwidKey = 'device_hwid_v1';
+  static const _expiryAlertsEnabledKey = 'expiry_alerts_enabled_v1';
+  static const _lastSubAlertLedgerKey = 'last_sub_alert_ledger_v1';
+  static const _speedBoostPresetKey = 'speed_boost_preset_v1';
+  static const _speedBoostSnapshotKey = 'speed_boost_snapshot_v1';
   static final _hwidPattern = RegExp(r'^[0-9a-f]{32}$');
   String? _cachedDeviceHwid;
 
@@ -166,6 +170,27 @@ class Preferences {
 
   Future<void> setVersionGateCache(String? value) =>
       _setString(_versionGateCacheKey, value);
+
+  Future<bool> getExpiryAlertsEnabled() =>
+      _getBool(_expiryAlertsEnabledKey, true);
+
+  Future<void> setExpiryAlertsEnabled(bool value) =>
+      _setBool(_expiryAlertsEnabledKey, value);
+
+  Future<String?> getLastSubAlertLedger() => _getString(_lastSubAlertLedgerKey);
+
+  Future<void> setLastSubAlertLedger(String? value) =>
+      _setString(_lastSubAlertLedgerKey, value);
+
+  Future<bool> getSpeedBoostPreset() => _getBool(_speedBoostPresetKey, false);
+
+  Future<void> setSpeedBoostPreset(bool value) =>
+      _setBool(_speedBoostPresetKey, value);
+
+  Future<String?> getSpeedBoostSnapshot() => _getString(_speedBoostSnapshotKey);
+
+  Future<void> setSpeedBoostSnapshot(String? value) =>
+      _setString(_speedBoostSnapshotKey, value);
 
   Future<String> getOrCreateDeviceHwid() async {
     final cached = _cachedDeviceHwid;

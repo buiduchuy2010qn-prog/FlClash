@@ -5,7 +5,9 @@ import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/features/ip_quality/leak_check_sheet.dart';
 import 'package:fl_clash/features/smart_hub/portal_connect_sheet.dart';
+import 'package:fl_clash/features/smart_hub/profile_security_sheet.dart';
 import 'package:fl_clash/models/models.dart';
+import 'package:fl_clash/plugins/app.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/views/dashboard/widgets/profile_detail.dart';
@@ -48,6 +50,12 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
             .read(profilesActionProvider.notifier)
             .refreshPortalStatus(profile, force: manual),
       );
+      if (manual ||
+          !ref.read(profileSecurityProvider).containsKey(profile.id)) {
+        unawaited(
+          ref.read(profileSecurityProvider.notifier).scanProfile(profile),
+        );
+      }
     }
     if (ref.read(coreStatusProvider) != CoreStatus.connected) {
       if (mounted) {
@@ -238,6 +246,29 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
     ref.read(setupActionProvider.notifier).applyProfileDebounce(force: true);
   }
 
+  Future<void> _toggleSpeedBoost(bool enable) async {
+    final l = context.appLocalizations;
+    final notifier = ref.read(speedBoostPresetProvider.notifier);
+    if (enable) {
+      await notifier.enablePreset();
+      dialogs.showBanner(l.speedBoostAppliedTip, level: BannerLevel.success);
+    } else {
+      await notifier.disablePresetAndRestore();
+    }
+    if (!mounted) return;
+    ref.read(setupActionProvider.notifier).applyProfileDebounce(force: true);
+  }
+
+  Future<void> _pinHomeWidget() async {
+    final l = context.appLocalizations;
+    final requested = await app?.pinHomeWidget() ?? false;
+    if (!mounted) return;
+    dialogs.showBanner(
+      requested ? l.homeWidgetPinRequested : l.homeWidgetPinFallback,
+      level: requested ? BannerLevel.success : BannerLevel.info,
+    );
+  }
+
   String _healStepLabel(BuildContext context, int step) {
     final l = context.appLocalizations;
     return switch (step) {
@@ -300,6 +331,11 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
         : false;
     final privacyMaxEnabled = hideIp && (!system.isAndroid || screenShield);
     final optimize4gEnabled = ref.watch(optimize4gPresetProvider);
+    final speedBoostEnabled = ref.watch(speedBoostPresetProvider);
+    final expiryAlertsEnabled = ref.watch(expiryAlertsEnabledProvider);
+    final securityReport = profile == null
+        ? null
+        : ref.watch(profileSecurityProvider.select((s) => s[profile.id]));
     final autoFailover = ref.watch(autoFailoverProvider);
     final closeConnections = ref.watch(
       appSettingProvider.select((state) => state.closeConnections),
@@ -520,6 +556,55 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
                 value: optimize4gEnabled,
                 onChanged: (value) => unawaited(_toggleOptimize4g(value)),
               ),
+              ListItem.toggle(
+                leading: const GlyphIcon(AppGlyphs.speed),
+                title: Text(l.speedBoostPreset),
+                subtitle: Text(l.speedBoostPresetDesc),
+                value: speedBoostEnabled,
+                onChanged: (value) => unawaited(_toggleSpeedBoost(value)),
+              ),
+              ListItem.toggle(
+                leading: const GlyphIcon(AppGlyphs.info),
+                title: Text(l.expiryAlertsToggle),
+                subtitle: Text(l.expiryAlertsToggleDesc),
+                value: expiryAlertsEnabled,
+                onChanged: (value) {
+                  ref.read(expiryAlertsEnabledProvider.notifier).value = value;
+                },
+              ),
+              if (profile != null)
+                ListItem(
+                  leading: GlyphIcon(
+                    securityReport?.isDangerous == true
+                        ? AppGlyphs.warning
+                        : AppGlyphs.verified,
+                    color: switch (securityReport?.level) {
+                      ProfileRiskLevel.danger => colors.error,
+                      ProfileRiskLevel.caution => colors.warning,
+                      ProfileRiskLevel.safe => colors.success,
+                      null => null,
+                    },
+                  ),
+                  title: Text(l.securityAuditTitle),
+                  subtitle: Text(
+                    securityReport == null
+                        ? l.securityAuditSubtitle
+                        : l.securityAuditSummary(
+                            securityReport.score,
+                            switch (securityReport.level) {
+                              ProfileRiskLevel.danger => l.securityLevelDanger,
+                              ProfileRiskLevel.caution =>
+                                l.securityLevelCaution,
+                              ProfileRiskLevel.safe => l.securityLevelSafe,
+                            },
+                          ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  trailing: const GlyphIcon(AppGlyphs.chevronForward),
+                  onTap: () =>
+                      unawaited(showProfileSecuritySheet(context, profile)),
+                ),
               ListItem(
                 leading: const GlyphIcon(AppGlyphs.radar),
                 title: Text(l.leakCheckTitle),
@@ -527,6 +612,14 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
                 trailing: const GlyphIcon(AppGlyphs.chevronForward),
                 onTap: () => unawaited(showLeakCheckSheet(context)),
               ),
+              if (system.isAndroid)
+                ListItem(
+                  leading: const GlyphIcon(AppGlyphs.customize),
+                  title: Text(l.homeWidgetAddTitle),
+                  subtitle: Text(l.homeWidgetAddDesc),
+                  trailing: const GlyphIcon(AppGlyphs.chevronForward),
+                  onTap: () => unawaited(_pinHomeWidget()),
+                ),
             ],
           ),
           if (forecast != null)

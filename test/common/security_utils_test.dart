@@ -128,6 +128,95 @@ void main() {
         expect(overDevices?.kind, SubscriptionAlertKind.deviceLimitExceeded);
         expect(overDevices?.onlineDevices, 3);
         expect(overDevices?.deviceLimit, 2);
+
+        final withinFiveDays = SubscriptionInfo(
+          upload: 100,
+          download: 100,
+          total: 10000,
+          expire:
+              now
+                  .add(const Duration(days: 4, hours: 12))
+                  .millisecondsSinceEpoch ~/
+              1000,
+        );
+        final fiveDayAlert = evaluateSubscriptionAlert(
+          withinFiveDays,
+          now: now,
+        );
+        expect(fiveDayAlert?.kind, SubscriptionAlertKind.expiringSoon);
+        expect(fiveDayAlert?.daysLeft, 5);
+        expect(fiveDayAlert?.hoursLeft, isNull);
+
+        final underDay = SubscriptionInfo(
+          upload: 100,
+          download: 100,
+          total: 10000,
+          expire:
+              now.add(const Duration(hours: 9)).millisecondsSinceEpoch ~/ 1000,
+        );
+        final hourAlert = evaluateSubscriptionAlert(underDay, now: now);
+        expect(hourAlert?.kind, SubscriptionAlertKind.expiringSoon);
+        expect(hourAlert?.daysLeft, 1);
+        expect(hourAlert?.hoursLeft, 9);
+      },
+    );
+
+    test(
+      'shouldDispatchSubscriptionAlert dedupes cooldown and escalates promptly',
+      () {
+        final t0 = DateTime.utc(2026, 11, 26, 10, 0);
+        const fiveDayAlert = SubscriptionAlert(
+          kind: SubscriptionAlertKind.expiringSoon,
+          daysLeft: 5,
+        );
+        expect(
+          shouldDispatchSubscriptionAlert(null, 42, fiveDayAlert, now: t0),
+          isTrue,
+        );
+
+        final ledger1 = recordDispatchedSubscriptionAlert(
+          null,
+          42,
+          fiveDayAlert,
+          now: t0,
+        );
+        expect(
+          shouldDispatchSubscriptionAlert(
+            ledger1,
+            42,
+            fiveDayAlert,
+            now: t0.add(const Duration(hours: 2)),
+          ),
+          isFalse,
+        );
+
+        const urgentDayAlert = SubscriptionAlert(
+          kind: SubscriptionAlertKind.expiringSoon,
+          daysLeft: 1,
+          hoursLeft: 8,
+        );
+        expect(
+          shouldDispatchSubscriptionAlert(
+            ledger1,
+            42,
+            urgentDayAlert,
+            now: t0.add(const Duration(hours: 1)),
+          ),
+          isTrue,
+        );
+
+        const expiredAlert = SubscriptionAlert(
+          kind: SubscriptionAlertKind.expiredOrExhausted,
+        );
+        expect(
+          shouldDispatchSubscriptionAlert(
+            ledger1,
+            42,
+            expiredAlert,
+            now: t0.add(const Duration(minutes: 5)),
+          ),
+          isTrue,
+        );
       },
     );
   });

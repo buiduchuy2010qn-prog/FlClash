@@ -4420,4 +4420,192 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planName => 'Plan Name';
+
+  @override
+  String subExpiringHoursWarning(Object hours) {
+    return 'Plan expires in ~${hours}h. Renew soon to avoid interruption.';
+  }
+
+  @override
+  String subAlertNotificationTitle(Object profile) {
+    return '$profile · Plan Alert';
+  }
+
+  @override
+  String securityAlertTitle(Object profile) {
+    return '$profile · Security Risk Detected';
+  }
+
+  @override
+  String securityAlertBody(Object score, Object count) {
+    return 'Safety score $score/100 ($count critical issue(s)). Review and harden now.';
+  }
+
+  @override
+  String get securityAuditTitle => 'VPN Security Scanner';
+
+  @override
+  String get securityAuditSubtitle =>
+      'Scan profile for data-leak, MITM, hosts hijack & unencrypted nodes';
+
+  @override
+  String securityAuditSummary(Object score, Object level) {
+    return '$score/100 · $level — Tap for details & 1-tap harden';
+  }
+
+  @override
+  String get securityLevelSafe => 'Safe';
+
+  @override
+  String get securityLevelCaution => 'Caution';
+
+  @override
+  String get securityLevelDanger => 'Dangerous';
+
+  @override
+  String get securityRescan => 'Rescan profile';
+
+  @override
+  String get securityScannedCounts => 'Scanned entries';
+
+  @override
+  String securityScannedCountsValue(Object proxies, Object rules) {
+    return '$proxies nodes · $rules rules';
+  }
+
+  @override
+  String get securityAutoHarden => 'Protect & Harden Now';
+
+  @override
+  String get securityAutoHardenDesc =>
+      'Lock LAN/controller, enforce DoH DNS, enable Privacy Max & banking bypass';
+
+  @override
+  String get securityAutoHardenApplied =>
+      'Runtime security hardening applied to active configuration';
+
+  @override
+  String get securityFindingsTitle => 'Security Findings';
+
+  @override
+  String get securityNoRisksTitle => 'No dangerous behaviors found';
+
+  @override
+  String get securityNoRisksDesc =>
+      'No MITM injection, host hijacking, exposed controller, or plaintext proxy threats were found in this profile.';
+
+  @override
+  String get securityFindingMitmTitle =>
+      'HTTPS Traffic Inspection (MITM) Enabled';
+
+  @override
+  String get securityFindingMitmDesc =>
+      'Profile enables TLS decryption or untrusted cert capture, which can read passwords & tokens.';
+
+  @override
+  String get securityFindingControllerTitle =>
+      'External Controller Exposed Without Protection';
+
+  @override
+  String get securityFindingControllerDesc =>
+      'Control API binds outside localhost or has no secret, letting LAN/remote peers control routes.';
+
+  @override
+  String get securityFindingHostsTitle =>
+      'Sensitive Banking / Account Domains Hijacked in Hosts';
+
+  @override
+  String get securityFindingHostsDesc =>
+      'Static hosts mapping redirects sensitive services to custom IPs.';
+
+  @override
+  String get securityFindingPlaintextTitle =>
+      'Unencrypted / Weak-Cipher Proxy Nodes';
+
+  @override
+  String securityFindingPlaintextDesc(Object count) {
+    return '$count node(s) send traffic in plaintext or weak cipher without TLS.';
+  }
+
+  @override
+  String get securityFindingSkipVerifyTitle =>
+      'TLS Certificate Verification Disabled';
+
+  @override
+  String securityFindingSkipVerifyDesc(Object count) {
+    return '$count node(s) skip TLS certificate checks, risking man-in-the-middle impersonation.';
+  }
+
+  @override
+  String get securityFindingHttpSubTitle =>
+      'Subscription Link Uses Unencrypted HTTP';
+
+  @override
+  String get securityFindingHttpSubDesc =>
+      'Subscription URL fetches configs over plain HTTP, allowing network tampering in transit.';
+
+  @override
+  String get securityFindingHttpProviderTitle =>
+      'Remote Rule/Proxy Providers Use Plain HTTP';
+
+  @override
+  String securityFindingHttpProviderDesc(Object count) {
+    return '$count external provider(s) download rules or nodes over unencrypted HTTP.';
+  }
+
+  @override
+  String get securityFindingAllowLanTitle => 'LAN Sharing Enabled by Profile';
+
+  @override
+  String get securityFindingAllowLanDesc =>
+      'Profile sets allow-lan: true, exposing local proxy ports to other devices on the same Wi-Fi.';
+
+  @override
+  String get securityFindingLanRouteTitle =>
+      'Private Local Network Traffic Routed to Proxy';
+
+  @override
+  String securityFindingLanRouteDesc(Object count) {
+    return '$count rule(s) forward private LAN or router IPs out through remote proxy nodes.';
+  }
+
+  @override
+  String get securityFindingPlainDnsTitle =>
+      'Custom Unencrypted Plain DNS Resolvers';
+
+  @override
+  String get securityFindingPlainDnsDesc =>
+      'Custom DNS lacks DoH/DoT encryption, allowing third parties to log DNS lookups.';
+
+  @override
+  String get speedBoostPreset => 'Network Speed Boost (BBRv3)';
+
+  @override
+  String get speedBoostPresetDesc =>
+      'Mips BBRv3 TUN, Fake-IP DoH & keep-alive tuning while keeping single-device safety';
+
+  @override
+  String get speedBoostAppliedTip => 'Network Speed Boost (BBRv3) applied';
+
+  @override
+  String get expiryAlertsToggle => 'Expiry & Security Notifications';
+
+  @override
+  String get expiryAlertsToggleDesc =>
+      'Warn via notification bar when plan expires soon, exceeds devices, or shows risks';
+
+  @override
+  String get homeWidgetAddTitle => 'Add Home Screen Widget';
+
+  @override
+  String get homeWidgetAddDesc =>
+      'Live speed, 1-tap toggle, devices, expiry & security shield on your launcher';
+
+  @override
+  String get homeWidgetPinRequested =>
+      'Confirm adding the FlClash widget on your home screen';
+
+  @override
+  String get homeWidgetPinFallback =>
+      'Long press your home screen, choose Widgets, and drag FlClash onto the screen';
 }

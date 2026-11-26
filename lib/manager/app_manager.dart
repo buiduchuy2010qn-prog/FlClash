@@ -33,6 +33,9 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
     scheduleMicrotask(() {
       if (mounted) {
         _updateVisible(WidgetsBinding.instance.lifecycleState);
+        unawaited(
+          ref.read(profilesActionProvider.notifier).checkCurrentProfileAlerts(),
+        );
       }
     });
     ref.listenManual(configProvider, (prev, next) {
@@ -96,6 +99,9 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
           return;
         }
         ref.read(routeTrackerProvider.notifier).markResumed();
+        unawaited(
+          ref.read(profilesActionProvider.notifier).checkCurrentProfileAlerts(),
+        );
       });
     }
   }

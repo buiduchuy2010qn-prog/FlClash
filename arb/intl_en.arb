@@ -455,40 +455,15 @@
   "invalidLinkTip": "Not a subscription link or a proxy share link",
   "numberTip": "{label} must be a number",
   "numberRangeTip": "{label} must be between {min} and {max}",
-  "@numberRangeTip": {
-    "placeholders": {
-      "label": {},
-      "min": {},
-      "max": {}
-    }
-  },
   "interval": "Interval",
   "existsTip": "{label} already exists",
   "maxLengthTip": "{label} must be at most {max} characters",
-  "@maxLengthTip": {
-    "placeholders": {
-      "label": {},
-      "max": {}
-    }
-  },
   "singleImport": "Single import",
   "batchImport": "Batch import",
   "batchUrlInputTip": "One URL per line",
   "batchLinkInputTip": "One link per line",
   "batchPreviewTip": "{count} to add, {skipped} skipped as existing",
-  "@batchPreviewTip": {
-    "placeholders": {
-      "count": {},
-      "skipped": {}
-    }
-  },
   "lineIssueTip": "Line {line}: {message}",
-  "@lineIssueTip": {
-    "placeholders": {
-      "line": {},
-      "message": {}
-    }
-  },
   "singleValueTip": "{label} must be a single item",
   "deleteTip": "Are you sure you want to delete this {label}?",
   "deleteMultipTip": "Are you sure you want to delete the selected {label}?",
@@ -708,26 +683,8 @@
   "geoUpdated": "{name} updated",
   "secondsCount": "{count, plural, =1{1 second} other{{count} seconds}}",
   "proxiesCount": "{count, plural, =1{1 proxy} other{{label} proxies}}",
-  "@proxiesCount": {
-    "placeholders": {
-      "count": {},
-      "label": {}
-    }
-  },
   "rulesCount": "{count, plural, =1{1 rule} other{{label} rules}}",
-  "@rulesCount": {
-    "placeholders": {
-      "count": {},
-      "label": {}
-    }
-  },
   "proxyGroupsCount": "{count, plural, =1{1 proxy group} other{{label} proxy groups}}",
-  "@proxyGroupsCount": {
-    "placeholders": {
-      "count": {},
-      "label": {}
-    }
-  },
   "changelogBreaking": "Breaking changes",
   "changelogFeatures": "New features",
   "changelogFixes": "Bug fixes",
@@ -808,12 +765,6 @@
   "shareLinksInvalid": "No proxy could be read from the links",
   "shareLinkUnreadable": "No proxy could be read from {link}",
   "proxiesProfileLabel": "{name} and others ({count} proxies)",
-  "@proxiesProfileLabel": {
-    "placeholders": {
-      "name": {},
-      "count": {}
-    }
-  },
   "singleShareLinkOnly": "Enter one link here; edit several from the quick edit of the list",
   "username": "Username",
   "emptyFallback": "Empty fallback",
@@ -832,38 +783,14 @@
   "customIssueGroupLoop": "Proxy groups reference each other in a loop: {path}",
   "customIssueInvalidEmptyFallback": "The empty fallback must be a proxy, but {name} does not exist or is a proxy group",
   "customIssueInvalidFilter": "{name} is not a valid regex: {message}",
-  "@customIssueInvalidFilter": {
-    "placeholders": {
-      "name": {},
-      "message": {}
-    }
-  },
   "customIssueMissingDialer": "The dialer proxy {name} does not exist",
   "customIssueDialerLoop": "{proxy} dials through {target}, which leads back to {proxy}, so the dial loops",
-  "@customIssueDialerLoop": {
-    "placeholders": {
-      "proxy": {},
-      "target": {}
-    }
-  },
   "dialerProxyLoopStopped": "Dialing through {name} leads back to the proxy that uses it, so the connection was stopped",
   "customIssuesSummary": "{count} items have problems, and applying this profile may fail",
   "providerInUse": "{label} is still used by {profiles}, which will not work properly once it is deleted. Are you sure you want to delete it?",
-  "@providerInUse": {
-    "placeholders": {
-      "label": {},
-      "profiles": {}
-    }
-  },
   "proxyGroupInUse": "{label} is still named by rules, proxy groups, dialer proxies, DNS or NTP in this profile, which stop working once it is deleted. Are you sure you want to delete it?",
   "proxiesRemovedTip": "These proxies will be deleted: {removed}. A line whose name changed counts as a new proxy, and custom profiles naming the deleted ones will flag them as missing. Apply anyway?",
   "proxiesReplacedTip": "These proxies will be deleted: {removed}. These will be added: {added}. A line whose name changed counts as a new proxy, and custom profiles naming the deleted ones will flag them as missing. Apply anyway?",
-  "@proxiesReplacedTip": {
-    "placeholders": {
-      "removed": {},
-      "added": {}
-    }
-  },
   "fontSize": "Size",
   "large": "Large",
   "extraLarge": "Extra large",
@@ -918,12 +845,6 @@
   "ipVersion": "IP version",
   "addFilters": "Add filters",
   "failedItem": "{label}: {message}",
-  "@failedItem": {
-    "placeholders": {
-      "label": {},
-      "message": {}
-    }
-  },
   "failedCount": "{count} items failed. Tap to view",
   "importConfigInvalid": "This file is not a config that can be imported",
   "importConfigReplaceTip": "Importing replaces the proxy groups, rules and settings this profile has now",
@@ -991,12 +912,6 @@
   "usedShort": "used",
   "profileUpdatedAt": "Updated {time}",
   "profileExpiresIn": "Expires {date}, {days, plural, =1{1 day} other{{days} days}} left",
-  "@profileExpiresIn": {
-    "placeholders": {
-      "date": {},
-      "days": {}
-    }
-  },
   "profileDaysLeft": "{days, plural, =1{1 day left} other{{days} days left}}",
   "target": "Target",
   "outboundExit": "Exit",
@@ -1014,12 +929,6 @@
   "done": "Done",
   "dashboardAddableSection": "Available to add",
   "customImportDroppedSubRules": "{count, plural, =1{1 SUB-RULE rule was dropped, since custom profiles do not support sub-rules} other{{label} SUB-RULE rules were dropped, since custom profiles do not support sub-rules}}",
-  "@customImportDroppedSubRules": {
-    "placeholders": {
-      "count": {},
-      "label": {}
-    }
-  },
   "autoInclude": "Auto-include",
   "allReferencedProxies": "All referenced proxies",
   "allReferencedProxyProviders": "All referenced proxy providers",
@@ -1038,12 +947,6 @@
   "httpCaptureNoHosts": "No host is listed, so nothing is recorded. Add hosts under Hostname on the MITM page, or from the details of a connection.",
   "httpCaptureLimit": "Maximum records",
   "httpCaptureLimitDesc": "The oldest records go first once this many are kept or they fill {memory} of memory. Each body keeps its first {body}.",
-  "@httpCaptureLimitDesc": {
-    "placeholders": {
-      "memory": {},
-      "body": {}
-    }
-  },
   "httpRequests": "HTTP requests",
   "httpRequestsMissing": "Requests made before capture was on, or since cleared, are not listed.",
   "httpRequestCleared": "This request is no longer kept",
@@ -1193,12 +1096,6 @@
   "http2": "HTTP/2",
   "decryptUntrusted": "Decrypt without local trust",
   "invalidOfCount": "{invalid} of {total} invalid",
-  "@invalidOfCount": {
-    "placeholders": {
-      "invalid": {},
-      "total": {}
-    }
-  },
   "batchLineInputTip": "One item per line",
   "downloadingUpdate": "Downloading update",
   "updateFailed": "Update failed",
@@ -1233,21 +1130,9 @@
   "coreStoppedDesc": "The app lost its connection to the core",
   "coreStoppedWithReason": "The app lost its connection to the core: {reason}",
   "mixedPortReset": "The mixed port cannot be {value}, so it was set back to {port}",
-  "@mixedPortReset": {
-    "placeholders": {
-      "value": {},
-      "port": {}
-    }
-  },
   "restartCore": "Restart core",
   "installUpdate": "Install update",
   "liveStatusPosition": "{index} of {count}",
-  "@liveStatusPosition": {
-    "placeholders": {
-      "index": {},
-      "count": {}
-    }
-  },
   "coreStarting": "Starting core",
   "coreStartingDesc": "Connecting to the core",
   "coreRunning": "Core running",
@@ -1261,30 +1146,12 @@
   "updateInstallingDesc": "Confirm the system prompt to finish updating. The APK will be deleted automatically.",
   "updateReadyAutoCleanDesc": "Verified and ready. The APK will be deleted automatically after updating.",
   "updateCleanedTip": "Updated to v{version} and deleted installer APK ({size}).",
-  "@updateCleanedTip": {
-    "placeholders": {
-      "version": {},
-      "size": {}
-    }
-  },
   "updateDeleteFile": "Delete APK",
   "updateInstallNow": "Install now",
   "selectFastestProxy": "Select fastest node",
   "autoFailover": "Auto-switch on drop",
   "fastestProxySelectedTip": "Switched to fastest node {proxy} ({delay})",
-  "@fastestProxySelectedTip": {
-    "placeholders": {
-      "proxy": {},
-      "delay": {}
-    }
-  },
   "autoFailoverSwitchedTip": "Auto-switched to {proxy} ({delay})",
-  "@autoFailoverSwitchedTip": {
-    "placeholders": {
-      "proxy": {},
-      "delay": {}
-    }
-  },
   "noAvailableProxyTip": "No reachable node found",
   "autoVpnSectionTitle": "Auto-VPN & Boot",
   "autoVpnOnCellular": "Auto-connect on cellular (4G/5G)",
@@ -1403,6 +1270,187 @@
   "portalInvalidUrl": "Please enter a valid http/https website URL",
   "portalInvalidEmail": "Please enter a valid email address",
   "planName": "Plan Name",
+  "subExpiringHoursWarning": "Plan expires in ~{hours}h. Renew soon to avoid interruption.",
+  "subAlertNotificationTitle": "{profile} · Plan Alert",
+  "securityAlertTitle": "{profile} · Security Risk Detected",
+  "securityAlertBody": "Safety score {score}/100 ({count} critical issue(s)). Review and harden now.",
+  "securityAuditTitle": "VPN Security Scanner",
+  "securityAuditSubtitle": "Scan profile for data-leak, MITM, hosts hijack & unencrypted nodes",
+  "securityAuditSummary": "{score}/100 · {level} — Tap for details & 1-tap harden",
+  "securityLevelSafe": "Safe",
+  "securityLevelCaution": "Caution",
+  "securityLevelDanger": "Dangerous",
+  "securityRescan": "Rescan profile",
+  "securityScannedCounts": "Scanned entries",
+  "securityScannedCountsValue": "{proxies} nodes · {rules} rules",
+  "securityAutoHarden": "Protect & Harden Now",
+  "securityAutoHardenDesc": "Lock LAN/controller, enforce DoH DNS, enable Privacy Max & banking bypass",
+  "securityAutoHardenApplied": "Runtime security hardening applied to active configuration",
+  "securityFindingsTitle": "Security Findings",
+  "securityNoRisksTitle": "No dangerous behaviors found",
+  "securityNoRisksDesc": "No MITM injection, host hijacking, exposed controller, or plaintext proxy threats were found in this profile.",
+  "securityFindingMitmTitle": "HTTPS Traffic Inspection (MITM) Enabled",
+  "securityFindingMitmDesc": "Profile enables TLS decryption or untrusted cert capture, which can read passwords & tokens.",
+  "securityFindingControllerTitle": "External Controller Exposed Without Protection",
+  "securityFindingControllerDesc": "Control API binds outside localhost or has no secret, letting LAN/remote peers control routes.",
+  "securityFindingHostsTitle": "Sensitive Banking / Account Domains Hijacked in Hosts",
+  "securityFindingHostsDesc": "Static hosts mapping redirects sensitive services to custom IPs.",
+  "securityFindingPlaintextTitle": "Unencrypted / Weak-Cipher Proxy Nodes",
+  "securityFindingPlaintextDesc": "{count} node(s) send traffic in plaintext or weak cipher without TLS.",
+  "securityFindingSkipVerifyTitle": "TLS Certificate Verification Disabled",
+  "securityFindingSkipVerifyDesc": "{count} node(s) skip TLS certificate checks, risking man-in-the-middle impersonation.",
+  "securityFindingHttpSubTitle": "Subscription Link Uses Unencrypted HTTP",
+  "securityFindingHttpSubDesc": "Subscription URL fetches configs over plain HTTP, allowing network tampering in transit.",
+  "securityFindingHttpProviderTitle": "Remote Rule/Proxy Providers Use Plain HTTP",
+  "securityFindingHttpProviderDesc": "{count} external provider(s) download rules or nodes over unencrypted HTTP.",
+  "securityFindingAllowLanTitle": "LAN Sharing Enabled by Profile",
+  "securityFindingAllowLanDesc": "Profile sets allow-lan: true, exposing local proxy ports to other devices on the same Wi-Fi.",
+  "securityFindingLanRouteTitle": "Private Local Network Traffic Routed to Proxy",
+  "securityFindingLanRouteDesc": "{count} rule(s) forward private LAN or router IPs out through remote proxy nodes.",
+  "securityFindingPlainDnsTitle": "Custom Unencrypted Plain DNS Resolvers",
+  "securityFindingPlainDnsDesc": "Custom DNS lacks DoH/DoT encryption, allowing third parties to log DNS lookups.",
+  "speedBoostPreset": "Network Speed Boost (BBRv3)",
+  "speedBoostPresetDesc": "Mips BBRv3 TUN, Fake-IP DoH & keep-alive tuning while keeping single-device safety",
+  "speedBoostAppliedTip": "Network Speed Boost (BBRv3) applied",
+  "expiryAlertsToggle": "Expiry & Security Notifications",
+  "expiryAlertsToggleDesc": "Warn via notification bar when plan expires soon, exceeds devices, or shows risks",
+  "homeWidgetAddTitle": "Add Home Screen Widget",
+  "homeWidgetAddDesc": "Live speed, 1-tap toggle, devices, expiry & security shield on your launcher",
+  "homeWidgetPinRequested": "Confirm adding the FlClash widget on your home screen",
+  "homeWidgetPinFallback": "Long press your home screen, choose Widgets, and drag FlClash onto the screen",
+  "@numberRangeTip": {
+    "placeholders": {
+      "label": {},
+      "min": {},
+      "max": {}
+    }
+  },
+  "@maxLengthTip": {
+    "placeholders": {
+      "label": {},
+      "max": {}
+    }
+  },
+  "@batchPreviewTip": {
+    "placeholders": {
+      "count": {},
+      "skipped": {}
+    }
+  },
+  "@lineIssueTip": {
+    "placeholders": {
+      "line": {},
+      "message": {}
+    }
+  },
+  "@proxiesCount": {
+    "placeholders": {
+      "count": {},
+      "label": {}
+    }
+  },
+  "@rulesCount": {
+    "placeholders": {
+      "count": {},
+      "label": {}
+    }
+  },
+  "@proxyGroupsCount": {
+    "placeholders": {
+      "count": {},
+      "label": {}
+    }
+  },
+  "@proxiesProfileLabel": {
+    "placeholders": {
+      "name": {},
+      "count": {}
+    }
+  },
+  "@customIssueInvalidFilter": {
+    "placeholders": {
+      "name": {},
+      "message": {}
+    }
+  },
+  "@customIssueDialerLoop": {
+    "placeholders": {
+      "proxy": {},
+      "target": {}
+    }
+  },
+  "@providerInUse": {
+    "placeholders": {
+      "label": {},
+      "profiles": {}
+    }
+  },
+  "@proxiesReplacedTip": {
+    "placeholders": {
+      "removed": {},
+      "added": {}
+    }
+  },
+  "@failedItem": {
+    "placeholders": {
+      "label": {},
+      "message": {}
+    }
+  },
+  "@profileExpiresIn": {
+    "placeholders": {
+      "date": {},
+      "days": {}
+    }
+  },
+  "@customImportDroppedSubRules": {
+    "placeholders": {
+      "count": {},
+      "label": {}
+    }
+  },
+  "@httpCaptureLimitDesc": {
+    "placeholders": {
+      "memory": {},
+      "body": {}
+    }
+  },
+  "@invalidOfCount": {
+    "placeholders": {
+      "invalid": {},
+      "total": {}
+    }
+  },
+  "@mixedPortReset": {
+    "placeholders": {
+      "value": {},
+      "port": {}
+    }
+  },
+  "@liveStatusPosition": {
+    "placeholders": {
+      "index": {},
+      "count": {}
+    }
+  },
+  "@updateCleanedTip": {
+    "placeholders": {
+      "version": {},
+      "size": {}
+    }
+  },
+  "@fastestProxySelectedTip": {
+    "placeholders": {
+      "proxy": {},
+      "delay": {}
+    }
+  },
+  "@autoFailoverSwitchedTip": {
+    "placeholders": {
+      "proxy": {},
+      "delay": {}
+    }
+  },
   "@hotspotCopiedTip": {
     "placeholders": {
       "address": {}
@@ -1481,6 +1529,59 @@
   "@portalConnectedAs": {
     "placeholders": {
       "email": {}
+    }
+  },
+  "@subExpiringHoursWarning": {
+    "placeholders": {
+      "hours": {}
+    }
+  },
+  "@subAlertNotificationTitle": {
+    "placeholders": {
+      "profile": {}
+    }
+  },
+  "@securityAlertTitle": {
+    "placeholders": {
+      "profile": {}
+    }
+  },
+  "@securityAlertBody": {
+    "placeholders": {
+      "score": {},
+      "count": {}
+    }
+  },
+  "@securityAuditSummary": {
+    "placeholders": {
+      "score": {},
+      "level": {}
+    }
+  },
+  "@securityScannedCountsValue": {
+    "placeholders": {
+      "proxies": {},
+      "rules": {}
+    }
+  },
+  "@securityFindingPlaintextDesc": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@securityFindingSkipVerifyDesc": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@securityFindingHttpProviderDesc": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@securityFindingLanRouteDesc": {
+    "placeholders": {
+      "count": {}
     }
   }
 }

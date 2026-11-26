@@ -531,10 +531,13 @@ class SetupAction extends _$SetupAction {
     final optimize4g = await ref
         .read(optimize4gPresetProvider.notifier)
         .ensureHydrated();
-    final effectivePatchConfig = optimize4g
+    final speedBoost = await ref
+        .read(speedBoostPresetProvider.notifier)
+        .ensureHydrated();
+    final effectivePatchConfig = (optimize4g || speedBoost)
         ? ref.read(patchClashConfigProvider)
         : patchConfig;
-    final effectiveOverrides = optimize4g
+    final effectiveOverrides = (optimize4g || speedBoost)
         ? setupState.overrides.copyWith(
             sniffer: setupState.overrides.sniffer.copyWith(enable: true),
             snifferOverrideKeys: {
