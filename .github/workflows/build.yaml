@@ -5,6 +5,15 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Target platform (all, windows, android)'
+        required: false
+        default: 'all'
+      release_tag:
+        description: 'Optional explicit tag (e.g. v0.9.27)'
+        required: false
+        default: ''
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -26,6 +35,7 @@ jobs:
       release_tag: ${{ steps.meta.outputs.release_tag }}
       app_version: ${{ steps.meta.outputs.app_version }}
       core_changed: ${{ steps.meta.outputs.core_changed }}
+      target_platform: ${{ steps.meta.outputs.target_platform }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,6 +47,8 @@ jobs:
         shell: bash
         env:
           TAG: ${{ github.ref_name }}
+          INPUT_TAG: ${{ inputs.release_tag }}
+          INPUT_PLATFORM: ${{ inputs.platform }}
         run: |
           if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
             if [[ ! "$TAG" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)(-pre\.[0-9]+(\+[0-9]+)?)?$ ]]; then
@@ -45,6 +57,13 @@ jobs:
             fi
             base="${BASH_REMATCH[1]}"
             release_tag="$TAG"
+          elif [ -n "$INPUT_TAG" ]; then
+            if [[ ! "$INPUT_TAG" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+              echo "::error::Invalid release_tag $INPUT_TAG"
+              exit 1
+            fi
+            base="${BASH_REMATCH[1]}"
+            release_tag="$INPUT_TAG"
           else
             latest_patch="$(git tag -l 'v0.9.*' | sed -n 's/^v0\.9\.\([0-9][0-9]*\)$/\1/p' | sort -n | tail -n 1)"
             if [ -n "$latest_patch" ]; then
@@ -61,6 +80,7 @@ jobs:
             build=$((committed + 1))
           fi
           app_version="${base}+${build}"
+          target_platform="${INPUT_PLATFORM:-all}"
 
           latest_tag="$(git tag -l 'v0.9.*' --sort=-v:refname | head -n 1)"
           if [ -z "$latest_tag" ] || ! git diff --quiet "$latest_tag"..HEAD -- core/; then
@@ -72,7 +92,8 @@ jobs:
           echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
           echo "app_version=$app_version" >> "$GITHUB_OUTPUT"
           echo "core_changed=$core_changed" >> "$GITHUB_OUTPUT"
-          echo "Resolved: version=$app_version tag=$release_tag core_changed=$core_changed"
+          echo "target_platform=$target_platform" >> "$GITHUB_OUTPUT"
+          echo "Resolved: version=$app_version tag=$release_tag core_changed=$core_changed target_platform=$target_platform"
 
   dart:
     name: L10n & Verify
@@ -167,6 +188,7 @@ jobs:
 
   build-android:
     name: Build Android APK (ARM64)
+    if: needs.version.outputs.target_platform == 'all' || needs.version.outputs.target_platform == 'android'
     needs: version
     runs-on: ubuntu-latest
     steps:
@@ -203,19 +225,8 @@ jobs:
             } >> android/local.properties
             keytool -list -keystore android/app/keystore.jks -storepass "${{ secrets.STORE_PASSWORD }}" >/dev/null
           else
-            KEYSTORE_PASS="flclash-fallback-$(date +%s)"
-            keytool -genkeypair -v \
-              -keystore android/app/keystore.jks \
-              -storetype PKCS12 \
-              -keyalg RSA -keysize 2048 -validity 10000 \
-              -alias flclash \
-              -storepass "$KEYSTORE_PASS" -keypass "$KEYSTORE_PASS" \
-              -dname "CN=FlClash VN, OU=Android, O=buiduchuy2010qn-prog, C=VN"
-            {
-              echo "keyAlias=flclash"
-              echo "storePassword=$KEYSTORE_PASS"
-              echo "keyPassword=$KEYSTORE_PASS"
-            } >> android/local.properties
+            echo "::error::Missing KEYSTORE secret; refusing to generate random keystore" >&2
+            exit 1
           fi
 
       - name: Setup Go
@@ -292,6 +303,7 @@ jobs:
 
   build-windows:
     name: Build Windows (x64)
+    if: needs.version.outputs.target_platform == 'all' || needs.version.outputs.target_platform == 'windows'
     needs: version
     runs-on: windows-2022
     steps:
@@ -366,7 +378,7 @@ jobs:
 
   publish:
     name: Publish GitHub Release
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+    if: always() && needs.version.result == 'success' && needs.dart.result == 'success' && (needs.build-android.result == 'success' || needs.build-android.result == 'skipped') && (needs.build-windows.result == 'success' || needs.build-windows.result == 'skipped') && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')))
     needs: [version, dart, build-android, build-windows]
     runs-on: ubuntu-latest
     steps:
@@ -381,6 +393,7 @@ jobs:
         run: |
           mkdir -p ./dist
           find ./artifacts -maxdepth 2 -type f \( -name '*.apk' -o -name '*.exe' -o -name '*.zip' \) -exec cp -t ./dist {} +
+          find ./artifacts -maxdepth 2 -type f -name 'manifest.json' | head -n 1 | xargs -r -I{} cp "{}" ./dist/manifest.json
           sum_name="$(basename "$(find ./artifacts -maxdepth 2 -type f -name 'FlClash-*-SHA256SUMS' | head -n 1)")"
           test -n "$sum_name"
           find ./artifacts -maxdepth 2 -type f -name 'FlClash-*-SHA256SUMS' -exec cat {} + | tr -d '\r' | sort -k2 -u > "./dist/$sum_name"
@@ -399,21 +412,17 @@ jobs:
         with:
           tag_name: ${{ needs.version.outputs.release_tag }}
           name: FlClash ${{ needs.version.outputs.release_tag }}
-          make_latest: true
+          make_latest: ${{ needs.version.outputs.target_platform != 'windows' }}
           body: |
             <!-- flclash:changelog:begin -->
-            - Vô hiệu hóa quét sức khỏe ngầm của các nhóm Tự động / Dự phòng do gói đăng ký cấu hình sẵn và hợp nhất luồng qua nhóm chính để 1 máy chỉ kết nối 1 máy chủ duy nhất
-            - Ép kết nối đơn luồng qua IPv4 (tắt đua song song IPv4/IPv6 và tcp-concurrent) tránh 1 điện thoại bị đếm thành nhiều IP online cùng lúc
-            - Đóng toàn bộ phiên cũ ngay khi đổi node (kể cả kết nối giữ phiên dài) và bỏ quét DoH ngẫu nhiên qua proxy
-            - Đặt mặc định Tắt tự động đo ping / đổi node lúc khởi động VPN để giữ dấu vết đúng 1 thiết bị thực tế
+            - Đồng bộ toàn bộ tính năng mới lên Windows PC (v0.9.27): Trung tâm thông minh (Smart Hub), Tự sửa mạng 1 chạm, Kiểm tra đa trang web & ping, Tăng tốc mạng Mixed + mở khóa cửa sổ QUIC/Hysteria2 và System Proxy
+            - Quét gói VPN nguy hiểm & Khắc phục 1 chạm, kiểm tra rò rỉ IP/DNS/IPv6, Khiên chống chụp màn hình (WDA_EXCLUDEFROMCAPTURE) và Chia sẻ LAN/Hotspot trực tiếp trên PC
+            - Thông báo Windows Action Center khi gói sắp hết hạn, sắp hết dung lượng, vượt số thiết bị hoặc phát hiện rủi ro bảo mật; đồng bộ tài khoản cổng gói & đếm thiết bị online; thống kê lưu lượng 400 ngày trong Smart Hub
+            - Tách rời hoàn toàn kênh cập nhật OTA giữa Windows và Android để mỗi nền tảng chỉ nhận đúng bản cập nhật của mình
             <!-- flclash:changelog:end -->
 
             ### Hướng dẫn chọn file tải phù hợp:
             - **Android (`android-arm64.apk`)**: Điện thoại Android hiện đại (64-bit ARMv8).
             - **Windows cài đặt (`windows-amd64-setup.exe`)**: Máy tính Windows 64-bit — **khuyên dùng**, hỗ trợ tự cập nhật OTA trong app.
             - **Windows Portable (`windows-amd64-portable.zip`)**: Bản giải nén chạy ngay không cần cài đặt.
-          files: |
-            ./dist/*.apk
-            ./dist/*.exe
-            ./dist/*.zip
-            ./dist/FlClash-*-SHA256SUMS
+          files: ./dist/*

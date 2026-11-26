@@ -223,10 +223,16 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
       ref
           .read(vpnSettingProvider.notifier)
           .update((state) => state.copyWith(ipv6: false));
-      ref
-          .read(patchClashConfigProvider.notifier)
-          .update((state) => state.copyWith(ipv6: false));
     }
+    ref.read(patchClashConfigProvider.notifier).update((state) {
+      return state.copyWith(
+        ipv6: false,
+        generalOverrideKeys: {
+          ...state.generalOverrideKeys,
+          GeneralOverrideKey.ipv6,
+        },
+      );
+    });
     await ref.read(setupActionProvider.notifier).applyPresetAndSyncTunnel();
     if (ref.read(coreStatusProvider) == CoreStatus.connected) {
       await ref.read(coreActionProvider.notifier).closeConnections();
@@ -244,7 +250,7 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
     ref
         .read(appSettingProvider.notifier)
         .update((state) => state.copyWith(hideIp: enable));
-    if (system.isAndroid) {
+    if (system.isAndroid || system.isWindows) {
       ref.read(privacyScreenShieldProvider.notifier).value = enable;
     }
     if (enable) {
@@ -439,13 +445,16 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
     final hideIp = ref.watch(
       appSettingProvider.select((state) => state.hideIp),
     );
-    final screenShield = system.isAndroid
+    final supportsScreenShield = system.isAndroid || system.isWindows;
+    final screenShield = supportsScreenShield
         ? ref.watch(privacyScreenShieldProvider)
         : false;
-    final privacyMaxEnabled = hideIp && (!system.isAndroid || screenShield);
+    final privacyMaxEnabled = hideIp && (!supportsScreenShield || screenShield);
     final optimize4gEnabled = ref.watch(optimize4gPresetProvider);
     final speedBoostEnabled = ref.watch(speedBoostPresetProvider);
     final expiryAlertsEnabled = ref.watch(expiryAlertsEnabledProvider);
+    final dailyTrafficEnabled = ref.watch(dailyTrafficEnabledProvider);
+    final dailyLedger = ref.watch(dailyTrafficProvider);
     final securityReport = profile == null
         ? null
         : ref.watch(profileSecurityProvider.select((s) => s[profile.id]));
@@ -454,9 +463,7 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
       appSettingProvider.select((state) => state.closeConnections),
     );
     final singleDeviceGuarded =
-        !autoFailover &&
-        closeConnections &&
-        (!system.isAndroid || !ipv6Enabled);
+        !autoFailover && closeConnections && !ipv6Enabled;
 
     final healthColor = switch (health.grade) {
       HealthGrade.excellent => colors.success,
@@ -752,6 +759,30 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
                 ),
             ],
           ),
+          if (dailyTrafficEnabled)
+            generateSection(
+              title: l.dailyTraffic,
+              items: [
+                for (final (label, stats) in [
+                  (
+                    l.dailyTrafficToday,
+                    (
+                      up: dailyLedger.today().up,
+                      down: dailyLedger.today().down,
+                      total: dailyLedger.today().total,
+                    ),
+                  ),
+                  (l.dailyTraffic7Days, dailyLedger.sumDays(7)),
+                  (l.dailyTraffic30Days, dailyLedger.sumDays(30)),
+                ])
+                  DetailRow(
+                    title: label,
+                    value: Text(
+                      '${stats.total.traffic.show} (↓ ${stats.down.traffic.show} · ↑ ${stats.up.traffic.show})',
+                    ),
+                  ),
+              ],
+            ),
           if (forecast != null)
             generateSection(
               title: l.quotaForecast,

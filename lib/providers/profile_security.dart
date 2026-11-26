@@ -79,14 +79,18 @@ class ProfileSecurityNotifier
         final title = l.securityAlertTitle(profile.realLabel);
         final body = l.securityAlertBody(report.score, report.criticalCount);
         dialogs.showBanner('$title: $body', level: BannerLevel.warning);
-        if (system.isAndroid && ref.read(expiryAlertsEnabledProvider)) {
-          unawaited(
-            app?.showAlertNotification(
-              id: 3000 + (profile.id.abs() % 500),
-              title: title,
-              body: body,
-            ),
-          );
+        if (ref.read(expiryAlertsEnabledProvider)) {
+          if (system.isAndroid) {
+            unawaited(
+              app?.showAlertNotification(
+                id: 3000 + (profile.id.abs() % 500),
+                title: title,
+                body: body,
+              ),
+            );
+          } else if (system.isWindows) {
+            unawaited(windows?.showAlertNotification(title: title, body: body));
+          }
         }
       }
       return report;

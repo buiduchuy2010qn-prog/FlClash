@@ -438,6 +438,8 @@ void main() {
 
         final enabled = presetContainer.read(patchClashConfigProvider);
         expect(presetContainer.read(speedBoostPresetProvider), isTrue);
+        expect(enabled.ipv6, isFalse);
+        expect(enabled.generalOverrideKeys, contains(GeneralOverrideKey.ipv6));
         expect(enabled.tun.stack, TunStack.mixed);
         expect(enabled.tun.mtu, defaultTunMtu);
         expect(enabled.tunOverride.mtu, defaultTunMtu);

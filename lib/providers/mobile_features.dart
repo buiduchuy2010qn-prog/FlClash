@@ -439,6 +439,9 @@ class SpeedBoostPresetNotifier extends _PersistedBoolNotifier {
         ref.read(networkSettingProvider.notifier).update((state) {
           return state.copyWith(
             bypassPrivateRoute: savedNetwork.bypassPrivateRoute,
+            systemProxy: system.isDesktop
+                ? savedNetwork.systemProxy
+                : state.systemProxy,
           );
         });
         if (ref.read(optimize4gPresetProvider)) {
@@ -499,7 +502,7 @@ class SpeedBoostPresetNotifier extends _PersistedBoolNotifier {
     const systemBootstrap = ['system'];
     ref.read(patchClashConfigProvider.notifier).update((state) {
       return state.copyWith(
-        ipv6: system.isAndroid ? false : state.ipv6,
+        ipv6: false,
         unifiedDelay: true,
         // Keep parallel TCP dial disabled to preserve single-device session limit.
         tcpConcurrent: false,
@@ -509,7 +512,7 @@ class SpeedBoostPresetNotifier extends _PersistedBoolNotifier {
         generalOverrideKeys: {
           ...state.generalOverrideKeys,
           ..._speedGeneralOverrideKeys,
-          if (system.isAndroid) GeneralOverrideKey.ipv6,
+          GeneralOverrideKey.ipv6,
         },
         tun: state.tun.copyWith(
           stack: TunStack.mixed,
@@ -550,7 +553,12 @@ class SpeedBoostPresetNotifier extends _PersistedBoolNotifier {
     }
     ref
         .read(networkSettingProvider.notifier)
-        .update((state) => state.copyWith(bypassPrivateRoute: true));
+        .update(
+          (state) => state.copyWith(
+            bypassPrivateRoute: true,
+            systemProxy: system.isDesktop ? true : state.systemProxy,
+          ),
+        );
   }
 }
 
@@ -571,6 +579,8 @@ class PrivacyScreenShieldNotifier extends _PersistedBoolNotifier {
   void onHydrated(bool saved) {
     if (system.isAndroid) {
       unawaited(app?.setSecureScreen(saved));
+    } else if (system.isWindows) {
+      windows?.setSecureScreen(saved);
     }
   }
 
@@ -579,6 +589,8 @@ class PrivacyScreenShieldNotifier extends _PersistedBoolNotifier {
     super.value = next;
     if (system.isAndroid) {
       unawaited(app?.setSecureScreen(next));
+    } else if (system.isWindows) {
+      windows?.setSecureScreen(next);
     }
   }
 }
