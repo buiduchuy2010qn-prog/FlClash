@@ -329,9 +329,73 @@ class Request {
     }
   }
 
+  Future<Map<String, dynamic>?> latestPlatformRelease({
+    SelfUpdateAsset? asset,
+    ReleaseOs? os,
+  }) async {
+    final targetAsset = asset ?? (os == null ? selfUpdateAsset : null);
+    final targetOs = os ?? asset?.os ?? currentReleaseOs;
+    try {
+      final response = await dio.get<List<dynamic>>(
+        'https://api.github.com/repos/$repository/releases?per_page=15',
+        options: Options(responseType: ResponseType.json),
+      );
+      for (final item in response.data ?? const []) {
+        if (item is! Map) {
+          continue;
+        }
+        final release = Map<String, dynamic>.from(item);
+        if (release['draft'] == true || release['prerelease'] == true) {
+          continue;
+        }
+        if (releaseSupportsPlatform(
+          release,
+          asset: targetAsset,
+          os: targetOs,
+        )) {
+          return release;
+        }
+      }
+      return null;
+    } on DioException catch (error) {
+      commonPrint.log(
+        'latest platform release API failed: ${compactError(error)}',
+        logLevel: LogLevel.warning,
+      );
+    }
+    final fallback = await latestRelease();
+    final tag = fallback['tag_name'];
+    if (tag is! String || tag.isEmpty) {
+      return null;
+    }
+    if (fallback['assets'] is! List) {
+      try {
+        final sums = await releaseDio.getUri<String>(
+          releaseAssetUri(tag, updateChecksumsName(tag)),
+          options: Options(responseType: ResponseType.plain),
+        );
+        fallback['assets'] = [
+          for (final name in releaseAssetNamesFromChecksums(sums.data ?? ''))
+            {'name': name},
+        ];
+      } on DioException {
+        return null;
+      }
+    }
+    return releaseSupportsPlatform(fallback, asset: targetAsset, os: targetOs)
+        ? fallback
+        : null;
+  }
+
   /// Null when this build is current; throws when GitHub cannot be asked.
   Future<Map<String, dynamic>?> checkForUpdate() async {
-    final release = await latestRelease();
+    final release = await latestPlatformRelease(
+      asset: selfUpdateAsset,
+      os: currentReleaseOs,
+    );
+    if (release == null) {
+      return null;
+    }
     final tag = release['tag_name'] as String;
     final remoteVersion = tag.startsWith('v') ? tag.substring(1) : tag;
     final hasBuild =
@@ -342,10 +406,6 @@ class Request {
         : info.version;
     final hasUpdate = compareVersions(remoteVersion, localVersion) > 0;
     if (!hasUpdate) {
-      return null;
-    }
-    final asset = selfUpdateAsset;
-    if (asset != null && !releaseHasAsset(release, asset)) {
       return null;
     }
     return release;

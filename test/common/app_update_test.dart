@@ -150,6 +150,86 @@ void main() {
 
     expect(releaseHasAsset(apkOnlyRelease, androidAsset), isTrue);
     expect(releaseHasAsset(apkOnlyRelease, windowsAsset), isFalse);
-    expect(releaseHasAsset({'tag_name': 'v0.9.13'}, windowsAsset), isTrue);
+    expect(releaseHasAsset({'tag_name': 'v0.9.13'}, windowsAsset), isFalse);
+  });
+
+  test('releaseOsForAbi maps supported platforms', () {
+    expect(releaseOsForAbi(Abi.androidArm64), ReleaseOs.android);
+    expect(releaseOsForAbi(Abi.windowsX64), ReleaseOs.windows);
+    expect(releaseOsForAbi(Abi.windowsArm64), ReleaseOs.windows);
+    expect(releaseOsForAbi(Abi.macosArm64), ReleaseOs.macos);
+    expect(releaseOsForAbi(Abi.linuxX64), ReleaseOs.linux);
+  });
+
+  test('releaseAssetNamesFromChecksums extracts every asset name', () {
+    const digest =
+        'ff6a953c0f5c12e6bdc97b49428b565b64c4a62d85e50081823ba297407529b1';
+    final sums =
+        '$digest  FlClash-0.9.26-android-arm64.apk\n'
+        '${'a' * 64} *FlClash-0.9.10-windows-amd64-setup.exe\r\n';
+
+    expect(releaseAssetNamesFromChecksums(sums), [
+      'FlClash-0.9.26-android-arm64.apk',
+      'FlClash-0.9.10-windows-amd64-setup.exe',
+    ]);
+  });
+
+  test('releaseSupportsPlatform filters installed and portable builds', () {
+    final installedWindows = selfUpdateAssetFor(
+      Abi.windowsX64,
+      windowsInstalled: true,
+    )!;
+    final apkOnly = {
+      'tag_name': 'v0.9.26',
+      'assets': [
+        {'name': 'FlClash-0.9.26-android-arm64.apk'},
+        {'name': 'FlClash-0.9.26-SHA256SUMS'},
+      ],
+    };
+    final windowsPortableOnly = {
+      'tag_name': 'v0.9.10',
+      'assets': [
+        {'name': 'FlClash-0.9.10-windows-amd64-portable.zip'},
+        {'name': 'FlClash-0.9.10-SHA256SUMS'},
+      ],
+    };
+    final windowsBoth = {
+      'tag_name': 'v0.9.10',
+      'assets': [
+        {'name': 'FlClash-0.9.10-windows-amd64-portable.zip'},
+        {'name': 'FlClash-0.9.10-windows-amd64-setup.exe'},
+        {'name': 'FlClash-0.9.10-SHA256SUMS'},
+      ],
+    };
+
+    expect(releaseSupportsPlatform(apkOnly, os: ReleaseOs.windows), isFalse);
+    expect(
+      releaseSupportsPlatform(
+        apkOnly,
+        asset: installedWindows,
+        os: ReleaseOs.windows,
+      ),
+      isFalse,
+    );
+    expect(
+      releaseSupportsPlatform(windowsPortableOnly, os: ReleaseOs.windows),
+      isTrue,
+    );
+    expect(
+      releaseSupportsPlatform(
+        windowsPortableOnly,
+        asset: installedWindows,
+        os: ReleaseOs.windows,
+      ),
+      isFalse,
+    );
+    expect(
+      releaseSupportsPlatform(
+        windowsBoth,
+        asset: installedWindows,
+        os: ReleaseOs.windows,
+      ),
+      isTrue,
+    );
   });
 }
