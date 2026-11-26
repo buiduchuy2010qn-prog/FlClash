@@ -19,7 +19,7 @@ const (
 	smartFailoverTickInterval          = 15 * time.Second
 	smartFailoverPeriodicProbeInterval = 180 * time.Second
 	smartFailoverSuspectProbeInterval  = 60 * time.Second
-	smartFailoverFastCandidateMs       = 1000
+	smartFailoverFastCandidateMs       = 350
 	smartFailoverSlowDelayMs           = 1200
 	smartFailoverFastEnoughMs          = 650
 	smartFailoverDegradedImproveMs     = 300

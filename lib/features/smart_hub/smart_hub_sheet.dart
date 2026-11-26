@@ -157,7 +157,10 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
               activeDelay >= _selfHealSlowThresholdMs) &&
           ref.read(isStartProvider)) {
         setState(() => _healStep = 3);
-        await proxiesAction.selectFastestActiveGroup(automatic: true);
+        await proxiesAction.selectFastestActiveGroup(
+          automatic: true,
+          manualHeal: true,
+        );
         if (!mounted) return;
         activeDelay = _readActiveDelayMs();
       }
@@ -307,6 +310,22 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
     }
   }
 
+  String _probeStatusLabel(BuildContext context, ServiceProbeStatus status) {
+    final l = context.appLocalizations;
+    return switch (status) {
+      ServiceProbeStatus.available => l.serviceAvailable,
+      ServiceProbeStatus.restricted => l.serviceRestricted,
+      ServiceProbeStatus.unavailable => l.serviceUnavailable,
+      ServiceProbeStatus.disallowedIsp => l.serviceDisallowedIsp,
+      ServiceProbeStatus.blocked => l.serviceBlocked,
+      ServiceProbeStatus.unsupportedRegion => l.serviceUnsupportedRegion,
+      ServiceProbeStatus.originalsOnly => l.serviceOriginalsOnly,
+      ServiceProbeStatus.comingSoon => l.serviceComingSoon,
+      ServiceProbeStatus.timeout => l.timeout,
+      ServiceProbeStatus.failed => l.serviceFailed,
+    };
+  }
+
   String _multiWebSummaryText(BuildContext context) {
     final l = context.appLocalizations;
     final results = _webResults;
@@ -320,20 +339,28 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
     for (final target in _multiWebTargets) {
       final item = results[target];
       if (item == null) continue;
-      if (item.status == ServiceProbeStatus.available) {
+      final reachableYoutube =
+          target == ServiceTarget.youtube &&
+          item.status == ServiceProbeStatus.unsupportedRegion &&
+          (item.delay ?? 0) > 0;
+      if (item.status == ServiceProbeStatus.available || reachableYoutube) {
         okCount++;
+        final regionTag = (item.region != null && item.region!.isNotEmpty)
+            ? ' (${item.region})'
+            : '';
         if (item.delay != null && item.delay! > 0) {
           delaySum += item.delay!;
           delayCount++;
-          perSite.add('${target.label} ${item.delay}ms');
+          perSite.add('${target.label} ${item.delay}ms$regionTag');
         } else {
-          perSite.add('${target.label} OK');
+          perSite.add('${target.label} OK$regionTag');
         }
       } else {
-        final issue = item.status == ServiceProbeStatus.timeout
-            ? l.timeout
-            : l.serviceFailed;
-        perSite.add('${target.label} ($issue)');
+        final issue = _probeStatusLabel(context, item.status);
+        final delayPrefix = (item.delay != null && item.delay! > 0)
+            ? '${item.delay}ms · '
+            : '';
+        perSite.add('${target.label} ($delayPrefix$issue)');
       }
     }
     final avgMs = delayCount > 0 ? (delaySum ~/ delayCount) : 0;

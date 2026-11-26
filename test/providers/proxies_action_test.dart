@@ -1553,6 +1553,123 @@ void main() {
       );
       expect(ProxiesAction.isInfoBannerProxyName('Singapore-01'), isFalse);
     });
+
+    test(
+      'activeProxyTargetProvider and selectFastestActiveGroup unwrap GLOBAL now when selectedMap is empty',
+      () async {
+        addTearDown(() => debouncer.cancel(FunctionTag.updateGroups));
+        when(
+          () => core.changeProxy(any()),
+        ).thenAnswer((_) async => const ChangeProxyResult(changed: true));
+        when(core.closeConnections).thenAnswer((_) async => true);
+        when(() => core.testDelay(_delayTest(_testUrl))).thenAnswer((
+          invocation,
+        ) async {
+          final name =
+              (invocation.positionalArguments[0] as TestDelayParams).proxyName;
+          return Delay(
+            name: name,
+            url: _testUrl,
+            value: name == 'SG-02' ? 110 : 900,
+          );
+        });
+        final container = _delayContainer(
+          () => buildContainer(
+            profile: const Profile(id: 1, autoUpdateDuration: Duration.zero),
+          ),
+        );
+        container.listen(patchClashConfigProvider, (_, _) {});
+        container
+            .read(patchClashConfigProvider.notifier)
+            .update((s) => s.copyWith(mode: Mode.global));
+        container.read(groupsProvider.notifier).value = const [
+          Group(
+            type: GroupType.Selector,
+            name: 'GLOBAL',
+            now: 'Proxy',
+            all: [
+              Proxy(name: 'DIRECT', type: 'direct'),
+              Proxy(name: 'Proxy', type: 'Selector'),
+            ],
+          ),
+          Group(
+            type: GroupType.Selector,
+            name: 'Proxy',
+            now: 'HK-01',
+            all: [
+              Proxy(name: 'HK-01', type: 'ss'),
+              Proxy(name: 'SG-02', type: 'ss'),
+            ],
+          ),
+        ];
+        container.read(delayDataSourceProvider.notifier).setDelays([
+          const Delay(name: 'HK-01', url: _testUrl, value: 900),
+        ]);
+
+        expect(container.read(activeProxyTargetProvider)?.proxyName, 'HK-01');
+
+        await actionOf(
+          container,
+        ).selectFastestActiveGroup(automatic: true, manualHeal: true);
+
+        verify(
+          () => core.changeProxy(
+            const ChangeProxyParams(groupName: 'Proxy', proxyName: 'SG-02'),
+          ),
+        ).called(1);
+        debouncer.cancel(FunctionTag.updateGroups);
+      },
+    );
+
+    test(
+      'degraded failover does not stop early on 720ms candidate and switches to fast node',
+      () async {
+        addTearDown(() => debouncer.cancel(FunctionTag.updateGroups));
+        final probed = <String>[];
+        when(
+          () => core.changeProxy(any()),
+        ).thenAnswer((_) async => const ChangeProxyResult(changed: true));
+        when(core.closeConnections).thenAnswer((_) async => true);
+        when(() => core.testDelay(_delayTest(_testUrl))).thenAnswer((
+          invocation,
+        ) async {
+          final name =
+              (invocation.positionalArguments[0] as TestDelayParams).proxyName;
+          probed.add(name);
+          final value = switch (name) {
+            'N1' => 720,
+            'N2' => 90,
+            _ => 60,
+          };
+          return Delay(name: name, url: _testUrl, value: value);
+        });
+        final container = _delayContainer(
+          () => buildContainer(profile: _selectedProfile('SlowActive')),
+        );
+        container.listen(patchClashConfigProvider, (_, _) {});
+        container.read(groupsProvider.notifier).value = [
+          _group('Proxy', const [
+            Proxy(name: 'SlowActive', type: 'ss'),
+            Proxy(name: 'N1', type: 'ss'),
+            Proxy(name: 'N2', type: 'ss'),
+            Proxy(name: 'N3', type: 'ss'),
+          ]),
+        ];
+        container.read(delayDataSourceProvider.notifier).setDelays([
+          const Delay(name: 'SlowActive', url: _testUrl, value: 1350),
+        ]);
+
+        await actionOf(container).selectFastestProxy('Proxy', automatic: true);
+
+        expect(probed, ['N1', 'N2']);
+        verify(
+          () => core.changeProxy(
+            const ChangeProxyParams(groupName: 'Proxy', proxyName: 'N2'),
+          ),
+        ).called(1);
+        debouncer.cancel(FunctionTag.updateGroups);
+      },
+    );
   });
 }
 

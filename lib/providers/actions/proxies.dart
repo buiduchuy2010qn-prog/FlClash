@@ -29,7 +29,7 @@ class ProxiesAction extends _$ProxiesAction {
   static const _failoverSlowDelayMs = 1200;
   static const _failoverFastEnoughMs = 650;
   static const _failoverDegradedImproveMs = 300;
-  static const _autoFastCandidateDelayMs = 800;
+  static const _autoFastCandidateDelayMs = 350;
   static const _autoProbeBatchSize = 1;
   static const _foregroundWatchdogInterval = Duration(seconds: 60);
   static const _backgroundWatchdogInterval = Duration(seconds: 180);
@@ -182,9 +182,10 @@ class ProxiesAction extends _$ProxiesAction {
     final selectedMap = ref.read(
       currentProfileProvider.select((state) => state?.selectedMap ?? {}),
     );
-    var current =
+    final initial =
         visible.firstWhereOrNull((g) => g.type == GroupType.Selector) ??
         visible.first;
+    var current = allGroups.getGroup(initial.name) ?? initial;
     final visited = <String>{current.name};
     for (var i = 0; i < 8; i++) {
       final pick = current.getCurrentSelectedName(
@@ -319,15 +320,23 @@ class ProxiesAction extends _$ProxiesAction {
     }
   }
 
-  Future<void> selectFastestActiveGroup({bool automatic = false}) async {
+  Future<void> selectFastestActiveGroup({
+    bool automatic = false,
+    bool manualHeal = false,
+  }) async {
     final primary = _resolvePrimaryLeafSelectorGroup();
     if (primary == null) return;
-    await selectFastestProxy(primary.name, automatic: automatic);
+    await selectFastestProxy(
+      primary.name,
+      automatic: automatic,
+      manualHeal: manualHeal,
+    );
   }
 
   Future<void> selectFastestProxy(
     String groupName, {
     bool automatic = false,
+    bool manualHeal = false,
     bool allowSubscriptionRecovery = true,
   }) async {
     final allGroups = ref.read(groupsProvider);
@@ -360,7 +369,7 @@ class ProxiesAction extends _$ProxiesAction {
           ? leafOnly
           : (nonBuiltin.isNotEmpty ? nonBuiltin : group.all);
       final probedCandidates = <Proxy>[];
-      if (!automatic) {
+      if (!automatic && !manualHeal) {
         await delayTest(candidates, group.testUrl);
         probedCandidates.addAll(candidates);
       } else {
@@ -475,7 +484,7 @@ class ProxiesAction extends _$ProxiesAction {
       if (bestProxy == null) {
         recoverNeeded =
             allowSubscriptionRecovery && await _tryRecoverDeadSubscription();
-        if (!recoverNeeded && !automatic) {
+        if (!recoverNeeded && !automatic && !manualHeal) {
           dialogs.showBanner(
             currentAppLocalizations.noAvailableProxyTip,
             level: BannerLevel.warning,
@@ -485,7 +494,7 @@ class ProxiesAction extends _$ProxiesAction {
         final selected = selectedMap[groupName] ?? '';
         final currentName = group.getCurrentSelectedName(selected);
         final switched = bestProxy.name != currentName;
-        if (automatic && switched) {
+        if ((automatic || manualHeal) && switched) {
           final currentLeaf = computeRealSelectedProxyState(
             currentName,
             groups: groups,
@@ -501,7 +510,11 @@ class ProxiesAction extends _$ProxiesAction {
             selectedMap: selectedMap,
             delayMap: delayMap,
           ).delay;
-          if (currentDelay >= _failoverSlowDelayMs) {
+          if (manualHeal) {
+            if (currentDelay > 0 && bestDelay + 150 > currentDelay) {
+              return;
+            }
+          } else if (currentDelay >= _failoverSlowDelayMs) {
             if (bestDelay >= _failoverFastEnoughMs ||
                 bestDelay + _failoverDegradedImproveMs > currentDelay) {
               return;
@@ -515,7 +528,7 @@ class ProxiesAction extends _$ProxiesAction {
           await changeProxy(groupName: groupName, proxyName: bestProxy.name);
           updateGroupsDebounce();
         }
-        if (automatic && !switched) {
+        if (manualHeal || (automatic && !switched)) {
           return;
         }
         final delayLabel = '${bestDelay}ms';
@@ -537,6 +550,7 @@ class ProxiesAction extends _$ProxiesAction {
       await selectFastestProxy(
         groupName,
         automatic: automatic,
+        manualHeal: manualHeal,
         allowSubscriptionRecovery: false,
       );
     }
@@ -640,12 +654,23 @@ class ProxiesAction extends _$ProxiesAction {
         final profilesAction = ref.read(profilesActionProvider.notifier);
         for (final group in groups) {
           final corePick = group.now;
-          if (group.type == GroupType.Selector &&
-              corePick != null &&
-              corePick.isNotEmpty &&
-              !_pendingSelectedRollback.containsKey(group.name) &&
-              currentProfile.selectedMap.containsKey(group.name) &&
-              currentProfile.selectedMap[group.name] != corePick) {
+          if (group.type != GroupType.Selector ||
+              corePick == null ||
+              corePick.isEmpty ||
+              _pendingSelectedRollback.containsKey(group.name)) {
+            continue;
+          }
+          final savedPick = currentProfile.selectedMap[group.name];
+          final shouldHealGlobal =
+              group.name == GroupName.GLOBAL.name &&
+              corePick != 'DIRECT' &&
+              corePick != 'COMPATIBLE' &&
+              (savedPick == null ||
+                  savedPick.isEmpty ||
+                  savedPick == 'DIRECT' ||
+                  savedPick == 'COMPATIBLE');
+          if ((savedPick != null && savedPick != corePick) ||
+              shouldHealGlobal) {
             profilesAction.updateCurrentSelectedMap(group.name, corePick);
           }
         }
