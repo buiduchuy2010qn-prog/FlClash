@@ -7735,6 +7735,294 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Plan Name'**
   String get planName;
+
+  /// No description provided for @subExpiringHoursWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan expires in ~{hours}h. Renew soon to avoid interruption.'**
+  String subExpiringHoursWarning(Object hours);
+
+  /// No description provided for @subAlertNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{profile} · Plan Alert'**
+  String subAlertNotificationTitle(Object profile);
+
+  /// No description provided for @securityAlertTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{profile} · Security Risk Detected'**
+  String securityAlertTitle(Object profile);
+
+  /// No description provided for @securityAlertBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety score {score}/100 ({count} critical issue(s)). Review and harden now.'**
+  String securityAlertBody(Object score, Object count);
+
+  /// No description provided for @securityAuditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'VPN Security Scanner'**
+  String get securityAuditTitle;
+
+  /// No description provided for @securityAuditSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan profile for data-leak, MITM, hosts hijack & unencrypted nodes'**
+  String get securityAuditSubtitle;
+
+  /// No description provided for @securityAuditSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{score}/100 · {level} — Tap for details & 1-tap harden'**
+  String securityAuditSummary(Object score, Object level);
+
+  /// No description provided for @securityLevelSafe.
+  ///
+  /// In en, this message translates to:
+  /// **'Safe'**
+  String get securityLevelSafe;
+
+  /// No description provided for @securityLevelCaution.
+  ///
+  /// In en, this message translates to:
+  /// **'Caution'**
+  String get securityLevelCaution;
+
+  /// No description provided for @securityLevelDanger.
+  ///
+  /// In en, this message translates to:
+  /// **'Dangerous'**
+  String get securityLevelDanger;
+
+  /// No description provided for @securityRescan.
+  ///
+  /// In en, this message translates to:
+  /// **'Rescan profile'**
+  String get securityRescan;
+
+  /// No description provided for @securityScannedCounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanned entries'**
+  String get securityScannedCounts;
+
+  /// No description provided for @securityScannedCountsValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{proxies} nodes · {rules} rules'**
+  String securityScannedCountsValue(Object proxies, Object rules);
+
+  /// No description provided for @securityAutoHarden.
+  ///
+  /// In en, this message translates to:
+  /// **'Protect & Harden Now'**
+  String get securityAutoHarden;
+
+  /// No description provided for @securityAutoHardenDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock LAN/controller, enforce DoH DNS, enable Privacy Max & banking bypass'**
+  String get securityAutoHardenDesc;
+
+  /// No description provided for @securityAutoHardenApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Runtime security hardening applied to active configuration'**
+  String get securityAutoHardenApplied;
+
+  /// No description provided for @securityFindingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Security Findings'**
+  String get securityFindingsTitle;
+
+  /// No description provided for @securityNoRisksTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No dangerous behaviors found'**
+  String get securityNoRisksTitle;
+
+  /// No description provided for @securityNoRisksDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'No MITM injection, host hijacking, exposed controller, or plaintext proxy threats were found in this profile.'**
+  String get securityNoRisksDesc;
+
+  /// No description provided for @securityFindingMitmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'HTTPS Traffic Inspection (MITM) Enabled'**
+  String get securityFindingMitmTitle;
+
+  /// No description provided for @securityFindingMitmDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile enables TLS decryption or untrusted cert capture, which can read passwords & tokens.'**
+  String get securityFindingMitmDesc;
+
+  /// No description provided for @securityFindingControllerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'External Controller Exposed Without Protection'**
+  String get securityFindingControllerTitle;
+
+  /// No description provided for @securityFindingControllerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Control API binds outside localhost or has no secret, letting LAN/remote peers control routes.'**
+  String get securityFindingControllerDesc;
+
+  /// No description provided for @securityFindingHostsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensitive Banking / Account Domains Hijacked in Hosts'**
+  String get securityFindingHostsTitle;
+
+  /// No description provided for @securityFindingHostsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Static hosts mapping redirects sensitive services to custom IPs.'**
+  String get securityFindingHostsDesc;
+
+  /// No description provided for @securityFindingPlaintextTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unencrypted / Weak-Cipher Proxy Nodes'**
+  String get securityFindingPlaintextTitle;
+
+  /// No description provided for @securityFindingPlaintextDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} node(s) send traffic in plaintext or weak cipher without TLS.'**
+  String securityFindingPlaintextDesc(Object count);
+
+  /// No description provided for @securityFindingSkipVerifyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'TLS Certificate Verification Disabled'**
+  String get securityFindingSkipVerifyTitle;
+
+  /// No description provided for @securityFindingSkipVerifyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} node(s) skip TLS certificate checks, risking man-in-the-middle impersonation.'**
+  String securityFindingSkipVerifyDesc(Object count);
+
+  /// No description provided for @securityFindingHttpSubTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription Link Uses Unencrypted HTTP'**
+  String get securityFindingHttpSubTitle;
+
+  /// No description provided for @securityFindingHttpSubDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription URL fetches configs over plain HTTP, allowing network tampering in transit.'**
+  String get securityFindingHttpSubDesc;
+
+  /// No description provided for @securityFindingHttpProviderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote Rule/Proxy Providers Use Plain HTTP'**
+  String get securityFindingHttpProviderTitle;
+
+  /// No description provided for @securityFindingHttpProviderDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} external provider(s) download rules or nodes over unencrypted HTTP.'**
+  String securityFindingHttpProviderDesc(Object count);
+
+  /// No description provided for @securityFindingAllowLanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'LAN Sharing Enabled by Profile'**
+  String get securityFindingAllowLanTitle;
+
+  /// No description provided for @securityFindingAllowLanDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile sets allow-lan: true, exposing local proxy ports to other devices on the same Wi-Fi.'**
+  String get securityFindingAllowLanDesc;
+
+  /// No description provided for @securityFindingLanRouteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Private Local Network Traffic Routed to Proxy'**
+  String get securityFindingLanRouteTitle;
+
+  /// No description provided for @securityFindingLanRouteDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} rule(s) forward private LAN or router IPs out through remote proxy nodes.'**
+  String securityFindingLanRouteDesc(Object count);
+
+  /// No description provided for @securityFindingPlainDnsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Unencrypted Plain DNS Resolvers'**
+  String get securityFindingPlainDnsTitle;
+
+  /// No description provided for @securityFindingPlainDnsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom DNS lacks DoH/DoT encryption, allowing third parties to log DNS lookups.'**
+  String get securityFindingPlainDnsDesc;
+
+  /// No description provided for @speedBoostPreset.
+  ///
+  /// In en, this message translates to:
+  /// **'Network Speed Boost (BBRv3)'**
+  String get speedBoostPreset;
+
+  /// No description provided for @speedBoostPresetDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Mips BBRv3 TUN, Fake-IP DoH & keep-alive tuning while keeping single-device safety'**
+  String get speedBoostPresetDesc;
+
+  /// No description provided for @speedBoostAppliedTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Network Speed Boost (BBRv3) applied'**
+  String get speedBoostAppliedTip;
+
+  /// No description provided for @expiryAlertsToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Expiry & Security Notifications'**
+  String get expiryAlertsToggle;
+
+  /// No description provided for @expiryAlertsToggleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Warn via notification bar when plan expires soon, exceeds devices, or shows risks'**
+  String get expiryAlertsToggleDesc;
+
+  /// No description provided for @homeWidgetAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Home Screen Widget'**
+  String get homeWidgetAddTitle;
+
+  /// No description provided for @homeWidgetAddDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Live speed, 1-tap toggle, devices, expiry & security shield on your launcher'**
+  String get homeWidgetAddDesc;
+
+  /// No description provided for @homeWidgetPinRequested.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm adding the FlClash widget on your home screen'**
+  String get homeWidgetPinRequested;
+
+  /// No description provided for @homeWidgetPinFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Long press your home screen, choose Widgets, and drag FlClash onto the screen'**
+  String get homeWidgetPinFallback;
 }
 
 class _AppLocalizationsDelegate

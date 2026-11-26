@@ -5,24 +5,46 @@ class ProfilesAction extends _$ProfilesAction {
   static const _subAlertCooldown = Duration(hours: 12);
   static const _portalRefreshCooldown = Duration(seconds: 15);
   CoreController get _core => ref.read(coreHandlerProvider);
-  final Map<int, DateTime> _lastSubAlertAt = {};
 
   @override
   void build() {}
 
-  void _maybeNotifySubscriptionHealth(Profile profile) {
+  Future<void> checkCurrentProfileAlerts() async {
+    final profile = ref.read(currentProfileProvider);
+    if (profile == null) return;
+    await _maybeNotifySubscriptionHealth(profile);
+    if (!ref.read(profileSecurityProvider).containsKey(profile.id)) {
+      unawaited(
+        ref
+            .read(profileSecurityProvider.notifier)
+            .scanProfile(profile, notifyIfDangerous: true),
+      );
+    }
+  }
+
+  Future<void> _maybeNotifySubscriptionHealth(Profile profile) async {
+    final alertsEnabled = await ref
+        .read(expiryAlertsEnabledProvider.notifier)
+        .ensureHydrated();
     final deviceMeta = ref.read(subscriptionInsightsProvider)[profile.id];
     final alert = evaluateSubscriptionAlert(
       profile.subscriptionInfo,
       deviceMeta: deviceMeta,
     );
     if (alert == null) return;
-    final now = DateTime.now();
-    final last = _lastSubAlertAt[profile.id];
-    if (last != null && now.difference(last) < _subAlertCooldown) {
+    final storedLedger = await preferences.getLastSubAlertLedger();
+    if (!shouldDispatchSubscriptionAlert(
+      storedLedger,
+      profile.id,
+      alert,
+      cooldown: _subAlertCooldown,
+    )) {
       return;
     }
-    _lastSubAlertAt[profile.id] = now;
+    await preferences.setLastSubAlertLedger(
+      recordDispatchedSubscriptionAlert(storedLedger, profile.id, alert),
+    );
+    if (!ref.mounted) return;
     final l = currentAppLocalizations;
     final message = switch (alert.kind) {
       SubscriptionAlertKind.expiredOrExhausted =>
@@ -35,11 +57,21 @@ class ProfilesAction extends _$ProfilesAction {
       SubscriptionAlertKind.lowQuota => l.subQuotaLowWarning(
         alert.remainingPercent ?? 0,
       ),
-      SubscriptionAlertKind.expiringSoon => l.subExpiringSoonWarning(
-        alert.daysLeft ?? 0,
-      ),
+      SubscriptionAlertKind.expiringSoon =>
+        alert.hoursLeft != null
+            ? l.subExpiringHoursWarning(alert.hoursLeft!)
+            : l.subExpiringSoonWarning(alert.daysLeft ?? 0),
     };
     dialogs.showBanner(message, level: BannerLevel.warning);
+    if (alertsEnabled && system.isAndroid) {
+      unawaited(
+        app?.showAlertNotification(
+          id: 2000 + (profile.id.abs() % 500),
+          title: l.subAlertNotificationTitle(profile.realLabel),
+          body: message,
+        ),
+      );
+    }
   }
 
   Future<PortalSubscribeSnapshot> connectPortalAccount({
@@ -79,7 +111,7 @@ class ProfilesAction extends _$ProfilesAction {
     if (snapshot.subscriptionInfo != null) {
       ref.read(profilesProvider.notifier).put(nextProfile);
     }
-    _maybeNotifySubscriptionHealth(nextProfile);
+    unawaited(_maybeNotifySubscriptionHealth(nextProfile));
     return snapshot;
   }
 
@@ -120,7 +152,7 @@ class ProfilesAction extends _$ProfilesAction {
       if (snapshot.subscriptionInfo != null) {
         ref.read(profilesProvider.notifier).put(nextProfile);
       }
-      _maybeNotifySubscriptionHealth(nextProfile);
+      unawaited(_maybeNotifySubscriptionHealth(nextProfile));
       return true;
     } on PortalAuthExpiredException {
       if (!ref.mounted) return false;
@@ -180,6 +212,7 @@ class ProfilesAction extends _$ProfilesAction {
     await ref.read(profilesProvider.notifier).del(id);
     ref.read(portalAccountsProvider.notifier).remove(id);
     ref.read(subscriptionInsightsProvider.notifier).remove(id);
+    ref.read(profileSecurityProvider.notifier).remove(id);
     await clearEffect(id);
     final currentProfileId = ref.read(currentProfileIdProvider);
     if (currentProfileId == id) {
@@ -326,8 +359,13 @@ class ProfilesAction extends _$ProfilesAction {
       if (ref.read(portalAccountsProvider)[profile.id] != null) {
         unawaited(refreshPortalStatus(newProfile, force: true));
       }
+      unawaited(
+        ref
+            .read(profileSecurityProvider.notifier)
+            .scanProfile(newProfile, notifyIfDangerous: true),
+      );
       if (profile.id == ref.read(currentProfileIdProvider)) {
-        _maybeNotifySubscriptionHealth(newProfile);
+        unawaited(_maybeNotifySubscriptionHealth(newProfile));
         ref
             .read(setupActionProvider.notifier)
             .applyProfileDebounce(silence: true);
@@ -372,6 +410,11 @@ class ProfilesAction extends _$ProfilesAction {
     );
     if (profile != null) {
       putProfile(profile);
+      unawaited(
+        ref
+            .read(profileSecurityProvider.notifier)
+            .scanProfile(profile, notifyIfDangerous: true),
+      );
     }
   }
 
@@ -538,6 +581,11 @@ class ProfilesAction extends _$ProfilesAction {
     );
     if (profile != null) {
       putProfile(profile);
+      unawaited(
+        ref
+            .read(profileSecurityProvider.notifier)
+            .scanProfile(profile, notifyIfDangerous: true),
+      );
     }
   }
 
@@ -557,11 +605,17 @@ class ProfilesAction extends _$ProfilesAction {
           else if (link == shareLinks.first)
             (profile: Profile.normal(), shareLinks: shareLinks),
       ],
-      (item) async => putProfile(
-        await (item.shareLinks.isEmpty
+      (item) async {
+        final saved = await (item.shareLinks.isEmpty
             ? _download(item.profile)
-            : _fromShareLinks(item.profile, item.shareLinks)),
-      ),
+            : _fromShareLinks(item.profile, item.shareLinks));
+        putProfile(saved);
+        unawaited(
+          ref
+              .read(profileSecurityProvider.notifier)
+              .scanProfile(saved, notifyIfDangerous: true),
+        );
+      },
       label: (item) => item.shareLinks.firstOrNull ?? item.profile.url,
       concurrency: maxConcurrentImports,
       tag: LoadingTag.profiles,

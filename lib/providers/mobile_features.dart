@@ -227,6 +227,9 @@ class Optimize4gPresetNotifier extends _PersistedBoolNotifier {
             appendSystemDns: savedNetwork.appendSystemDns,
           );
         });
+        if (ref.read(speedBoostPresetProvider)) {
+          ref.read(speedBoostPresetProvider.notifier).applySpeedPreset();
+        }
         return;
       } catch (_) {}
     }
@@ -253,6 +256,9 @@ class Optimize4gPresetNotifier extends _PersistedBoolNotifier {
     ref.read(networkSettingProvider.notifier).update((state) {
       return state.copyWith(appendSystemDns: true);
     });
+    if (ref.read(speedBoostPresetProvider)) {
+      ref.read(speedBoostPresetProvider.notifier).applySpeedPreset();
+    }
   }
 
   void applyMobilePreset() {
@@ -316,6 +322,205 @@ class Optimize4gPresetNotifier extends _PersistedBoolNotifier {
 final optimize4gPresetProvider =
     NotifierProvider<Optimize4gPresetNotifier, bool>(
       Optimize4gPresetNotifier.new,
+    );
+
+class ExpiryAlertsEnabledNotifier extends _PersistedBoolNotifier {
+  @override
+  bool get defaultValue => true;
+
+  @override
+  Future<bool> readValue() => preferences.getExpiryAlertsEnabled();
+
+  @override
+  Future<void> writeValue(bool value) =>
+      preferences.setExpiryAlertsEnabled(value);
+}
+
+final expiryAlertsEnabledProvider =
+    NotifierProvider<ExpiryAlertsEnabledNotifier, bool>(
+      ExpiryAlertsEnabledNotifier.new,
+    );
+
+class SpeedBoostPresetNotifier extends _PersistedBoolNotifier {
+  static const _speedTunOverrideKeys = {TunOverrideKey.congestionController};
+  static const _speedGeneralOverrideKeys = {
+    GeneralOverrideKey.unifiedDelay,
+    GeneralOverrideKey.tcpConcurrent,
+  };
+  static const _speedDnsOverrideKeys = {
+    DnsOverrideKey.enable,
+    DnsOverrideKey.ipv6,
+    DnsOverrideKey.useHosts,
+    DnsOverrideKey.respectRules,
+    DnsOverrideKey.enhancedMode,
+    DnsOverrideKey.nameserver,
+    DnsOverrideKey.defaultNameserver,
+    DnsOverrideKey.proxyServerNameserver,
+    DnsOverrideKey.directNameserver,
+  };
+
+  @override
+  Future<bool> readValue() => preferences.getSpeedBoostPreset();
+
+  @override
+  Future<void> writeValue(bool value) => preferences.setSpeedBoostPreset(value);
+
+  @override
+  void onHydrated(bool saved) {
+    if (saved) {
+      applySpeedPreset();
+    }
+  }
+
+  Future<void> enablePreset() async {
+    if (await preferences.getSpeedBoostSnapshot() == null) {
+      if (_disposed) return;
+      final snapshot = json.encode({
+        'clash': ref.read(patchClashConfigProvider).toJson(),
+        'network': ref.read(networkSettingProvider).toJson(),
+      });
+      await preferences.setSpeedBoostSnapshot(snapshot);
+    }
+    if (_disposed) return;
+    value = true;
+    applySpeedPreset();
+  }
+
+  Future<void> disablePresetAndRestore() async {
+    value = false;
+    final raw = await preferences.getSpeedBoostSnapshot();
+    await preferences.setSpeedBoostSnapshot(null);
+    if (_disposed) return;
+    if (raw != null) {
+      try {
+        final decoded = json.decode(raw) as Map<String, Object?>;
+        final savedClash = PatchClashConfig.fromJson(
+          Map<String, Object?>.from(decoded['clash']! as Map),
+        );
+        final savedNetwork = NetworkProps.fromJson(
+          Map<String, Object?>.from(decoded['network']! as Map),
+        );
+        ref.read(patchClashConfigProvider.notifier).update((state) {
+          return state.copyWith(
+            ipv6: savedClash.ipv6,
+            unifiedDelay: savedClash.unifiedDelay,
+            tcpConcurrent: savedClash.tcpConcurrent,
+            disableKeepAlive: savedClash.disableKeepAlive,
+            keepAliveInterval: savedClash.keepAliveInterval,
+            keepAliveIdle: savedClash.keepAliveIdle,
+            generalOverrideKeys: savedClash.generalOverrideKeys,
+            tun: state.tun.copyWith(
+              stack: savedClash.tun.stack,
+              mtu: savedClash.tun.mtu,
+              congestionController: savedClash.tun.congestionController,
+            ),
+            tunOverrideKeys: savedClash.tunOverrideKeys,
+            dns: savedClash.dns,
+            dnsOverrideKeys: savedClash.dnsOverrideKeys,
+          );
+        });
+        ref.read(networkSettingProvider.notifier).update((state) {
+          return state.copyWith(
+            bypassPrivateRoute: savedNetwork.bypassPrivateRoute,
+          );
+        });
+        if (ref.read(optimize4gPresetProvider)) {
+          ref.read(optimize4gPresetProvider.notifier).applyMobilePreset();
+        }
+        return;
+      } catch (_) {}
+    }
+
+    ref.read(patchClashConfigProvider.notifier).update((state) {
+      return state.copyWith(
+        unifiedDelay: true,
+        tcpConcurrent: false,
+        disableKeepAlive: false,
+        keepAliveInterval: defaultKeepAliveInterval,
+        keepAliveIdle: defaultKeepAliveInterval,
+        generalOverrideKeys: {
+          for (final key in state.generalOverrideKeys)
+            if (!_speedGeneralOverrideKeys.contains(key) &&
+                key != GeneralOverrideKey.ipv6)
+              key,
+        },
+        tun: state.tun.copyWith(
+          mtu: defaultTunMtu,
+          congestionController: defaultCongestionController,
+        ),
+        tunOverrideKeys: {
+          for (final key in state.tunOverrideKeys)
+            if (!_speedTunOverrideKeys.contains(key) &&
+                key != TunOverrideKey.mtu)
+              key,
+        },
+        dnsOverrideKeys: {
+          for (final key in state.dnsOverrideKeys)
+            if (!_speedDnsOverrideKeys.contains(key)) key,
+        },
+      );
+    });
+    if (ref.read(optimize4gPresetProvider)) {
+      ref.read(optimize4gPresetProvider.notifier).applyMobilePreset();
+    }
+  }
+
+  void applySpeedPreset() {
+    if (_disposed) return;
+    const dnsResolvers = [
+      'https://1.1.1.1/dns-query',
+      'https://dns.google/dns-query',
+      'tcp://1.1.1.1:53',
+      'tcp://8.8.8.8:53',
+    ];
+    const systemBootstrap = ['system'];
+    ref.read(patchClashConfigProvider.notifier).update((state) {
+      return state.copyWith(
+        ipv6: system.isAndroid ? false : state.ipv6,
+        unifiedDelay: true,
+        // Keep parallel TCP dial disabled to preserve single-device session limit.
+        tcpConcurrent: false,
+        disableKeepAlive: false,
+        keepAliveInterval: 15,
+        keepAliveIdle: 15,
+        generalOverrideKeys: {
+          ...state.generalOverrideKeys,
+          ..._speedGeneralOverrideKeys,
+          if (system.isAndroid) GeneralOverrideKey.ipv6,
+        },
+        tun: state.tun.copyWith(
+          stack: TunStack.mips,
+          congestionController: 'bbr3',
+          mtu: system.isAndroid ? 1400 : state.tun.mtu,
+        ),
+        tunOverrideKeys: {
+          ...state.tunOverrideKeys,
+          ..._speedTunOverrideKeys,
+          if (system.isAndroid) TunOverrideKey.mtu,
+        },
+        dns: state.dns.copyWith(
+          enable: true,
+          ipv6: false,
+          useHosts: true,
+          respectRules: true,
+          enhancedMode: DnsMode.fakeIp,
+          nameserver: dnsResolvers,
+          defaultNameserver: systemBootstrap,
+          proxyServerNameserver: systemBootstrap,
+          directNameserver: systemBootstrap,
+        ),
+        dnsOverrideKeys: {...state.dnsOverrideKeys, ..._speedDnsOverrideKeys},
+      );
+    });
+    ref
+        .read(networkSettingProvider.notifier)
+        .update((state) => state.copyWith(bypassPrivateRoute: true));
+  }
+}
+
+final speedBoostPresetProvider =
+    NotifierProvider<SpeedBoostPresetNotifier, bool>(
+      SpeedBoostPresetNotifier.new,
     );
 
 class PrivacyScreenShieldNotifier extends _PersistedBoolNotifier {

@@ -51,9 +51,69 @@ class _AndroidContainerState extends ConsumerState<AndroidManager>
         unawaited(service?.setTelemetryPaused(!next));
       }
     }, fireImmediately: true);
+    ref.listenManual(
+      currentProfileProvider,
+      (_, _) => _scheduleWidgetSync(),
+      fireImmediately: true,
+    );
+    ref.listenManual(
+      activeProxyTargetProvider,
+      (_, _) => _scheduleWidgetSync(),
+    );
+    ref.listenManual(delayDataSourceProvider, (_, _) => _scheduleWidgetSync());
+    ref.listenManual(
+      subscriptionInsightsProvider,
+      (_, _) => _scheduleWidgetSync(),
+    );
+    ref.listenManual(profileSecurityProvider, (_, _) => _scheduleWidgetSync());
+    ref.listenManual(speedBoostPresetProvider, (_, _) => _scheduleWidgetSync());
+    ref.listenManual(
+      expiryAlertsEnabledProvider,
+      (_, _) => _scheduleWidgetSync(),
+    );
+    ref.listenManual(isStartProvider, (_, _) => _scheduleWidgetSync());
     service?.addListener(this);
     app?.onPackagesChanged = _reloadPackages;
     app?.onSwitchFastestProxy = _switchFastestProxy;
+  }
+
+  void _scheduleWidgetSync() {
+    debouncer.call(FunctionTag.syncHomeWidget, () async {
+      if (!mounted) return;
+      final profile = ref.read(currentProfileProvider);
+      final target = ref.read(activeProxyTargetProvider);
+      final groups = ref.read(groupsProvider);
+      final selectedMap = ref.read(selectedMapProvider);
+      final delayMap = ref.read(delayDataSourceProvider);
+      final delayMs = target == null
+          ? null
+          : computeProxyDelayState(
+              proxyName: target.proxyName,
+              testUrl: target.testUrl,
+              groups: groups,
+              selectedMap: selectedMap,
+              delayMap: delayMap,
+            ).delay;
+      final deviceMeta = profile == null
+          ? null
+          : ref.read(effectiveProfileDeviceMetaProvider(profile.id));
+      final security = profile == null
+          ? null
+          : ref.read(profileSecurityProvider)[profile.id];
+      final expireSec = profile?.subscriptionInfo?.expire;
+      await app?.updateHomeWidget(
+        profileName: profile?.realLabel ?? '',
+        activeNode: target?.proxyName ?? '',
+        activeDelayMs: delayMs != null && delayMs > 0 ? delayMs : null,
+        onlineDevices: deviceMeta?.onlineDevices,
+        deviceLimit: deviceMeta?.deviceLimit,
+        expireEpochSec: expireSec != null && expireSec > 0 ? expireSec : null,
+        securityLevel: security?.level.name ?? 'safe',
+        securityScore: security?.score ?? 100,
+        speedBoost: ref.read(speedBoostPresetProvider),
+        expiryAlertsEnabled: ref.read(expiryAlertsEnabledProvider),
+      );
+    }, duration: const Duration(milliseconds: 600));
   }
 
   /// A reload reads every installed app's label, and a round of store updates
@@ -78,6 +138,7 @@ class _AndroidContainerState extends ConsumerState<AndroidManager>
   @override
   void dispose() {
     debouncer.cancel(FunctionTag.reloadPackages);
+    debouncer.cancel(FunctionTag.syncHomeWidget);
     if (app?.onPackagesChanged == _reloadPackages) {
       app?.onPackagesChanged = null;
     }

@@ -4415,4 +4415,192 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planName => 'Тариф';
+
+  @override
+  String subExpiringHoursWarning(Object hours) {
+    return 'Срок тарифа истекает примерно через $hours ч. Продлите заранее.';
+  }
+
+  @override
+  String subAlertNotificationTitle(Object profile) {
+    return '$profile · Уведомление тарифа';
+  }
+
+  @override
+  String securityAlertTitle(Object profile) {
+    return '$profile · Обнаружен риск безопасности';
+  }
+
+  @override
+  String securityAlertBody(Object score, Object count) {
+    return 'Оценка $score/100 ($count критич. угроз). Проверьте и усильте защиту.';
+  }
+
+  @override
+  String get securityAuditTitle => 'Проверка безопасности VPN';
+
+  @override
+  String get securityAuditSubtitle =>
+      'Поиск MITM, подмены hosts, открытых портов и незашифрованных узлов';
+
+  @override
+  String securityAuditSummary(Object score, Object level) {
+    return '$score/100 · $level — Нажмите для деталей и защиты';
+  }
+
+  @override
+  String get securityLevelSafe => 'Безопасно';
+
+  @override
+  String get securityLevelCaution => 'Внимание';
+
+  @override
+  String get securityLevelDanger => 'Опасно';
+
+  @override
+  String get securityRescan => 'Пересканировать профиль';
+
+  @override
+  String get securityScannedCounts => 'Проверено';
+
+  @override
+  String securityScannedCountsValue(Object proxies, Object rules) {
+    return '$proxies узлов · $rules правил';
+  }
+
+  @override
+  String get securityAutoHarden => 'Усилить защиту сейчас';
+
+  @override
+  String get securityAutoHardenDesc =>
+      'Закрыть LAN/контроллер, включить DoH DNS и максимальную защиту';
+
+  @override
+  String get securityAutoHardenApplied =>
+      'Усиление безопасности применено к текущей конфигурации';
+
+  @override
+  String get securityFindingsTitle => 'Результаты проверки';
+
+  @override
+  String get securityNoRisksTitle => 'Опасных параметров не найдено';
+
+  @override
+  String get securityNoRisksDesc =>
+      'Угроз MITM, подмены hosts, открытого контроллера или открытого трафика не найдено.';
+
+  @override
+  String get securityFindingMitmTitle => 'Включён перехват HTTPS (MITM)';
+
+  @override
+  String get securityFindingMitmDesc =>
+      'Профиль включает расшифровку TLS, что создаёт риск перехвата паролей и токенов.';
+
+  @override
+  String get securityFindingControllerTitle =>
+      'Внешний контроллер открыт без защиты';
+
+  @override
+  String get securityFindingControllerDesc =>
+      'API управления доступно извне или без ключа secret.';
+
+  @override
+  String get securityFindingHostsTitle =>
+      'Подмена банковских или важных доменов в Hosts';
+
+  @override
+  String get securityFindingHostsDesc =>
+      'Записи hosts перенаправляют важные домены на сторонние IP.';
+
+  @override
+  String get securityFindingPlaintextTitle =>
+      'Найдены узлы без шифрования или со слабым шифром';
+
+  @override
+  String securityFindingPlaintextDesc(Object count) {
+    return '$count узлов передают трафик без TLS или со слабым шифром.';
+  }
+
+  @override
+  String get securityFindingSkipVerifyTitle =>
+      'Отключена проверка TLS-сертификата';
+
+  @override
+  String securityFindingSkipVerifyDesc(Object count) {
+    return '$count узлов пропускают проверку сертификатов (риск MITM).';
+  }
+
+  @override
+  String get securityFindingHttpSubTitle =>
+      'Ссылка подписки использует незашифрованный HTTP';
+
+  @override
+  String get securityFindingHttpSubDesc =>
+      'Подписка загружается по HTTP, что допускает подмену конфигурации.';
+
+  @override
+  String get securityFindingHttpProviderTitle =>
+      'Внешние провайдеры используют открытый HTTP';
+
+  @override
+  String securityFindingHttpProviderDesc(Object count) {
+    return '$count внешних источников загружаются по незашифрованному HTTP.';
+  }
+
+  @override
+  String get securityFindingAllowLanTitle =>
+      'Профиль включает общий доступ в LAN';
+
+  @override
+  String get securityFindingAllowLanDesc =>
+      'Локальный прокси открыт для других устройств в той же Wi-Fi сети.';
+
+  @override
+  String get securityFindingLanRouteTitle =>
+      'Локальный трафик направляется через прокси';
+
+  @override
+  String securityFindingLanRouteDesc(Object count) {
+    return '$count правил направляют локальные подсети через внешний прокси.';
+  }
+
+  @override
+  String get securityFindingPlainDnsTitle =>
+      'Используется незашифрованный сторонний DNS';
+
+  @override
+  String get securityFindingPlainDnsDesc =>
+      'Пользовательский DNS без DoH/DoT позволяет отслеживать запросы доменов.';
+
+  @override
+  String get speedBoostPreset => 'Ускорение сети (BBRv3)';
+
+  @override
+  String get speedBoostPresetDesc =>
+      'BBRv3, Fake-IP DoH и keep-alive без многопоточного сканирования устройств';
+
+  @override
+  String get speedBoostAppliedTip => 'Режим ускорения сети (BBRv3) применён';
+
+  @override
+  String get expiryAlertsToggle => 'Уведомления об истечении и угрозах';
+
+  @override
+  String get expiryAlertsToggleDesc =>
+      'Предупреждать в шторке о скором истечении, лимите устройств и рисках';
+
+  @override
+  String get homeWidgetAddTitle => 'Добавить виджет на экран';
+
+  @override
+  String get homeWidgetAddDesc =>
+      'Скорость, переключатель, устройства, срок и щит на рабочем столе';
+
+  @override
+  String get homeWidgetPinRequested =>
+      'Подтвердите добавление виджета FlClash на рабочий стол';
+
+  @override
+  String get homeWidgetPinFallback =>
+      'Удерживайте главный экран → Виджеты → перетащите FlClash';
 }

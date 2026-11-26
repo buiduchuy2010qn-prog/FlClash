@@ -4217,4 +4217,174 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get planName => 'プラン名';
+
+  @override
+  String subExpiringHoursWarning(Object hours) {
+    return 'プランはあと約$hours時間で期限切れになります。お早めに更新してください。';
+  }
+
+  @override
+  String subAlertNotificationTitle(Object profile) {
+    return '$profile · プラン通知';
+  }
+
+  @override
+  String securityAlertTitle(Object profile) {
+    return '$profile · セキュリティリスク検出';
+  }
+
+  @override
+  String securityAlertBody(Object score, Object count) {
+    return '安全スコア $score/100（重大リスク $count 件）。確認して保護してください。';
+  }
+
+  @override
+  String get securityAuditTitle => 'VPN セキュリティ診断';
+
+  @override
+  String get securityAuditSubtitle => 'MITM、Hosts 改ざん、暗号化なしノードや漏洩リスクを診断';
+
+  @override
+  String securityAuditSummary(Object score, Object level) {
+    return '$score/100 · $level — 詳細確認とワンタップ保護';
+  }
+
+  @override
+  String get securityLevelSafe => '安全';
+
+  @override
+  String get securityLevelCaution => '注意';
+
+  @override
+  String get securityLevelDanger => '危険';
+
+  @override
+  String get securityRescan => 'プロファイルを再スキャン';
+
+  @override
+  String get securityScannedCounts => 'スキャン対象';
+
+  @override
+  String securityScannedCountsValue(Object proxies, Object rules) {
+    return '$proxies ノード · $rules ルール';
+  }
+
+  @override
+  String get securityAutoHarden => '今すぐ保護を強化';
+
+  @override
+  String get securityAutoHardenDesc => 'LAN/外部制御を閉じ、暗号化DoH DNSと最高プライバシー保護を適用';
+
+  @override
+  String get securityAutoHardenApplied => '現在の設定にセキュリティ強化を適用しました';
+
+  @override
+  String get securityFindingsTitle => 'セキュリティ診断結果';
+
+  @override
+  String get securityNoRisksTitle => '危険な設定は見つかりませんでした';
+
+  @override
+  String get securityNoRisksDesc =>
+      'MITM復号、Hosts改ざん、制御ポート公開、平文プロキシの脅威は検出されませんでした。';
+
+  @override
+  String get securityFindingMitmTitle => 'HTTPS 復号 (MITM) が有効です';
+
+  @override
+  String get securityFindingMitmDesc => 'TLS 復号やキャプチャが有効で、パスワード等が傍受される恐れがあります。';
+
+  @override
+  String get securityFindingControllerTitle => '外部コントローラーが無防備に公開されています';
+
+  @override
+  String get securityFindingControllerDesc =>
+      '制御 API がローカル外に公開または認証なしのため外部操作の恐れがあります。';
+
+  @override
+  String get securityFindingHostsTitle => 'Hosts で銀行・アカウントドメインが改ざんされています';
+
+  @override
+  String get securityFindingHostsDesc => '静的 Hosts 設定が重要なドメインを不審な IP へ誘導しています。';
+
+  @override
+  String get securityFindingPlaintextTitle => '暗号化なし・脆弱な暗号のノードがあります';
+
+  @override
+  String securityFindingPlaintextDesc(Object count) {
+    return '$count 件のノードが TLS なしまたは脆弱な暗号を使用しています。';
+  }
+
+  @override
+  String get securityFindingSkipVerifyTitle => 'TLS 証明書検証が無効になっています';
+
+  @override
+  String securityFindingSkipVerifyDesc(Object count) {
+    return '$count 件のノードが証明書検証をスキップしており中間者攻撃の恐れがあります。';
+  }
+
+  @override
+  String get securityFindingHttpSubTitle => 'サブスクリプション URL が非暗号化 HTTP です';
+
+  @override
+  String get securityFindingHttpSubDesc =>
+      'HTTP 経由で設定を取得するため、通信経路上で改ざんされる恐れがあります。';
+
+  @override
+  String get securityFindingHttpProviderTitle => '外部プロバイダーが非暗号化 HTTP を使用しています';
+
+  @override
+  String securityFindingHttpProviderDesc(Object count) {
+    return '$count 件の外部リソースが HTTP で取得されています。';
+  }
+
+  @override
+  String get securityFindingAllowLanTitle => 'プロファイルで LAN 共有が有効になっています';
+
+  @override
+  String get securityFindingAllowLanDesc =>
+      '同じ Wi-Fi 内の他端末からローカルプロキシに接続できる状態です。';
+
+  @override
+  String get securityFindingLanRouteTitle => 'プライベート LAN 通信がプロキシ経由に設定されています';
+
+  @override
+  String securityFindingLanRouteDesc(Object count) {
+    return '$count 件のルールがプライベート IP 通信を外部プロキシへ転送しています。';
+  }
+
+  @override
+  String get securityFindingPlainDnsTitle => '暗号化されないカスタム DNS が指定されています';
+
+  @override
+  String get securityFindingPlainDnsDesc =>
+      'DoH/DoT 暗号化がないためアクセス先ドメインが記録される恐れがあります。';
+
+  @override
+  String get speedBoostPreset => 'ネットワーク高速化 (BBRv3)';
+
+  @override
+  String get speedBoostPresetDesc =>
+      'BBRv3輻輳制御・Fake-IP DoH・Keep-Alive最適化（単一端末制限を保護）';
+
+  @override
+  String get speedBoostAppliedTip => 'ネットワーク高速化 (BBRv3) を適用しました';
+
+  @override
+  String get expiryAlertsToggle => '期限切れ・セキュリティ通知';
+
+  @override
+  String get expiryAlertsToggleDesc => 'プラン期限間近・端末数超過・危険検出時に通知バーでお知らせ';
+
+  @override
+  String get homeWidgetAddTitle => 'ホーム画面ウィジェットを追加';
+
+  @override
+  String get homeWidgetAddDesc => 'ホーム画面で速度・ワンタップ切替・端末数・期限・安全状態を確認';
+
+  @override
+  String get homeWidgetPinRequested => 'ホーム画面への FlClash ウィジェット追加を承認してください';
+
+  @override
+  String get homeWidgetPinFallback => 'ホーム画面を長押し → ウィジェット → FlClash を配置してください';
 }

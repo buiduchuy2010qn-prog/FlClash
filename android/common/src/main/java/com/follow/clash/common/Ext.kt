@@ -1,5 +1,6 @@
 package com.follow.clash.common
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
@@ -13,8 +14,11 @@ import android.content.Context.RECEIVER_EXPORTED
 import android.content.Context.RECEIVER_NOT_EXPORTED
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
 import android.os.Build
+import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -77,6 +81,64 @@ fun Context.ensureNotificationChannel() {
             NotificationManager.IMPORTANCE_LOW,
         ),
     )
+}
+
+fun Context.ensureAlertNotificationChannel() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+        return
+    }
+    val manager = getSystemService(NotificationManager::class.java) ?: return
+    if (manager.getNotificationChannel(GlobalState.ALERT_NOTIFICATION_CHANNEL) != null) {
+        return
+    }
+    manager.createNotificationChannel(
+        NotificationChannel(
+            GlobalState.ALERT_NOTIFICATION_CHANNEL,
+            getString(R.string.alert_channel_name),
+            NotificationManager.IMPORTANCE_HIGH,
+        ),
+    )
+}
+
+@SuppressLint("MissingPermission")
+fun Context.postAlertNotification(
+    id: Int,
+    title: String,
+    body: String,
+): Boolean {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        val granted = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.POST_NOTIFICATIONS,
+        ) == PackageManager.PERMISSION_GRANTED
+        if (!granted) return false
+    }
+    ensureAlertNotificationChannel()
+    val manager = getSystemService(NotificationManager::class.java) ?: return false
+    val launchIntent = Components.mainActivity.intent.apply {
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+    }
+    val contentIntent = PendingIntent.getActivity(
+        this,
+        id,
+        launchIntent,
+        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+    )
+    val notification = NotificationCompat.Builder(
+        this,
+        GlobalState.ALERT_NOTIFICATION_CHANNEL,
+    ).apply {
+        setSmallIcon(R.drawable.ic_alert_shield)
+        setContentTitle(title)
+        setContentText(body)
+        setStyle(NotificationCompat.BigTextStyle().bigText(body))
+        setPriority(NotificationCompat.PRIORITY_HIGH)
+        setCategory(NotificationCompat.CATEGORY_STATUS)
+        setAutoCancel(true)
+        setContentIntent(contentIntent)
+    }.build()
+    manager.notify(id, notification)
+    return true
 }
 
 fun Service.startForeground(notification: Notification) {

@@ -2,5 +2,31 @@
 <resources>
     <string name="app_name">FlClash</string>
     <string name="service_channel_name">FlClash Service</string>
+    <string name="alert_channel_name">Plan &amp; Security Alerts</string>
     <string name="notification_switch_fastest">Fastest</string>
+    <string name="widget_description">Live VPN control, speed, active devices, expiry, and security status</string>
+    <string name="widget_status_connected">VPN Connected</string>
+    <string name="widget_status_connecting">Connecting…</string>
+    <string name="widget_status_stopped">VPN Paused</string>
+    <string name="widget_speed_idle">0 B/s · Idle</string>
+    <string name="widget_devices_empty">Devices: —</string>
+    <string name="widget_devices_ratio">%1$d/%2$d devices</string>
+    <string name="widget_devices_limit">Max %1$d devices</string>
+    <string name="widget_expiry_empty">No expiry</string>
+    <string name="widget_expiry_expired">Expired</string>
+    <string name="widget_expiry_hours">%1$dh left</string>
+    <string name="widget_expiry_days">%1$dd left</string>
+    <string name="widget_shield_safe">Safe</string>
+    <string name="widget_shield_caution">Caution</string>
+    <string name="widget_shield_danger">Risk!</string>
+    <string name="widget_speed_boost">BBRv3</string>
+    <string name="widget_no_profile">No active profile</string>
+    <string name="widget_no_node">Select node</string>
+    <string name="widget_node_with_ping">%1$s · %2$dms</string>
+    <string name="widget_action_toggle">Toggle VPN</string>
+    <string name="widget_action_fastest">Fastest node</string>
+    <string name="widget_expiry_alert_title">%1$s · Plan Alert</string>
+    <string name="widget_expiry_alert_expired_body">Your VPN plan has expired. Renew to keep the connection working.</string>
+    <string name="widget_expiry_alert_hours_body">Your VPN plan expires in about %1$d hour(s).</string>
+    <string name="widget_expiry_alert_days_body">Your VPN plan expires in %1$d day(s).</string>
 </resources>

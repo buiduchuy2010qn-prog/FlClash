@@ -3,6 +3,7 @@ package com.follow.clash
 import android.app.Application
 import android.content.Context
 import com.follow.clash.common.GlobalState
+import com.follow.clash.widget.VpnWidgetController
 
 class FlClashApplication : Application() {
     override fun attachBaseContext(base: Context?) {
@@ -13,5 +14,6 @@ class FlClashApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         AutoVpnController.start(this)
+        VpnWidgetController.start(this)
     }
 }
