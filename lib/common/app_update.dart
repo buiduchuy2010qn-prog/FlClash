@@ -60,6 +60,12 @@ SelfUpdateAsset? Function() resolveSelfUpdateAsset = () => selfUpdateAssetFor(
 
 SelfUpdateAsset? get selfUpdateAsset => resolveSelfUpdateAsset();
 
+@visibleForTesting
+ReleaseOs? Function() resolveCurrentReleaseOs = () =>
+    releaseOsForAbi(Abi.current());
+
+ReleaseOs? get currentReleaseOs => resolveCurrentReleaseOs();
+
 bool releaseHasAsset(Map<String, dynamic> release, SelfUpdateAsset asset) {
   final tag = release['tag_name'];
   if (tag is! String || tag.isEmpty) {
@@ -67,10 +73,36 @@ bool releaseHasAsset(Map<String, dynamic> release, SelfUpdateAsset asset) {
   }
   final assets = release['assets'];
   if (assets is! List || assets.isEmpty) {
-    return true;
+    return false;
   }
   final expected = updateAssetName(tag, asset);
   return assets.any((item) => item is Map && item['name'] == expected);
+}
+
+bool releaseSupportsPlatform(
+  Map<String, dynamic> release, {
+  SelfUpdateAsset? asset,
+  ReleaseOs? os,
+}) {
+  if (asset != null) {
+    return releaseHasAsset(release, asset);
+  }
+  if (os == null) {
+    return false;
+  }
+  final tag = release['tag_name'];
+  if (tag is! String || tag.isEmpty) {
+    return false;
+  }
+  final assets = release['assets'];
+  if (assets is! List || assets.isEmpty) {
+    return false;
+  }
+  final prefix = '$releaseFilePrefix-${releaseVersionOfTag(tag)}-${os.name}-';
+  return assets.any((item) {
+    final name = item is Map ? item['name'] : null;
+    return name is String && name.startsWith(prefix);
+  });
 }
 
 @visibleForTesting
@@ -79,10 +111,11 @@ Future<bool> Function(Uri uri) launchReleasePage = launchUrl;
 bool? Function(String path, String arguments) runWindowsUpdateInstaller =
     (path, arguments) => windows?.runas(path, arguments);
 
-Future<bool> openReleasePage() {
-  return launchReleasePage(
-    Uri.https('github.com', '/$repository/releases/latest'),
-  );
+Future<bool> openReleasePage([String? tag]) {
+  final path = tag != null && tag.isNotEmpty
+      ? '/$repository/releases/tag/$tag'
+      : '/$repository/releases/latest';
+  return launchReleasePage(Uri.https('github.com', path));
 }
 
 Uri releaseAssetUri(String tag, String name) {

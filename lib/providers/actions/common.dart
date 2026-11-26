@@ -204,6 +204,8 @@ class CommonAction extends _$CommonAction {
       if (res == true) {
         if (asset != null) {
           unawaited(_downloadUpdate(tag, updateAssetName(tag, asset)));
+        } else {
+          unawaited(openReleasePage(tag));
         }
       } else if (!isUser && res == false) {
         ref
@@ -227,7 +229,7 @@ class CommonAction extends _$CommonAction {
       return;
     }
     final release = await globalState.loadingRun(
-      request.latestRelease,
+      () => request.latestPlatformRelease(asset: asset, os: currentReleaseOs),
       title: currentAppLocalizations.updateDownloadTest,
       tag: LoadingTag.checkUpdate,
     );

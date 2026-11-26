@@ -91,5 +91,37 @@ void main() {
         expect(failed, isNull);
       },
     );
+
+    test('separates android and windows platform policies', () {
+      final raw = {
+        'minVersionCode': 0,
+        'latestVersion': '0.9.26',
+        'downloadUrl': '',
+        'message': '',
+        'android': {
+          'minVersionCode': 2026114616,
+          'latestVersion': '0.9.26',
+          'downloadUrl': 'https://example.com/android',
+          'message': 'Android update',
+        },
+        'windows': {
+          'minVersionCode': 2026112323,
+          'latestVersion': '0.9.10',
+          'downloadUrl': 'https://example.com/windows',
+          'message': 'Windows update',
+        },
+      };
+
+      final android = VersionGatePolicy.fromJson(raw, platform: 'android');
+      final windows = VersionGatePolicy.fromJson(raw, platform: 'windows');
+      final linux = VersionGatePolicy.fromJson(raw, platform: 'linux');
+
+      expect(android?.latestVersion, '0.9.26');
+      expect(android?.minVersionCode, 2026114616);
+      expect(windows?.latestVersion, '0.9.10');
+      expect(windows?.minVersionCode, 2026112323);
+      expect(linux?.latestVersion, isEmpty);
+      expect(linux?.minVersionCode, 0);
+    });
   });
 }
