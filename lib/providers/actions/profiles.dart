@@ -71,6 +71,13 @@ class ProfilesAction extends _$ProfilesAction {
           body: message,
         ),
       );
+    } else if (alertsEnabled && system.isWindows) {
+      unawaited(
+        windows?.showAlertNotification(
+          title: l.subAlertNotificationTitle(profile.realLabel),
+          body: message,
+        ),
+      );
     }
   }
 

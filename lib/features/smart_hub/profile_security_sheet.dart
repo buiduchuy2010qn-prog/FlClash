@@ -103,8 +103,10 @@ class _ProfileSecuritySheetState extends ConsumerState<ProfileSecuritySheet> {
       ref
           .read(appSettingProvider.notifier)
           .update((state) => state.copyWith(hideIp: true));
-      if (system.isAndroid) {
+      if (system.isAndroid || system.isWindows) {
         ref.read(privacyScreenShieldProvider.notifier).value = true;
+      }
+      if (system.isAndroid) {
         final packages = ref.read(packagesProvider);
         if (packages.isNotEmpty) {
           final currentAccess = ref.read(vpnSettingProvider).accessControlProps;

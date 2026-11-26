@@ -1,8 +1,10 @@
 # Changelog
 
-## Fork Modifications (v0.9.10 – v0.9.26, November 2026)
+## Fork Modifications (v0.9.10 – v0.9.27, November 2026)
 
 Modified fork maintained by **Bùi Đức Huy (`@buiduchuy2010qn-prog`)** under GNU GPL-3.0 (see [LICENSE](LICENSE), [NOTICE.md](NOTICE.md), and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)):
+
+- **2026-11-26 (`v0.9.27` — Windows PC)** — Brought full feature parity to Windows (`amd64` setup & portable): added Windows `SetWindowDisplayAffinity` (`WDA_EXCLUDEFROMCAPTURE`) Privacy Screen Shield, Windows 10/11 Action Center toast notifications for plan expiry/quota/device-limit/security alerts, LAN/Mobile Hotspot proxy sharing on desktop (preserving Android-only root TUN toggle), Desktop Max Speed Boost `systemProxy` save/restore and IPv6 suppression, Smart Hub 400-day daily traffic breakdown, and selective Windows/Android GitHub Actions release packaging without moving `/releases/latest` away from Android `v0.9.26`.
 
 - **2026-11-26** — Decoupled Windows and Android OTA update discovery (`latestPlatformRelease` + `SHA256SUMS` rate-limit fallback verification and portable `-windows-` prefix matching) and separated `android` / `windows` manifests in `min_version.json` so APK-only releases never trigger update prompts on Windows PCs.
 - **2026-11-26 (`v0.9.26`)** — Unlocked full 300+ Mbps Android VPN throughput by switching Max Network Speed Boost and Optimize 4G/5G presets to `TunStack.mixed` (Linux native kernel TCP stack + gVisor UDP), raising Speed Boost TUN/override MTU to `9000` (6.6× fewer packet syscalls) and enabling Android `systemProxy: true` (`127.0.0.1:mixedPort` local bypass of `tun0`); automatically stripped template `<= 300 Mbps` Brutal rate caps (`up`/`down` such as `50/100 Mbps`) on `hysteria2` nodes in Go core (`optimizeProxyNodes`) so QUIC falls back to adaptive BBR while raising Hysteria2/TUIC QUIC receive windows (`8/16/24/48 MiB`) and defaulting `packet-encoding: xudp` + `udp: true` on `vless`/`vmess`; and updated `speedBoostPreset` localization across all 8 languages.

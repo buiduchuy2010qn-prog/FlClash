@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 
@@ -265,9 +266,11 @@ class Windows {
   static const _swHide = 0;
   static const _swShowNormal = 1;
   late DynamicLibrary _shell32;
+  late DynamicLibrary _user32;
 
   Windows._internal() {
     _shell32 = DynamicLibrary.open('shell32.dll');
+    _user32 = DynamicLibrary.open('user32.dll');
   }
 
   factory Windows() {
@@ -322,6 +325,75 @@ class Windows {
       return false;
     }
     return true;
+  }
+
+  bool setSecureScreen(bool enable) {
+    try {
+      final findWindow = _user32
+          .lookupFunction<
+            Pointer<Void> Function(
+              Pointer<Utf16> lpClassName,
+              Pointer<Utf16> lpWindowName,
+            ),
+            Pointer<Void> Function(
+              Pointer<Utf16> lpClassName,
+              Pointer<Utf16> lpWindowName,
+            )
+          >('FindWindowW');
+      final setAffinity = _user32
+          .lookupFunction<
+            Int32 Function(Pointer<Void> hWnd, Uint32 dwAffinity),
+            int Function(Pointer<Void> hWnd, int dwAffinity)
+          >('SetWindowDisplayAffinity');
+      final className = 'FLUTTER_RUNNER_WIN32_WINDOW'.toNativeUtf16();
+      try {
+        final hwnd = findWindow(className, nullptr);
+        if (hwnd == nullptr) {
+          return false;
+        }
+        return setAffinity(hwnd, enable ? 0x00000011 : 0) != 0;
+      } finally {
+        calloc.free(className);
+      }
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> showAlertNotification({
+    required String title,
+    required String body,
+  }) async {
+    try {
+      final tB64 = base64Encode(utf8.encode(title));
+      final bB64 = base64Encode(utf8.encode(body));
+      final script =
+          '\$t=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String(\'$tB64\'));'
+          '\$b=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String(\'$bB64\'));'
+          '[Windows.UI.Notifications.ToastNotificationManager,Windows.UI.Notifications,ContentType=WindowsRuntime]|Out-Null;'
+          '[Windows.Data.Xml.Dom.XmlDocument,Windows.Data.Xml.Dom.XmlDocument,ContentType=WindowsRuntime]|Out-Null;'
+          '\$x=New-Object Windows.Data.Xml.Dom.XmlDocument;'
+          '\$x.LoadXml(\'<toast><visual><binding template="ToastGeneric"><text></text><text></text></binding></visual></toast>\');'
+          '\$n=\$x.GetElementsByTagName(\'text\');'
+          '\$n.Item(0).AppendChild(\$x.CreateTextNode(\$t))|Out-Null;'
+          '\$n.Item(1).AppendChild(\$x.CreateTextNode(\$b))|Out-Null;'
+          '\$toast=[Windows.UI.Notifications.ToastNotification]::new(\$x);'
+          '[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier(\'{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\WindowsPowerShell\\v1.0\\powershell.exe\').Show(\$toast)';
+      final utf16Units = <int>[];
+      for (final unit in script.codeUnits) {
+        utf16Units
+          ..add(unit & 0xff)
+          ..add((unit >> 8) & 0xff);
+      }
+      await Process.run('powershell.exe', [
+        '-NoProfile',
+        '-NonInteractive',
+        '-WindowStyle',
+        'Hidden',
+        '-EncodedCommand',
+        base64Encode(utf16Units),
+      ]);
+    } catch (_) {}
   }
 
   /// The installer may be another administrator, so this process names the owner.
