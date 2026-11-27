@@ -222,7 +222,13 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
     if (system.isAndroid) {
       ref
           .read(vpnSettingProvider.notifier)
-          .update((state) => state.copyWith(ipv6: false));
+          .update(
+            (state) => state.copyWith(
+              ipv6: false,
+              dnsHijacking: true,
+              allowBypass: false,
+            ),
+          );
     }
     ref.read(patchClashConfigProvider.notifier).update((state) {
       return state.copyWith(
@@ -231,8 +237,19 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
           ...state.generalOverrideKeys,
           GeneralOverrideKey.ipv6,
         },
+        tunOverride: system.isDesktop
+            ? state.tunOverride.copyWith(strictRoute: true)
+            : state.tunOverride,
+        tunOverrideKeys: system.isDesktop
+            ? {...state.tunOverrideKeys, TunOverrideKey.strictRoute}
+            : state.tunOverrideKeys,
       );
     });
+    if (system.isDesktop) {
+      ref
+          .read(networkSettingProvider.notifier)
+          .update((state) => state.copyWith(appendSystemDns: false));
+    }
     await ref.read(setupActionProvider.notifier).applyPresetAndSyncTunnel();
     if (ref.read(coreStatusProvider) == CoreStatus.connected) {
       await ref.read(coreActionProvider.notifier).closeConnections();

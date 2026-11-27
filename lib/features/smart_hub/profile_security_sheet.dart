@@ -59,28 +59,50 @@ class _ProfileSecuritySheetState extends ConsumerState<ProfileSecuritySheet> {
     setState(() => _hardening = true);
     final l = context.appLocalizations;
     try {
-      const hardDns = [
-        'https://1.1.1.1/dns-query',
-        'https://8.8.8.8/dns-query',
-        'tcp://1.1.1.1:53',
-        'tcp://8.8.8.8:53',
-      ];
+      final hardDns = system.isDesktop
+          ? const [
+              '1.1.1.1',
+              '8.8.8.8',
+              'https://1.1.1.1/dns-query',
+              'https://8.8.8.8/dns-query',
+            ]
+          : const [
+              'https://1.1.1.1/dns-query',
+              'https://8.8.8.8/dns-query',
+              'tcp://1.1.1.1:53',
+              'tcp://8.8.8.8:53',
+            ];
+      final bootstrapDns = system.isDesktop
+          ? const ['1.1.1.1', '8.8.8.8', '223.5.5.5']
+          : const ['1.1.1.1', '8.8.8.8', 'system'];
+      const directDns = ['1.1.1.1', '8.8.8.8'];
       ref.read(patchClashConfigProvider.notifier).update((state) {
         return state.copyWith(
           allowLan: false,
+          ipv6: false,
+          generalOverrideKeys: {
+            ...state.generalOverrideKeys,
+            GeneralOverrideKey.ipv6,
+          },
           externalController: ExternalControllerStatus.close,
           hosts: const {},
+          tunOverride: system.isDesktop
+              ? state.tunOverride.copyWith(strictRoute: true)
+              : state.tunOverride,
+          tunOverrideKeys: system.isDesktop
+              ? {...state.tunOverrideKeys, TunOverrideKey.strictRoute}
+              : state.tunOverrideKeys,
           dns: state.dns.copyWith(
             enable: true,
             ipv6: false,
             preferH3: false,
             useHosts: true,
-            respectRules: true,
+            respectRules: false,
             enhancedMode: DnsMode.fakeIp,
             nameserver: hardDns,
-            defaultNameserver: const ['system'],
-            proxyServerNameserver: const ['system'],
-            directNameserver: const ['system'],
+            defaultNameserver: bootstrapDns,
+            proxyServerNameserver: bootstrapDns,
+            directNameserver: directDns,
           ),
           dnsOverrideKeys: {
             ...state.dnsOverrideKeys,
@@ -99,7 +121,12 @@ class _ProfileSecuritySheetState extends ConsumerState<ProfileSecuritySheet> {
       });
       ref
           .read(networkSettingProvider.notifier)
-          .update((state) => state.copyWith(bypassPrivateRoute: true));
+          .update(
+            (state) => state.copyWith(
+              bypassPrivateRoute: true,
+              appendSystemDns: false,
+            ),
+          );
       ref
           .read(appSettingProvider.notifier)
           .update((state) => state.copyWith(hideIp: true));
@@ -107,6 +134,15 @@ class _ProfileSecuritySheetState extends ConsumerState<ProfileSecuritySheet> {
         ref.read(privacyScreenShieldProvider.notifier).value = true;
       }
       if (system.isAndroid) {
+        ref
+            .read(vpnSettingProvider.notifier)
+            .update(
+              (state) => state.copyWith(
+                ipv6: false,
+                dnsHijacking: true,
+                allowBypass: false,
+              ),
+            );
         final packages = ref.read(packagesProvider);
         if (packages.isNotEmpty) {
           final currentAccess = ref.read(vpnSettingProvider).accessControlProps;

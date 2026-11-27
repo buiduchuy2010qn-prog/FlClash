@@ -138,7 +138,31 @@ final rootHotspotShareProvider =
       RootHotspotShareNotifier.new,
     );
 
+List<String> get _presetDnsResolvers => system.isDesktop
+    ? const [
+        '1.1.1.1',
+        '8.8.8.8',
+        'https://1.1.1.1/dns-query',
+        'https://8.8.8.8/dns-query',
+      ]
+    : const [
+        'https://1.1.1.1/dns-query',
+        'https://8.8.8.8/dns-query',
+        'tcp://1.1.1.1:53',
+        'tcp://8.8.8.8:53',
+      ];
+
+List<String> get _presetBootstrapDns => system.isDesktop
+    ? const ['1.1.1.1', '8.8.8.8', '223.5.5.5']
+    : const ['1.1.1.1', '8.8.8.8', 'system'];
+
+const _presetDirectDns = ['1.1.1.1', '8.8.8.8'];
+
 class Optimize4gPresetNotifier extends _PersistedBoolNotifier {
+  static const _presetTunOverrideKeys = {
+    TunOverrideKey.strictRoute,
+    TunOverrideKey.mtu,
+  };
   static const _presetDnsOverrideKeys = {
     DnsOverrideKey.enable,
     DnsOverrideKey.ipv6,
@@ -207,6 +231,8 @@ class Optimize4gPresetNotifier extends _PersistedBoolNotifier {
               stack: savedClash.tun.stack,
               mtu: savedClash.tun.mtu,
             ),
+            tunOverride: savedClash.tunOverride,
+            tunOverrideKeys: savedClash.tunOverrideKeys,
             dns: savedClash.dns,
             dnsOverrideKeys: savedClash.dnsOverrideKeys,
           );
@@ -243,6 +269,14 @@ class Optimize4gPresetNotifier extends _PersistedBoolNotifier {
             if (key != GeneralOverrideKey.ipv6) key,
         },
         tun: state.tun.copyWith(stack: TunStack.mips, mtu: defaultTunMtu),
+        tunOverride: state.tunOverride.copyWith(
+          strictRoute: false,
+          mtu: defaultTunMtu,
+        ),
+        tunOverrideKeys: {
+          for (final key in state.tunOverrideKeys)
+            if (!_presetTunOverrideKeys.contains(key)) key,
+        },
         dnsOverrideKeys: {
           for (final key in state.dnsOverrideKeys)
             if (!_presetDnsOverrideKeys.contains(key)) key,
@@ -264,13 +298,6 @@ class Optimize4gPresetNotifier extends _PersistedBoolNotifier {
 
   void applyMobilePreset() {
     if (_disposed) return;
-    const dnsResolvers = [
-      'https://1.1.1.1/dns-query',
-      'https://8.8.8.8/dns-query',
-      'tcp://1.1.1.1:53',
-      'tcp://8.8.8.8:53',
-    ];
-    const systemBootstrap = ['system'];
     final speedBoostOn = ref.read(speedBoostPresetProvider);
     ref.read(patchClashConfigProvider.notifier).update((state) {
       return state.copyWith(
@@ -283,19 +310,25 @@ class Optimize4gPresetNotifier extends _PersistedBoolNotifier {
         tun: state.tun.copyWith(
           enable: system.isDesktop ? true : state.tun.enable,
           stack: TunStack.mixed,
-          mtu: speedBoostOn ? defaultTunMtu : 1400,
+          mtu: (speedBoostOn || system.isDesktop) ? defaultTunMtu : 1400,
         ),
+        tunOverride: system.isDesktop
+            ? state.tunOverride.copyWith(strictRoute: true, mtu: defaultTunMtu)
+            : state.tunOverride,
+        tunOverrideKeys: system.isDesktop
+            ? {...state.tunOverrideKeys, ..._presetTunOverrideKeys}
+            : state.tunOverrideKeys,
         dns: state.dns.copyWith(
           enable: true,
           ipv6: false,
           preferH3: false,
           useHosts: true,
-          respectRules: true,
+          respectRules: false,
           enhancedMode: DnsMode.fakeIp,
-          nameserver: dnsResolvers,
-          defaultNameserver: systemBootstrap,
-          proxyServerNameserver: systemBootstrap,
-          directNameserver: systemBootstrap,
+          nameserver: _presetDnsResolvers,
+          defaultNameserver: _presetBootstrapDns,
+          proxyServerNameserver: _presetBootstrapDns,
+          directNameserver: _presetDirectDns,
         ),
         dnsOverrideKeys: {...state.dnsOverrideKeys, ..._presetDnsOverrideKeys},
       );
@@ -433,12 +466,14 @@ class SpeedBoostPresetNotifier extends _PersistedBoolNotifier {
               systemProxy: savedVpn.systemProxy,
               ipv6: savedVpn.ipv6,
               dnsHijacking: savedVpn.dnsHijacking,
+              allowBypass: savedVpn.allowBypass,
             );
           });
         }
         ref.read(networkSettingProvider.notifier).update((state) {
           return state.copyWith(
             bypassPrivateRoute: savedNetwork.bypassPrivateRoute,
+            appendSystemDns: savedNetwork.appendSystemDns,
             systemProxy: system.isDesktop
                 ? savedNetwork.systemProxy
                 : state.systemProxy,
@@ -470,6 +505,7 @@ class SpeedBoostPresetNotifier extends _PersistedBoolNotifier {
           congestionController: defaultCongestionController,
         ),
         tunOverride: state.tunOverride.copyWith(
+          strictRoute: false,
           mtu: defaultTunMtu,
           congestionController: defaultCongestionController,
         ),
@@ -477,7 +513,8 @@ class SpeedBoostPresetNotifier extends _PersistedBoolNotifier {
           for (final key in state.tunOverrideKeys)
             if (!_speedTunOverrideKeys.contains(key) &&
                 key != TunOverrideKey.congestionController &&
-                key != TunOverrideKey.mtu)
+                key != TunOverrideKey.mtu &&
+                key != TunOverrideKey.strictRoute)
               key,
         },
         dnsOverrideKeys: {
@@ -486,20 +523,17 @@ class SpeedBoostPresetNotifier extends _PersistedBoolNotifier {
         },
       );
     });
-    if (ref.read(optimize4gPresetProvider)) {
+    if (!ref.read(optimize4gPresetProvider)) {
+      ref.read(networkSettingProvider.notifier).update((state) {
+        return state.copyWith(appendSystemDns: true);
+      });
+    } else {
       ref.read(optimize4gPresetProvider.notifier).applyMobilePreset();
     }
   }
 
   void applySpeedPreset() {
     if (_disposed) return;
-    const dnsResolvers = [
-      'https://1.1.1.1/dns-query',
-      'https://8.8.8.8/dns-query',
-      'tcp://1.1.1.1:53',
-      'tcp://8.8.8.8:53',
-    ];
-    const systemBootstrap = ['system'];
     ref.read(patchClashConfigProvider.notifier).update((state) {
       return state.copyWith(
         ipv6: false,
@@ -515,26 +549,32 @@ class SpeedBoostPresetNotifier extends _PersistedBoolNotifier {
           GeneralOverrideKey.ipv6,
         },
         tun: state.tun.copyWith(
+          enable: system.isDesktop ? true : state.tun.enable,
           stack: TunStack.mixed,
           congestionController: defaultCongestionController,
           mtu: defaultTunMtu,
         ),
         tunOverride: state.tunOverride.copyWith(
+          strictRoute: system.isDesktop ? true : state.tunOverride.strictRoute,
           congestionController: defaultCongestionController,
           mtu: defaultTunMtu,
         ),
-        tunOverrideKeys: {...state.tunOverrideKeys, ..._speedTunOverrideKeys},
+        tunOverrideKeys: {
+          ...state.tunOverrideKeys,
+          ..._speedTunOverrideKeys,
+          if (system.isDesktop) TunOverrideKey.strictRoute,
+        },
         dns: state.dns.copyWith(
           enable: true,
           ipv6: false,
           preferH3: false,
           useHosts: true,
-          respectRules: true,
+          respectRules: false,
           enhancedMode: DnsMode.fakeIp,
-          nameserver: dnsResolvers,
-          defaultNameserver: systemBootstrap,
-          proxyServerNameserver: systemBootstrap,
-          directNameserver: systemBootstrap,
+          nameserver: _presetDnsResolvers,
+          defaultNameserver: _presetBootstrapDns,
+          proxyServerNameserver: _presetBootstrapDns,
+          directNameserver: _presetDirectDns,
         ),
         dnsOverrideKeys: {...state.dnsOverrideKeys, ..._speedDnsOverrideKeys},
       );
@@ -548,6 +588,7 @@ class SpeedBoostPresetNotifier extends _PersistedBoolNotifier {
               systemProxy: true,
               ipv6: false,
               dnsHijacking: true,
+              allowBypass: false,
             ),
           );
     }
@@ -556,6 +597,7 @@ class SpeedBoostPresetNotifier extends _PersistedBoolNotifier {
         .update(
           (state) => state.copyWith(
             bypassPrivateRoute: true,
+            appendSystemDns: false,
             systemProxy: system.isDesktop ? true : state.systemProxy,
           ),
         );

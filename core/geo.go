@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -373,9 +374,77 @@ func deferredGeoSnapshot() []string {
 	return append([]string(nil), deferredGeoTypes...)
 }
 
+var isWindowsPlatform = runtime.GOOS == "windows"
+
+func isWindowsHostRuntime() bool {
+	return isWindowsPlatform && !isAndroidRuntime
+}
+
+func stripSystemDNSServers(servers []string) ([]string, bool) {
+	if len(servers) == 0 {
+		return servers, false
+	}
+	kept := make([]string, 0, len(servers))
+	removedSystem := false
+	for _, entry := range servers {
+		trimmed := strings.ToLower(strings.TrimSpace(entry))
+		if trimmed == "system" || trimmed == "system://" {
+			removedSystem = true
+			continue
+		}
+		kept = append(kept, entry)
+	}
+	return kept, removedSystem
+}
+
+func ensureRawDoTHosts(raw *config.RawConfig) {
+	if raw.Hosts == nil {
+		raw.Hosts = make(map[string]any)
+	}
+	for _, entry := range androidDoTHosts {
+		if _, exists := raw.Hosts[entry.host]; !exists {
+			ips := make([]string, len(entry.ips))
+			copy(ips, entry.ips)
+			raw.Hosts[entry.host] = ips
+		}
+	}
+}
+
+func enforceWindowsDualStackGuard(raw *config.RawConfig) {
+	if !isWindowsHostRuntime() || raw == nil {
+		return
+	}
+	if !raw.IPv6 && len(raw.Tun.RouteAddress) == 0 {
+		raw.Tun.StrictRoute = true
+	}
+	if !raw.Tun.StrictRoute || !raw.DNS.Enable {
+		return
+	}
+	ensureRawDoTHosts(raw)
+	raw.DNS.NameServer, _ = stripSystemDNSServers(raw.DNS.NameServer)
+	raw.DNS.DefaultNameserver, _ = stripSystemDNSServers(raw.DNS.DefaultNameserver)
+	proxyServers, hadSystemProxy := stripSystemDNSServers(raw.DNS.ProxyServerNameserver)
+	raw.DNS.ProxyServerNameserver = proxyServers
+	directServers, hadSystemDirect := stripSystemDNSServers(raw.DNS.DirectNameServer)
+	raw.DNS.DirectNameServer = directServers
+	if len(raw.DNS.DefaultNameserver) == 0 {
+		raw.DNS.DefaultNameserver = []string{"1.1.1.1", "8.8.8.8", "223.5.5.5"}
+	}
+	if hadSystemProxy && len(raw.DNS.ProxyServerNameserver) == 0 {
+		raw.DNS.ProxyServerNameserver = []string{"1.1.1.1", "8.8.8.8", "223.5.5.5"}
+	}
+	if hadSystemDirect && len(raw.DNS.DirectNameServer) == 0 {
+		raw.DNS.DirectNameServer = []string{"1.1.1.1", "8.8.8.8"}
+	}
+	if len(raw.DNS.NameServer) == 0 {
+		raw.DNS.NameServer = []string{"1.1.1.1", "8.8.8.8", "https://1.1.1.1/dns-query", "https://8.8.8.8/dns-query"}
+	}
+}
+
 func prepareRawConfigForParse(raw *config.RawConfig) {
 	pruneUnusedGeoFiles(raw)
 	setDeferredGeoResources(filterUnavailableGeoRules(raw))
+	enforceWindowsDualStackGuard(raw)
 }
 
 func scheduleDeferredGeoDownloads() {
