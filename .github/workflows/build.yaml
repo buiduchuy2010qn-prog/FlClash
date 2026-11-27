@@ -415,10 +415,10 @@ jobs:
           make_latest: ${{ needs.version.outputs.target_platform != 'windows' }}
           body: |
             <!-- flclash:changelog:begin -->
-            - Đồng bộ toàn bộ tính năng mới lên Windows PC (v0.9.27): Trung tâm thông minh (Smart Hub), Tự sửa mạng 1 chạm, Kiểm tra đa trang web & ping, Tăng tốc mạng Mixed + mở khóa cửa sổ QUIC/Hysteria2 và System Proxy
-            - Quét gói VPN nguy hiểm & Khắc phục 1 chạm, kiểm tra rò rỉ IP/DNS/IPv6, Khiên chống chụp màn hình (WDA_EXCLUDEFROMCAPTURE) và Chia sẻ LAN/Hotspot trực tiếp trên PC
-            - Thông báo Windows Action Center khi gói sắp hết hạn, sắp hết dung lượng, vượt số thiết bị hoặc phát hiện rủi ro bảo mật; đồng bộ tài khoản cổng gói & đếm thiết bị online; thống kê lưu lượng 400 ngày trong Smart Hub
-            - Tách rời hoàn toàn kênh cập nhật OTA giữa Windows và Android để mỗi nền tảng chỉ nhận đúng bản cập nhật của mình
+            - Chặn triệt để rò rỉ IPv6 và lọt lưu lượng ra ngoài VPN trên cả Windows PC (.exe) lẫn Android (.apk) khi mạng gốc có dual-stack IPv4+IPv6
+            - Tự động bật strict-route (WFP IPv6 block) trên Windows khi tắt IPv6, bỏ system/system:// khỏi DNS và điền sẵn bootstrap DNS trực tiếp để Speedtest/trình duyệt đạt tốc độ cao và tính 100% lưu lượng
+            - Khóa allowBypass và tự động chiếm quyền DNS port 53 trên Android khi tắt IPv6 để tránh app tự nối socket trực tiếp bỏ qua VPN
+            - Sửa các preset Smart Hub (Tối ưu 4G, Tăng tốc mạng, Gia cố 1 chạm, Bảo vệ 1 thiết bị) giữ đồng bộ strict-route, MTU 9000 và DNS nhanh cho từng nền tảng
             <!-- flclash:changelog:end -->
 
             ### Hướng dẫn chọn file tải phù hợp:

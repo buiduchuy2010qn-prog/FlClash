@@ -445,6 +445,10 @@ func optimizeConfigDocument(document, profile *yaml.Node) {
 	optimizeProxyNodes(root)
 	optimizeProxyProviders(root)
 	optimizeProxyGroups(root)
+	if isWindowsHostRuntime() {
+		ensureAndroidHosts(root)
+		ensureAndroidProfilePersistence(root)
+	}
 	if !isAndroidRuntime {
 		return
 	}

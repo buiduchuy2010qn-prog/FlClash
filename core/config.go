@@ -126,6 +126,9 @@ func withPlatformLimits(cfg *config.Config) *config.Config {
 		log.Warnln("ntp write-to-system ignored: Android does not let apps set the system time")
 		cfg.NTP.WriteToSystem = false
 	}
+	if isWindowsHostRuntime() && cfg != nil && cfg.General != nil && !cfg.General.IPv6 && len(cfg.General.Tun.RouteAddress) == 0 {
+		cfg.General.Tun.StrictRoute = true
+	}
 	return sanitizeConfigSecurity(cfg)
 }
 
@@ -238,6 +241,9 @@ func updateConfig(params *UpdateParams) error {
 	}
 	if params.Tun != nil {
 		patchTun(&general.Tun, params.Tun)
+	}
+	if isWindowsHostRuntime() && !general.IPv6 && general.Tun.Enable && len(general.Tun.RouteAddress) == 0 {
+		general.Tun.StrictRoute = true
 	}
 	patchController(params)
 	if params.Authentication != nil {

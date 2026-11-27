@@ -332,22 +332,46 @@ void main() {
       expect(clash.mode, Mode.global);
       expect(clash.ipv6, isFalse);
       expect(clash.generalOverrideKeys, contains(GeneralOverrideKey.ipv6));
-      expect(clash.tun.mtu, 1400);
+      expect(clash.tun.mtu, system.isDesktop ? defaultTunMtu : 1400);
       expect(clash.dns.ipv6, isFalse);
       expect(clash.dns.preferH3, isFalse);
       expect(clash.dns.useHosts, isTrue);
-      expect(clash.dns.respectRules, isTrue);
+      expect(clash.dns.respectRules, isFalse);
       expect(clash.dns.enhancedMode, DnsMode.fakeIp);
-      expect(clash.dns.nameserver, [
-        'https://1.1.1.1/dns-query',
-        'https://8.8.8.8/dns-query',
-        'tcp://1.1.1.1:53',
-        'tcp://8.8.8.8:53',
-      ]);
+      expect(
+        clash.dns.nameserver,
+        system.isDesktop
+            ? const [
+                '1.1.1.1',
+                '8.8.8.8',
+                'https://1.1.1.1/dns-query',
+                'https://8.8.8.8/dns-query',
+              ]
+            : const [
+                'https://1.1.1.1/dns-query',
+                'https://8.8.8.8/dns-query',
+                'tcp://1.1.1.1:53',
+                'tcp://8.8.8.8:53',
+              ],
+      );
       expect(clash.dnsOverrideKeys, contains(DnsOverrideKey.preferH3));
-      expect(clash.dns.defaultNameserver, ['system']);
-      expect(clash.dns.proxyServerNameserver, ['system']);
-      expect(clash.dns.directNameserver, ['system']);
+      expect(
+        clash.dns.defaultNameserver,
+        system.isDesktop
+            ? const ['1.1.1.1', '8.8.8.8', '223.5.5.5']
+            : const ['1.1.1.1', '8.8.8.8', 'system'],
+      );
+      expect(
+        clash.dns.proxyServerNameserver,
+        system.isDesktop
+            ? const ['1.1.1.1', '8.8.8.8', '223.5.5.5']
+            : const ['1.1.1.1', '8.8.8.8', 'system'],
+      );
+      expect(clash.dns.directNameserver, const ['1.1.1.1', '8.8.8.8']);
+      if (system.isDesktop) {
+        expect(clash.tunOverride.strictRoute, isTrue);
+        expect(clash.tunOverrideKeys, contains(TunOverrideKey.strictRoute));
+      }
 
       final network = presetContainer.read(networkSettingProvider);
       expect(network.bypassPrivateRoute, isTrue);
@@ -382,12 +406,14 @@ void main() {
         );
         await notifier.enablePreset();
 
+        final enabled = presetContainer.read(patchClashConfigProvider);
         expect(presetContainer.read(optimize4gPresetProvider), isTrue);
-        expect(
-          presetContainer.read(patchClashConfigProvider).mode,
-          Mode.global,
-        );
-        expect(presetContainer.read(patchClashConfigProvider).tun.mtu, 1400);
+        expect(enabled.mode, Mode.global);
+        expect(enabled.tun.mtu, system.isDesktop ? defaultTunMtu : 1400);
+        if (system.isDesktop) {
+          expect(enabled.tunOverride.strictRoute, isTrue);
+          expect(enabled.tunOverrideKeys, contains(TunOverrideKey.strictRoute));
+        }
         expect(
           presetContainer.read(networkSettingProvider).appendSystemDns,
           isFalse,
@@ -395,20 +421,14 @@ void main() {
 
         await notifier.disablePresetAndRestore();
 
+        final restored = presetContainer.read(patchClashConfigProvider);
         expect(presetContainer.read(optimize4gPresetProvider), isFalse);
-        expect(presetContainer.read(patchClashConfigProvider).mode, Mode.rule);
-        expect(
-          presetContainer.read(patchClashConfigProvider).tun.mtu,
-          defaultTunMtu,
-        );
-        expect(
-          presetContainer.read(patchClashConfigProvider).generalOverrideKeys,
-          isEmpty,
-        );
-        expect(
-          presetContainer.read(patchClashConfigProvider).dnsOverrideKeys,
-          isEmpty,
-        );
+        expect(restored.mode, Mode.rule);
+        expect(restored.tun.mtu, defaultTunMtu);
+        expect(restored.tunOverride.strictRoute, isFalse);
+        expect(restored.tunOverrideKeys, isEmpty);
+        expect(restored.generalOverrideKeys, isEmpty);
+        expect(restored.dnsOverrideKeys, isEmpty);
         expect(
           presetContainer.read(networkSettingProvider).appendSystemDns,
           isTrue,
@@ -443,9 +463,18 @@ void main() {
         expect(enabled.tun.stack, TunStack.mixed);
         expect(enabled.tun.mtu, defaultTunMtu);
         expect(enabled.tunOverride.mtu, defaultTunMtu);
+        if (system.isDesktop) {
+          expect(enabled.tunOverride.strictRoute, isTrue);
+          expect(enabled.tunOverrideKeys, contains(TunOverrideKey.strictRoute));
+        }
         expect(enabled.tcpConcurrent, isFalse);
         expect(enabled.dns.preferH3, isFalse);
+        expect(enabled.dns.respectRules, isFalse);
         expect(enabled.dnsOverrideKeys, contains(DnsOverrideKey.preferH3));
+        expect(
+          presetContainer.read(networkSettingProvider).appendSystemDns,
+          isFalse,
+        );
 
         await notifier.disablePresetAndRestore();
 
@@ -453,6 +482,8 @@ void main() {
         expect(presetContainer.read(speedBoostPresetProvider), isFalse);
         expect(restored.tun.stack, TunStack.mips);
         expect(restored.tunOverride.mtu, defaultTunMtu);
+        expect(restored.tunOverride.strictRoute, isFalse);
+        expect(restored.tunOverrideKeys, isEmpty);
         expect(restored.dnsOverrideKeys, isEmpty);
       },
     );

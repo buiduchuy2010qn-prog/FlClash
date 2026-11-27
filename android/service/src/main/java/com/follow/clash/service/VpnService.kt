@@ -76,7 +76,7 @@ class VpnService : SystemVpnService(), ManagedService {
 
     private val VpnOptions.tunDns
         get(): String {
-            if (dnsHijacking || NetworkObserver.isActiveNetworkUnvalidatedCellular()) {
+            if (dnsHijacking || !ipv6 || NetworkObserver.isActiveNetworkUnvalidatedCellular()) {
                 return if (ipv6) "$NET_ANY,$NET_ANY6" else NET_ANY
             }
             return buildString {
@@ -136,7 +136,7 @@ class VpnService : SystemVpnService(), ManagedService {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 setMetered(false)
             }
-            if (options.allowBypass && !NetworkObserver.isActiveNetworkUnvalidatedCellular()) {
+            if (options.allowBypass && options.ipv6 && !NetworkObserver.isActiveNetworkUnvalidatedCellular()) {
                 allowBypass()
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && options.systemProxy) {

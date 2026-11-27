@@ -759,3 +759,58 @@ func TestOptimizeProxyNodesUnlocksHysteria2CapAndHighBDPWindows(t *testing.T) {
 		t.Errorf("expected QUIC windows on tuic, got %#v", tuic)
 	}
 }
+
+func TestEnforceWindowsDualStackGuard(t *testing.T) {
+	prevWin := isWindowsPlatform
+	prevAndroid := isAndroidRuntime
+	isWindowsPlatform = true
+	isAndroidRuntime = false
+	t.Cleanup(func() {
+		isWindowsPlatform = prevWin
+		isAndroidRuntime = prevAndroid
+	})
+
+	raw := config.DefaultRawConfig()
+	raw.IPv6 = false
+	raw.Tun.StrictRoute = false
+	raw.Tun.RouteAddress = nil
+	raw.DNS.Enable = true
+	raw.DNS.NameServer = []string{"system://"}
+	raw.DNS.DefaultNameserver = []string{"system"}
+	raw.DNS.ProxyServerNameserver = []string{"system"}
+	raw.DNS.DirectNameServer = []string{"system://"}
+
+	enforceWindowsDualStackGuard(raw)
+
+	if !raw.Tun.StrictRoute {
+		t.Fatalf("expected StrictRoute=true when IPv6=false on Windows")
+	}
+	if !slices.Equal(raw.DNS.DefaultNameserver, []string{"1.1.1.1", "8.8.8.8", "223.5.5.5"}) {
+		t.Fatalf("DefaultNameserver = %v, want direct IPv4 bootstrap resolvers", raw.DNS.DefaultNameserver)
+	}
+	if !slices.Equal(raw.DNS.ProxyServerNameserver, []string{"1.1.1.1", "8.8.8.8", "223.5.5.5"}) {
+		t.Fatalf("ProxyServerNameserver = %v, want direct IPv4 bootstrap resolvers", raw.DNS.ProxyServerNameserver)
+	}
+	if !slices.Equal(raw.DNS.DirectNameServer, []string{"1.1.1.1", "8.8.8.8"}) {
+		t.Fatalf("DirectNameServer = %v, want direct IPv4 resolvers", raw.DNS.DirectNameServer)
+	}
+	if !slices.Equal(raw.DNS.NameServer, []string{"1.1.1.1", "8.8.8.8", "https://1.1.1.1/dns-query", "https://8.8.8.8/dns-query"}) {
+		t.Fatalf("NameServer = %v, want IPv4+DoH resolvers without system", raw.DNS.NameServer)
+	}
+	if _, ok := raw.Hosts["1dot1dot1dot1.cloudflare-dns.com"]; !ok {
+		t.Fatalf("expected DoH/DoT static hosts populated, got %#v", raw.Hosts)
+	}
+
+	rawV6 := config.DefaultRawConfig()
+	rawV6.IPv6 = true
+	rawV6.Tun.StrictRoute = false
+	rawV6.DNS.Enable = true
+	rawV6.DNS.DefaultNameserver = []string{"system"}
+	enforceWindowsDualStackGuard(rawV6)
+	if rawV6.Tun.StrictRoute {
+		t.Fatalf("expected StrictRoute to stay false when IPv6=true")
+	}
+	if !slices.Equal(rawV6.DNS.DefaultNameserver, []string{"system"}) {
+		t.Fatalf("expected DNS to stay untouched when StrictRoute=false, got %v", rawV6.DNS.DefaultNameserver)
+	}
+}
