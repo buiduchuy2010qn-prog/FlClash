@@ -264,41 +264,37 @@ void main() {
       await tapCancel(tester);
     });
 
-    testWidgets(
-      'reports a missing release file without opening the repository page',
-      (tester) async {
-        request.releaseDio.httpClientAdapter = _ReleaseAdapter(
-          sums: '$digest  FlClash-0.8.96-android-armv7.apk\n',
-          asset: () => ResponseBody.fromBytes(package, 200),
-        );
+    testWidgets('opens the release page for a file the release lacks', (
+      tester,
+    ) async {
+      request.releaseDio.httpClientAdapter = _ReleaseAdapter(
+        sums: '$digest  FlClash-0.8.96-android-armv7.apk\n',
+        asset: () => ResponseBody.fromBytes(package, 200),
+      );
 
-        final printed = <String>[];
-        final previousPrint = debugPrint;
-        debugPrint = (message, {wrapWidth}) => printed.add(message ?? '');
-        addTearDown(() => debugPrint = previousPrint);
+      final printed = <String>[];
+      final previousPrint = debugPrint;
+      debugPrint = (message, {wrapWidth}) => printed.add(message ?? '');
+      addTearDown(() => debugPrint = previousPrint);
 
-        final container = await startUpdate(tester);
-        await settleUntil(
-          tester,
-          () => printed.any(
-            (m) => m.contains('The update file is not in the release.'),
-          ),
-        );
-        await tester.pump();
+      final container = await startUpdate(tester);
+      await settleUntil(tester, () => launched.isNotEmpty);
+      await tester.pump();
 
-        expect(container.read(updateDownloadStateProvider), isNull);
-        expect(launched, isEmpty);
-        expect(
-          printed,
-          contains(
-            '[APP] banner: The update file is not in the release. '
-            'Download it from the release page.',
-          ),
-        );
-        expect(shows('Update failed'), isFalse);
-        await tester.pump(const Duration(seconds: 10));
-      },
-    );
+      expect(container.read(updateDownloadStateProvider), isNull);
+      expect(launched, [
+        Uri.parse('https://github.com/$repository/releases/tag/v0.8.96'),
+      ]);
+      expect(
+        printed,
+        contains(
+          '[APP] banner: The update file is not in the release. '
+          'Download it from the release page.',
+        ),
+      );
+      expect(shows('Update failed'), isFalse);
+      await tester.pump(const Duration(seconds: 10));
+    });
 
     testWidgets('downloads without blocking and waits to install', (
       tester,
@@ -398,6 +394,8 @@ void main() {
     container
         .read(viewSizeProvider.notifier)
         .update((_) => const Size(1200, 800));
+    await tester.binding.setSurfaceSize(const Size(800, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await tester.pumpWidget(
       UncontrolledProviderScope(

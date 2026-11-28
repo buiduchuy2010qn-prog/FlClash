@@ -185,10 +185,7 @@ void main() {
     final l10n = currentAppLocalizations;
     await tester.tap(find.text(l10n.link));
     await tester.pumpAndSettle();
-    await tester.enterText(
-      _field(l10n.link),
-      'wireguard://key@example.com:51820',
-    );
+    await tester.enterText(_field(l10n.link), 'gopher://user@example.com:70');
     await tester.pump();
     await tester.tap(find.text(l10n.submit));
     await tester.pumpAndSettle();

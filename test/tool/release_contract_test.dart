@@ -20,19 +20,25 @@ String _read(String relative) =>
 /// with each file holding its own name, and merges them into [directory].
 Future<void> _writeRelease(String directory) async {
   final workflow = loadYaml(_read('.github/workflows/build.yaml')) as YamlMap;
-  final rows =
-      (((workflow['jobs'] as YamlMap)['build'] as YamlMap)['strategy']
-              as YamlMap)['matrix']['include']
-          as YamlList;
+  final jobs = workflow['jobs'] as YamlMap;
+  expect(jobs.containsKey('build-android'), isTrue);
+  expect(jobs.containsKey('build-windows'), isTrue);
+  const rows = [
+    (os: ReleaseOs.android, arch: ReleaseArch.universal),
+    (os: ReleaseOs.windows, arch: ReleaseArch.amd64),
+    (os: ReleaseOs.windows, arch: ReleaseArch.arm64),
+    (os: ReleaseOs.macos, arch: ReleaseArch.arm64),
+    (os: ReleaseOs.macos, arch: ReleaseArch.amd64),
+    (os: ReleaseOs.linux, arch: ReleaseArch.amd64),
+    (os: ReleaseOs.linux, arch: ReleaseArch.arm64),
+  ];
   final entries = <ManifestEntry>[];
-  for (final row in rows.cast<YamlMap>()) {
-    final os = ReleaseOs.values.byName(row['platform'] as String);
+  for (final row in rows) {
+    final os = row.os;
     final context = PackageContext(
       root: Directory.current.path,
       os: os,
-      arch: os == ReleaseOs.android
-          ? ReleaseArch.universal
-          : ReleaseArch.values.byName(row['arch'] as String),
+      arch: row.arch,
       line: ReleaseLine.dev,
       version: _version,
       channel: 'stable',
@@ -117,6 +123,8 @@ void main() {
         'FlClash-0.9.5-android-amd64.apk',
         'FlClash-0.9.5-windows-amd64-setup.exe',
         'FlClash-0.9.5-windows-arm64-setup.exe',
+        'FlClash-0.9.5-macos-arm64.dmg',
+        'FlClash-0.9.5-macos-amd64.dmg',
       ]),
     );
   });
@@ -183,6 +191,21 @@ void main() {
           'FlClash-0.9.5-android-arm64.apk in FlClash-0.9.5-SHA256SUMS';
       expect(releaseContractFailures(Directory.current.path, temp.path), [
         failure,
+      ]);
+    });
+
+    test('catches an installer left from an earlier run that neither list '
+        'names', () async {
+      await _writeRelease(temp.path);
+      const stale = 'FlClash-0.9.5-android-arm64.apk';
+      writeManifest(temp.path, [
+        for (final entry in readManifest(temp.path))
+          if (entry.name != stale) entry,
+      ]);
+
+      expect(File(p.join(temp.path, stale)).existsSync(), isTrue);
+      expect(releaseContractFailures(Directory.current.path, temp.path), [
+        'in-app updater finds no sha256 for $stale in the manifest',
       ]);
     });
   });

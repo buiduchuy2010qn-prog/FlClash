@@ -134,7 +134,7 @@ void main() {
     expect(horizontal.position.maxScrollExtent, 0);
 
     vertical.jumpTo(140 * editorLineHeight);
-    await settle(tester, 2);
+    await settle(tester);
 
     expect(
       horizontal.position.maxScrollExtent,

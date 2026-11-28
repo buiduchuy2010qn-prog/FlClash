@@ -199,7 +199,15 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
           .update((state) => state.copyWith(ipv6: false));
       ref
           .read(patchClashConfigProvider.notifier)
-          .update((state) => state.copyWith(ipv6: false));
+          .update(
+            (state) => state.copyWith(
+              ipv6: false,
+              generalOverrideKeys: {
+                ...state.generalOverrideKeys,
+                GeneralOverrideKey.ipv6,
+              },
+            ),
+          );
     }
     if (ref.read(coreStatusProvider) == CoreStatus.connected) {
       await ref.read(coreActionProvider.notifier).closeConnections();

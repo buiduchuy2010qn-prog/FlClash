@@ -44,7 +44,6 @@
   "ja": "Tiếng Nhật",
   "ko": "Tiếng Hàn",
   "ru": "Tiếng Nga",
-  "vi": "Tiếng Việt",
   "zhCN": "Tiếng Trung giản thể",
   "theme": "Giao diện",
   "extend": "Mở rộng",
@@ -60,6 +59,9 @@
   "logcat": "Logcat",
   "logcatDesc": "Tắt Logcat sẽ ẩn mục nhật ký.",
   "autoCheckUpdate": "Tự động kiểm tra cập nhật",
+  "updateChannel": "Kênh cập nhật",
+  "updateChannelStable": "Ổn định",
+  "updateChannelPre": "Thử nghiệm",
   "checkCertificate": "Xác minh chứng chỉ TLS",
   "checkCertificateDesc": "Khi tắt xác minh TLS, các gói đăng ký và bản sao lưu có thể bị tấn công trung gian.",
   "accessControl": "Kiểm soát truy cập",
@@ -156,13 +158,12 @@
   "search": "Tìm kiếm",
   "allowBypass": "Cho phép ứng dụng bỏ qua VPN",
   "externalController": "Bộ điều khiển ngoài",
-  "externalControllerDesc": "Bộ điều khiển ngoài cho phép điều khiển nhân qua cổng 9090.",
+  "externalControllerDesc": "Bộ điều khiển ngoài lắng nghe trên cổng 9090.",
   "externalControllerSecret": "Khóa bộ điều khiển ngoài",
   "ipv6Desc": "Chỉ nhận lưu lượng IPv6 khi đã bật IPv6.",
   "app": "Ứng dụng",
   "general": "Chung",
   "startupAndBackground": "Khởi động và chạy nền",
-  "requestsAndUpdates": "Yêu cầu và cập nhật",
   "logsAndDiagnostics": "Nhật ký và chẩn đoán",
   "userAgent": "User-Agent",
   "unifiedDelay": "Độ trễ thống nhất",
@@ -175,6 +176,126 @@
   "infiniteTime": "Không hết hạn",
   "connections": "Kết nối",
   "liveConnections": "Kết nối thời gian thực",
+  "speed": "Tốc độ",
+  "closeActiveConnections": "Đóng toàn bộ kết nối đang hoạt động",
+  "closeActiveConnectionsTip": "{count, plural, =1{1 kết nối đang hoạt động sẽ đóng.} other{{count} kết nối đang hoạt động sẽ đóng.}} Các ứng dụng dùng kết nối này sẽ tự kết nối lại, nhưng tải xuống và cuộc gọi đang diễn ra có thể bị gián đoạn.",
+  "@closeActiveConnectionsTip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "connectionsAll": "Tất cả",
+  "connectionsActive": "Đang hoạt động",
+  "connectionsFailed": "Thất bại",
+  "connectionsDecrypted": "Đã giải mã",
+  "connectionRuleGlobal": "Chế độ toàn cục",
+  "connectionRuleNone": "Không có quy tắc",
+  "failureRefused": "Bị từ chối",
+  "failureUnreachable": "Không thể truy cập",
+  "failureDns": "Lỗi DNS",
+  "dnsNoSuchDomain": "Không có tên miền này",
+  "dnsServerFailure": "Máy chủ DNS nguồn gặp lỗi",
+  "dnsRefused": "Bị máy chủ DNS nguồn từ chối",
+  "dnsTimedOut": "Truy vấn quá thời gian chờ",
+  "dnsBlockedByRule": "Bị chặn bởi quy tắc",
+  "failureHandshake": "Bắt tay thất bại",
+  "failureOther": "Lỗi khác",
+  "connectionClosed": "Đã đóng",
+  "timeline": "Dòng thời gian",
+  "connectionInfo": "Thông tin",
+  "decryption": "Giải mã",
+  "connectionRuleIndex": "#{number}",
+  "handshake": "Bắt tay",
+  "now": "Hiện tại",
+  "mitmCertificateRefused": "Chứng chỉ bị từ chối",
+  "connectionEndLocal": "Đóng cục bộ",
+  "connectionEndRemote": "Đóng bởi máy chủ đích",
+  "connectionEndFinished": "Hoàn tất",
+  "connectionEndReset": "Bị đặt lại",
+  "connectionEndCore": "Đóng bởi nhân",
+  "fakeIpMapping": "Ánh xạ fake-ip",
+  "dnsFromHosts": "Từ hosts",
+  "condition": "Điều kiện",
+  "addCondition": "Thêm điều kiện",
+  "conditionField": "Trường",
+  "conditionContains": "Chứa",
+  "conditionEquals": "Bằng",
+  "conditionTip": "Các điều kiện trên cùng một trường khớp bất kỳ điều kiện nào; trên các trường khác nhau phải khớp tất cả. Ô tìm kiếm dùng cú pháp tương tự, ví dụ: host:github.com -app:chrome.",
+  "conditionNotContains": "Không chứa",
+  "conditionNotEquals": "Không bằng",
+  "editCondition": "Chỉnh sửa điều kiện",
+  "conditionValuesIn": "{field} nằm trong danh sách",
+  "@conditionValuesIn": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "conditionShows": "Kết nối hiển thị: {count}",
+  "@conditionShows": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "conditionRows": "Bất kỳ trong một hàng, khớp mọi hàng",
+  "clearAll": "Xóa tất cả",
+  "conditionOr": "hoặc",
+  "selectConnection": "Chọn một kết nối",
+  "selectConnectionHint": "Dòng thời gian, yêu cầu HTTP và chi tiết kết nối sẽ hiển thị tại đây",
+  "selectDnsQuery": "Chọn một truy vấn",
+  "selectDnsQueryHint": "Kết quả trả về, máy chủ nguồn và kết nối liên quan sẽ hiển thị tại đây",
+  "relatedConnections": "Kết nối liên quan",
+  "upstream": "Máy chủ nguồn",
+  "dnsQueryFields": "Truy vấn",
+  "dnsQueryAskedBy": "Hỏi bởi {initiator}",
+  "@dnsQueryAskedBy": {
+    "placeholders": {
+      "initiator": {
+        "type": "String"
+      }
+    }
+  },
+  "dnsConditionTip": "Các điều kiện trên cùng một trường khớp bất kỳ điều kiện nào; trên các trường khác nhau phải khớp tất cả.",
+  "dnsConditionValuesIn": "{field} nằm trong danh sách",
+  "@dnsConditionValuesIn": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "dnsConditionShows": "Truy vấn hiển thị: {count}",
+  "@dnsConditionShows": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "connectionPath": "Đường dẫn",
+  "processPath": "Đường dẫn tiến trình",
+  "proxyNode": "Nút",
+  "closingTime": "Đóng lúc",
+  "processUid": "UID {uid}",
+  "@processUid": {
+    "placeholders": {
+      "uid": {
+        "type": "int"
+      }
+    }
+  },
+  "onlyThisApp": "Chỉ ứng dụng này",
+  "onlyThisDomain": "Chỉ tên miền này",
+  "hideThisHost": "Ẩn máy chủ này",
+  "copySummary": "Sao chép tóm tắt",
+  "copyDomain": "Sao chép tên miền",
+  "copyAnswers": "Sao chép câu trả lời",
+  "viewHttp": "Xem HTTP",
   "inbound": "Đầu vào",
   "intranetIP": "IP nội bộ",
   "view": "Xem",
@@ -245,11 +366,10 @@
   "ntpInterval": "Chu kỳ đồng bộ (phút)",
   "dialerProxy": "Proxy quay số",
   "writeToSystem": "Ghi vào hệ thống",
-  "writeToSystemDesc": "Ghi vào hệ thống cũng sẽ đặt đồng hồ hệ thống; Android bỏ qua tùy chọn này.",
+  "writeToSystemDesc": "Ghi vào hệ thống không có tác dụng trên Android.",
   "sniffer": "Sniffer",
   "overrideDestination": "Ghi đè địa chỉ đích",
   "forceDnsMapping": "Buộc ánh xạ DNS",
-  "forceDnsMappingDesc": "Buộc ánh xạ DNS cũng sẽ sniff các kết nối có tên miền lấy từ ánh xạ DNS.",
   "parsePureIp": "Phân giải IP thuần",
   "forceDomain": "Tên miền buộc sniff",
   "forceDomainDesc": "Tên miền buộc sniff cũng sẽ được sniff; các kết nối khác đã có tên miền sẽ không sniff.",
@@ -260,7 +380,7 @@
   "ports": "Cổng",
   "overrideEntries": "Mục ghi đè",
   "addOverrideEntry": "Thêm mục ghi đè",
-  "dnsOverrideDesc": "Các mục thêm tại đây sẽ ghi đè DNS của mọi hồ sơ URL và tệp; mục nào không thêm sẽ giữ cài đặt riêng của hồ sơ. Hồ sơ tùy chỉnh thiết lập DNS ngay trong nội dung của nó.",
+  "dnsOverrideDesc": "Các mục được thêm sẽ thay thế DNS của hồ sơ URL và tệp.",
   "settingEntries": "mục cài đặt",
   "addSettingEntry": "Thêm mục cài đặt",
   "profileSettingsDesc": "Chỉ áp dụng cho hồ sơ này; mục nào không thêm sẽ dùng giá trị mặc định.",
@@ -270,7 +390,7 @@
   "status": "Trạng thái",
   "statusDesc": "Khi tắt DNS, DNS hệ thống sẽ được sử dụng.",
   "respectRules": "Tuân theo quy tắc",
-  "respectRulesDesc": "Tuân theo quy tắc sẽ định tuyến các kết nối DNS theo quy tắc và cần có Proxy Server Nameserver.",
+  "respectRulesDesc": "Tuân theo quy tắc cần có Proxy Server Nameserver.",
   "dnsMode": "Chế độ DNS",
   "fakeipRange": "Dải Fake-IP",
   "fakeipFilter": "Bộ lọc Fake-IP",
@@ -344,7 +464,6 @@
   "iconStylePlain": "Chỉ biểu tượng",
   "iconStyleHidden": "Ẩn",
   "filter": "Lọc",
-  "groupBy": "Nhóm theo",
   "hideTimeoutProxies": "Ẩn proxy hết thời gian chờ",
   "stackMode": "Chế độ Stack",
   "network": "Mạng",
@@ -455,15 +574,40 @@
   "invalidLinkTip": "Không phải liên kết gói đăng ký hoặc liên kết chia sẻ proxy",
   "numberTip": "{label} phải là một số",
   "numberRangeTip": "{label} phải nằm trong khoảng từ {min} đến {max}",
+  "@numberRangeTip": {
+    "placeholders": {
+      "label": {},
+      "min": {},
+      "max": {}
+    }
+  },
   "interval": "Khoảng thời gian",
   "existsTip": "{label} đã tồn tại",
   "maxLengthTip": "{label} tối đa {max} ký tự",
+  "@maxLengthTip": {
+    "placeholders": {
+      "label": {},
+      "max": {}
+    }
+  },
   "singleImport": "Nhập một mục",
   "batchImport": "Nhập hàng loạt",
   "batchUrlInputTip": "Mỗi dòng một URL",
   "batchLinkInputTip": "Mỗi dòng một liên kết",
   "batchPreviewTip": "Sẽ thêm {count} mục, bỏ qua {skipped} mục đã tồn tại",
+  "@batchPreviewTip": {
+    "placeholders": {
+      "count": {},
+      "skipped": {}
+    }
+  },
   "lineIssueTip": "Dòng {line}: {message}",
+  "@lineIssueTip": {
+    "placeholders": {
+      "line": {},
+      "message": {}
+    }
+  },
   "singleValueTip": "{label} chỉ được có một mục",
   "deleteTip": "Bạn có chắc muốn xóa {label} này không?",
   "deleteMultipTip": "Bạn có chắc muốn xóa các {label} đã chọn không?",
@@ -683,8 +827,26 @@
   "geoUpdated": "Đã cập nhật {name}",
   "secondsCount": "{count, plural, other{{count} giây}}",
   "proxiesCount": "{count, plural, other{{label} proxy}}",
+  "@proxiesCount": {
+    "placeholders": {
+      "count": {},
+      "label": {}
+    }
+  },
   "rulesCount": "{count, plural, other{{label} quy tắc}}",
+  "@rulesCount": {
+    "placeholders": {
+      "count": {},
+      "label": {}
+    }
+  },
   "proxyGroupsCount": "{count, plural, other{{label} nhóm proxy}}",
+  "@proxyGroupsCount": {
+    "placeholders": {
+      "count": {},
+      "label": {}
+    }
+  },
   "changelogBreaking": "Thay đổi lớn",
   "changelogFeatures": "Tính năng mới",
   "changelogFixes": "Sửa lỗi",
@@ -700,7 +862,6 @@
   "exitFullScreen": "Thoát toàn màn hình",
   "torch": "Đèn pin",
   "pickFromAlbum": "Chọn từ album",
-  "closeConnections": "Đóng kết nối",
   "scrollToSelected": "Cuộn tới mục đã chọn",
   "showMore": "Mở rộng",
   "showLess": "Thu gọn",
@@ -708,6 +869,12 @@
   "nextMatch": "Kết quả tiếp theo",
   "clearSearch": "Xóa tìm kiếm",
   "noSearchResults": "Không có kết quả phù hợp",
+  "noActiveConnections": "Không có kết nối đang hoạt động",
+  "noFailedConnections": "Không có kết nối thất bại",
+  "noFailedDnsQueries": "Không có truy vấn DNS thất bại",
+  "noCachedDnsQueries": "Không có truy vấn DNS trả về từ bộ nhớ đệm",
+  "noFailedHttpRequests": "Không có yêu cầu HTTP thất bại",
+  "noRewrittenHttpRequests": "Không có yêu cầu HTTP được viết lại",
   "showPassword": "Hiện mật khẩu",
   "hidePassword": "Ẩn mật khẩu",
   "authorize": "Cấp quyền",
@@ -765,6 +932,12 @@
   "shareLinksInvalid": "Không thể đọc được proxy nào từ các liên kết",
   "shareLinkUnreadable": "Không thể đọc được proxy từ {link}",
   "proxiesProfileLabel": "{name} và các proxy khác ({count} proxy)",
+  "@proxiesProfileLabel": {
+    "placeholders": {
+      "name": {},
+      "count": {}
+    }
+  },
   "singleShareLinkOnly": "Chỉ nhập một liên kết tại đây; sửa nhiều liên kết trong phần chỉnh sửa nhanh của danh sách",
   "username": "Tên người dùng",
   "emptyFallback": "Dự phòng khi trống",
@@ -783,14 +956,38 @@
   "customIssueGroupLoop": "Các nhóm proxy tham chiếu vòng lặp lẫn nhau: {path}",
   "customIssueInvalidEmptyFallback": "Mục dự phòng khi trống phải là một proxy, nhưng {name} không tồn tại hoặc là một nhóm proxy",
   "customIssueInvalidFilter": "{name} không phải là regex hợp lệ: {message}",
+  "@customIssueInvalidFilter": {
+    "placeholders": {
+      "name": {},
+      "message": {}
+    }
+  },
   "customIssueMissingDialer": "Proxy quay số {name} không tồn tại",
   "customIssueDialerLoop": "{proxy} quay số qua {target}, mà {target} lại dẫn về {proxy}, tạo thành vòng lặp",
+  "@customIssueDialerLoop": {
+    "placeholders": {
+      "proxy": {},
+      "target": {}
+    }
+  },
   "dialerProxyLoopStopped": "Quay số qua {name} dẫn ngược về proxy đang dùng nó, nên kết nối đã bị dừng",
   "customIssuesSummary": "{count} mục gặp sự cố, việc áp dụng hồ sơ này có thể thất bại",
   "providerInUse": "{label} vẫn đang được sử dụng bởi {profiles}; nếu xóa, các hồ sơ này sẽ hoạt động bất thường. Bạn có chắc chắn muốn xóa không?",
+  "@providerInUse": {
+    "placeholders": {
+      "label": {},
+      "profiles": {}
+    }
+  },
   "proxyGroupInUse": "{label} vẫn đang được tham chiếu bởi quy tắc, nhóm proxy, proxy quay số, DNS hoặc NTP trong hồ sơ này; nếu xóa, các tham chiếu đó sẽ ngừng hoạt động. Bạn có chắc chắn muốn xóa không?",
   "proxiesRemovedTip": "Các proxy sau sẽ bị xóa: {removed}. Dòng đã đổi tên được tính là proxy mới, và các hồ sơ tùy chỉnh nhắc đến proxy bị xóa sẽ đánh dấu là thiếu. Vẫn áp dụng chứ?",
   "proxiesReplacedTip": "Các proxy sau sẽ bị xóa: {removed}. Các proxy sau sẽ được thêm: {added}. Dòng đã đổi tên được tính là proxy mới, và các hồ sơ tùy chỉnh nhắc đến proxy bị xóa sẽ đánh dấu là thiếu. Vẫn áp dụng chứ?",
+  "@proxiesReplacedTip": {
+    "placeholders": {
+      "removed": {},
+      "added": {}
+    }
+  },
   "fontSize": "Kích thước",
   "large": "Lớn",
   "extraLarge": "Rất lớn",
@@ -813,7 +1010,7 @@
   "keepAliveIdle": "Thời gian rảnh TCP keep-alive",
   "disableKeepAlive": "Tắt TCP keep-alive",
   "routingMark": "Dấu định tuyến",
-  "strictRouteDesc": "Định tuyến nghiêm ngặt ngăn lưu lượng như DNS bỏ qua TUN, và khi tắt IPv6 sẽ chặn các kết nối IPv6 của thiết bị này.",
+  "strictRouteDesc": "Khi tắt IPv6, định tuyến nghiêm ngặt cũng sẽ chặn các kết nối IPv6 của thiết bị này.",
   "initFailed": "Khởi động thất bại",
   "initFailedTip": "FlClash gặp lỗi khi khởi động và không thể tiếp tục. Hãy sao chép chi tiết để báo lỗi. Nếu sự cố vẫn lặp lại, xóa dữ liệu thường sẽ giúp ứng dụng khởi động lại.",
   "errorDetails": "Chi tiết lỗi",
@@ -822,10 +1019,10 @@
   "clearDataFailed": "Không thể xóa dữ liệu: {detail}",
   "bypassPrivateRoute": "Bỏ qua địa chỉ riêng tư",
   "disableIcmpForwarding": "Tắt chuyển tiếp ICMP",
-  "disableIcmpForwardingDesc": "Khi tắt chuyển tiếp ICMP, TUN sẽ tự trả lời ping nên ping không còn hiển thị độ trễ thực.",
+  "disableIcmpForwardingDesc": "Khi tắt chuyển tiếp ICMP, ping sẽ không còn hiển thị độ trễ thực.",
   "excludeInterface": "Giao diện mạng loại trừ",
   "includeInterface": "Giao diện mạng bao gồm",
-  "includeInterfaceDesc": "Chỉ lưu lượng đi vào qua các giao diện mạng được bao gồm mới đi qua TUN, và danh sách giao diện loại trừ sẽ không còn hiệu lực.",
+  "includeInterfaceDesc": "Khi đã đặt, danh sách giao diện loại trừ sẽ không còn hiệu lực.",
   "includeUid": "ID người dùng bao gồm",
   "excludeUid": "ID người dùng loại trừ",
   "excludeSrcPort": "Cổng nguồn loại trừ",
@@ -833,9 +1030,9 @@
   "udpTimeout": "Thời gian chờ UDP",
   "udpTimeoutDesc": "Thời gian chờ UDP tính bằng giây và chỉ hoạt động với các ngăn xếp gvisor, system và mixed.",
   "dnsHijackDesc": "Nếu không có mục này, TUN sẽ chặn bắt mọi truy vấn DNS tới cổng 53 (any:53).",
-  "tunOverrideDesc": "Các mục thêm tại đây sẽ ghi đè cài đặt TUN của mọi hồ sơ; mục nào không thêm sẽ giữ cài đặt riêng của hồ sơ. Các mục do hồ sơ tùy chỉnh tự thêm sẽ được ưu tiên.",
-  "generalOverrideDesc": "Các mục thêm tại đây sẽ ghi đè cài đặt của mọi hồ sơ; mục nào không thêm sẽ giữ cài đặt riêng của hồ sơ, hoặc dùng mặc định của nhân nếu hồ sơ không có.",
-  "profileTunSettingsDesc": "Chỉ áp dụng cho hồ sơ này và được ưu tiên hơn các mục ghi đè TUN trong cài đặt mạng.",
+  "tunOverrideDesc": "Các mục được thêm sẽ ghi đè mọi hồ sơ; các mục riêng của hồ sơ tùy chỉnh được ưu tiên.",
+  "generalOverrideDesc": "Các mục được thêm sẽ thay thế cài đặt riêng của mọi hồ sơ.",
+  "profileTunSettingsDesc": "Chỉ dành cho hồ sơ này; ưu tiên hơn các mục ghi đè TUN trong cài đặt mạng.",
   "settingsCount": "{count, plural, other{{count} cài đặt}}",
   "sectionsInEffect": "{count} mục đang có hiệu lực",
   "itemsCount": "{count, plural, other{{count} mục}}",
@@ -845,6 +1042,12 @@
   "ipVersion": "Phiên bản IP",
   "addFilters": "Thêm bộ lọc",
   "failedItem": "{label}: {message}",
+  "@failedItem": {
+    "placeholders": {
+      "label": {},
+      "message": {}
+    }
+  },
   "failedCount": "{count} mục thất bại. Nhấn để xem",
   "importConfigInvalid": "Tệp này không phải là cấu hình có thể nhập",
   "importConfigReplaceTip": "Việc nhập sẽ thay thế các nhóm proxy, quy tắc và cài đặt hiện có của hồ sơ này",
@@ -912,6 +1115,12 @@
   "usedShort": "đã dùng",
   "profileUpdatedAt": "Đã cập nhật {time}",
   "profileExpiresIn": "Hết hạn {date}, còn {days, plural, other{{days} ngày}}",
+  "@profileExpiresIn": {
+    "placeholders": {
+      "date": {},
+      "days": {}
+    }
+  },
   "profileDaysLeft": "{days, plural, other{Còn {days} ngày}}",
   "target": "Đích",
   "outboundExit": "Đầu ra",
@@ -929,6 +1138,12 @@
   "done": "Xong",
   "dashboardAddableSection": "Có thể thêm",
   "customImportDroppedSubRules": "{count, plural, other{Hồ sơ tùy chỉnh không hỗ trợ quy tắc con, đã bỏ qua {label} quy tắc SUB-RULE}}",
+  "@customImportDroppedSubRules": {
+    "placeholders": {
+      "count": {},
+      "label": {}
+    }
+  },
   "autoInclude": "Tự động bao gồm",
   "allReferencedProxies": "Tất cả proxy được tham chiếu",
   "allReferencedProxyProviders": "Tất cả nguồn cung cấp proxy được tham chiếu",
@@ -943,18 +1158,37 @@
   "mitm": "MITM",
   "httpsDecryption": "Giải mã HTTPS",
   "httpCapture": "Bắt gói HTTP",
-  "httpCaptureDesc": "Ghi lại các yêu cầu gửi tới những máy chủ có trong mục Tên máy chủ để xem trong chi tiết kết nối. Các bản ghi chỉ được lưu trong bộ nhớ.",
-  "httpCaptureNoHosts": "Chưa có máy chủ nào trong danh sách nên sẽ không ghi lại nội dung gì. Hãy thêm máy chủ vào Tên máy chủ trên trang MITM hoặc từ chi tiết kết nối.",
+  "httpCaptureNoHosts": "Sẽ không có gì được ghi lại cho đến khi thêm máy chủ vào Tên máy chủ.",
   "httpCaptureLimit": "Số bản ghi tối đa",
-  "httpCaptureLimitDesc": "Khi đạt giới hạn này hoặc chiếm hết {memory} bộ nhớ, các bản ghi cũ nhất sẽ bị xóa trước. Mỗi phần thân chỉ giữ lại {body} đầu tiên.",
+  "httpCaptureMemoryOnly": "Chỉ lưu trong bộ nhớ",
   "httpRequests": "Yêu cầu HTTP",
+  "httpRequestCount": "{count, plural, =1{1 yêu cầu HTTP} other{{count} yêu cầu HTTP}}",
+  "@httpRequestCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "latestHttpRequest": "Mới nhất: {request}",
+  "@latestHttpRequest": {
+    "placeholders": {
+      "request": {
+        "type": "String"
+      }
+    }
+  },
   "httpRequestsMissing": "Các yêu cầu được gửi trước khi bật bắt gói hoặc đã bị xóa sẽ không xuất hiện trong danh sách.",
+  "noHttpRequests": "Chưa có yêu cầu nào",
+  "noHttpRequestsHint": "Kết nối này đã được giải mã, các yêu cầu HTTP trên đó sẽ hiển thị tại đây",
   "httpRequestCleared": "Bản ghi của yêu cầu này đã bị xóa",
   "httpCaptureOff": "Bắt gói đang tắt",
   "inProgress": "Đang xử lý",
   "method": "Phương thức",
   "originalUrl": "URL gốc",
-  "timeToFirstByte": "Thời gian nhận byte đầu tiên",
+  "httpTiming": "Thời gian",
+  "httpWaiting": "Đang chờ",
+  "httpReceiving": "Đang nhận",
   "requestBody": "Phần thân yêu cầu",
   "response": "Phản hồi",
   "responseBody": "Phần thân phản hồi",
@@ -995,7 +1229,7 @@
   "mitmTrustNotInstalled": "Chưa cài đặt",
   "mitmTrustChecking": "Đang kiểm tra…",
   "mitmCertificateAndroidReadyTip": "Chỉ những ứng dụng tin cậy chứng chỉ người dùng (chủ yếu là trình duyệt) mới được giải mã.",
-  "mitmAndroidRootDesc": "Khi chưa root, chỉ giải mã được các ứng dụng tin cậy chứng chỉ người dùng (chủ yếu là trình duyệt). Khi đã root, mọi ứng dụng đều có thể được giải mã.",
+  "mitmAndroidRootDesc": "Khi không có root, chỉ các ứng dụng tin cậy chứng chỉ người dùng mới được giải mã.",
   "mitmCertificateLinuxTip": "Các trình duyệt Flatpak cần nhập thủ công chứng chỉ đã xuất.",
   "mitmCertutilMissing": "Chrome và Firefox sử dụng kho chứng chỉ riêng nên cần certutil: {command}",
   "mitmMissingStores": "Chưa có trong: {stores}",
@@ -1039,16 +1273,16 @@
   "arguments": "Tham số",
   "mitmRoutingRules": "Quy tắc định tuyến",
   "mitmIgnoredLines": "Các dòng bị bỏ qua",
-  "mitmModuleRulesDesc": "Quy tắc định tuyến sẽ đứng trước các quy tắc riêng của hồ sơ.",
-  "mitmRequestRulesDesc": "Các quy tắc URL-REGEX và USER-AGENT của mô-đun đã được chuyển thành viết lại URL, kiểm tra theo từng yêu cầu: áp dụng cho mọi yêu cầu HTTP thuần, còn với HTTPS chỉ áp dụng cho các máy chủ trong danh sách tên máy chủ MITM.",
+  "mitmModuleRulesDesc": "Khớp trước các quy tắc của hồ sơ.",
+  "mitmRequestRulesDesc": "Các quy tắc URL-REGEX và USER-AGENT chạy như viết lại URL, với HTTPS chỉ áp dụng cho máy chủ trong danh sách.",
   "mitmModuleSystemTip": "Được viết cho {system}; một số dòng có thể không phù hợp với ứng dụng trên thiết bị này.",
   "mitmModuleRequirementTip": "Mô-đun yêu cầu {requirement}, điều mà thiết bị này không đáp ứng; mô-đun có thể không hoạt động như mong đợi.",
   "mitmExitModules": "Từ mô-đun: {modules}",
   "mitmModuleRiskTitle": "Bật mô-đun này?",
-  "mitmNetworkRisk": "Khi cấu hình được tạo, mô-đun sẽ thay đổi các cài đặt mạng bên dưới, ưu tiên hơn các thiết lập tương ứng của bạn trong FlClash. Tắt hoặc xóa mô-đun sẽ hoàn tác việc này.",
+  "mitmNetworkRisk": "Khi đang bật, mô-đun sẽ ghi đè các cài đặt mạng này.",
   "mitmSkipVerifyRisk": "Bật tùy chọn này sẽ ngừng kiểm tra chứng chỉ của các máy chủ sau, nên máy chủ giả mạo chúng sẽ không bị phát hiện: {hosts}",
   "mitmClientSourceRisk": "Mô-đun chỉ giải mã cho các máy khách sau: {addresses}. Khi bật TUN, các ứng dụng trên thiết bị này kết nối tới FlClash qua địa chỉ của TUN nên có thể bị bỏ sót.",
-  "mitmClientSourceTunTip": "Khi bật TUN, ứng dụng trên thiết bị này đi từ địa chỉ của TUN; nếu danh sách không chứa địa chỉ này, lưu lượng của chúng sẽ không được giải mã.",
+  "mitmClientSourceTunTip": "Khi bật TUN, hãy thêm địa chỉ của TUN để giải mã ứng dụng trên thiết bị này.",
   "mitmNetworkChanges": "Cài đặt mạng",
   "mitmChangeReplace": "Thay thế bằng {values}",
   "mitmChangeInsert": "Thêm {values} vào đầu",
@@ -1096,6 +1330,12 @@
   "http2": "HTTP/2",
   "decryptUntrusted": "Giải mã dù máy chưa tin cậy",
   "invalidOfCount": "{invalid}/{total} mục không hợp lệ",
+  "@invalidOfCount": {
+    "placeholders": {
+      "invalid": {},
+      "total": {}
+    }
+  },
   "batchLineInputTip": "Mỗi dòng một mục",
   "downloadingUpdate": "Đang tải bản cập nhật",
   "updateFailed": "Cập nhật thất bại",
@@ -1130,9 +1370,21 @@
   "coreStoppedDesc": "Ứng dụng đã mất kết nối với nhân",
   "coreStoppedWithReason": "Ứng dụng đã mất kết nối với nhân: {reason}",
   "mixedPortReset": "Cổng hỗn hợp không thể là {value}, nên đã được đặt lại thành {port}",
+  "@mixedPortReset": {
+    "placeholders": {
+      "value": {},
+      "port": {}
+    }
+  },
   "restartCore": "Khởi động lại nhân",
   "installUpdate": "Cài đặt bản cập nhật",
   "liveStatusPosition": "{index} / {count}",
+  "@liveStatusPosition": {
+    "placeholders": {
+      "index": {},
+      "count": {}
+    }
+  },
   "coreStarting": "Đang khởi động nhân",
   "coreStartingDesc": "Đang kết nối tới nhân",
   "coreRunning": "Nhân đang chạy",
@@ -1140,12 +1392,49 @@
   "forceRestartCore": "Buộc khởi động lại",
   "vpnPermissionNotGranted": "Chưa được cấp quyền VPN nên VPN không thể khởi động. Nếu một ứng dụng khác đang đặt VPN luôn bật, điều này cũng xảy ra.",
   "vpnServiceStartFailed": "Không thể khởi động dịch vụ VPN.",
+  "requestPath": "Đường dẫn",
+  "statusCode": "Mã trạng thái",
+  "contentKind": "Loại",
+  "httpRewritten": "Đã viết lại",
+  "httpAnswerReject": "Bị từ chối",
+  "httpAnswerRedirect": "Đã chuyển hướng",
+  "httpAnswerScript": "Phản hồi từ tập lệnh",
+  "httpBodyText": "Văn bản",
+  "httpBodyImage": "Hình ảnh",
+  "regexReplace": "Thay thế bằng Regex",
+  "owningConnection": "Kết nối",
+  "selectHttpRequest": "Chọn một yêu cầu",
+  "selectHttpRequestHint": "Yêu cầu, phản hồi và thời gian của nó sẽ hiển thị tại đây",
+  "httpConditionShows": "Yêu cầu hiển thị: {count}",
+  "@httpConditionShows": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "httpConditionValuesIn": "{field} nằm trong danh sách",
+  "@httpConditionValuesIn": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "httpConditionTip": "Các điều kiện trên cùng một trường khớp bất kỳ điều kiện nào; trên các trường khác nhau phải khớp tất cả.",
+  "vi": "Tiếng Việt",
   "updateVerifying": "Đang xác minh bản cập nhật",
   "updateVerifyingDesc": "Đang kiểm tra chữ ký bảo mật SHA-256...",
   "updateInstalling": "Đang cài đặt bản cập nhật",
   "updateInstallingDesc": "Chọn Cập nhật trên hộp thoại hệ thống để hoàn tất. Tệp APK sẽ tự động xóa sau khi cài xong.",
   "updateReadyAutoCleanDesc": "Đã xác minh an toàn. Tệp APK sẽ tự động xóa sau khi cập nhật xong.",
   "updateCleanedTip": "Đã cập nhật lên v{version} và tự động xóa tệp APK ({size}).",
+  "@updateCleanedTip": {
+    "placeholders": {
+      "version": {},
+      "size": {}
+    }
+  },
   "updateDeleteFile": "Xóa tệp APK",
   "updateInstallNow": "Cài đặt ngay",
   "selectFastestProxy": "Chọn node mượt nhất",
@@ -1281,5 +1570,85 @@
   "portalDisconnectedTip": "Đã gỡ liên kết tài khoản cổng gói",
   "portalInvalidUrl": "Vui lòng nhập địa chỉ web http/https hợp lệ",
   "portalInvalidEmail": "Vui lòng nhập email hợp lệ",
-  "planName": "Tên gói cước"
+  "planName": "Tên gói cước",
+  "@hotspotCopiedTip": {
+    "placeholders": {
+      "address": {}
+    }
+  },
+  "@bypassEssentialAppsTip": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@subQuotaLowWarning": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
+  "@subExpiringSoonWarning": {
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "@devicesShort": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@subDeviceLimitExceededWarning": {
+    "placeholders": {
+      "online": {},
+      "limit": {}
+    }
+  },
+  "@quotaAvgDaily": {
+    "placeholders": {
+      "avg": {}
+    }
+  },
+  "@quotaDaysEstimate": {
+    "placeholders": {
+      "avg": {},
+      "days": {}
+    }
+  },
+  "@quotaSafeUntilExpiry": {
+    "placeholders": {
+      "avg": {}
+    }
+  },
+  "@quotaDailyBudget": {
+    "placeholders": {
+      "budget": {}
+    }
+  },
+  "@smartHealDoneHealthy": {
+    "placeholders": {
+      "node": {},
+      "delay": {}
+    }
+  },
+  "@smartHealDoneSwitched": {
+    "placeholders": {
+      "node": {}
+    }
+  },
+  "@smartFootprintSingle": {
+    "placeholders": {
+      "node": {},
+      "count": {}
+    }
+  },
+  "@smartFootprintMultiWarn": {
+    "placeholders": {
+      "nodes": {},
+      "count": {}
+    }
+  },
+  "@portalConnectedAs": {
+    "placeholders": {
+      "email": {}
+    }
+  }
 }

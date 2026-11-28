@@ -158,7 +158,7 @@ class _OnDemandViewState extends ConsumerState<OnDemandView>
       key: ValueKey(ssid),
       index: index,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: context.listInsets.page(),
         child: ItemPositionProvider(
           position: position,
           child: SelectedDecorationListItem(
@@ -377,7 +377,7 @@ class _OnDemandViewState extends ConsumerState<OnDemandView>
   ) {
     if (excludeSSIDs.isEmpty) {
       return SliverPadding(
-        padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(top: 12),
+        padding: context.listInsets.page().copyWith(top: 12),
         sliver: SliverToBoxAdapter(
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 48),
@@ -417,29 +417,30 @@ class _OnDemandViewState extends ConsumerState<OnDemandView>
         slivers: [
           if (_isAndroid)
             SliverPadding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-              ).copyWith(top: context.sectionsTopPadding),
+              padding: context.listInsets.page().copyWith(
+                top: context.sectionsTopPadding,
+              ),
               sliver: SliverToBoxAdapter(child: _buildAutoVpnSection()),
             ),
           SliverPadding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-            ).copyWith(top: _isAndroid ? 0 : context.sectionsTopPadding),
+            padding: context.listInsets.page().copyWith(
+              top: _isAndroid ? 0 : context.sectionsTopPadding,
+            ),
             sliver: SliverToBoxAdapter(child: _buildPrerequisites()),
           ),
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: context.listInsets.page(),
             sliver: SliverToBoxAdapter(child: _buildExcludeSsidsHeader()),
           ),
           _buildExcludeSsidsList(excludeSSIDs, selectedItems),
           SliverPadding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-            ).copyWith(bottom: 16 + context.bottomInset),
+            padding: context.listInsets.page().copyWith(
+              bottom: 16 + context.bottomInset,
+            ),
             sliver: SliverToBoxAdapter(
               child: ListFooter(
                 text: context.appLocalizations.excludeSsidsDesc,
+                last: true,
               ),
             ),
           ),
