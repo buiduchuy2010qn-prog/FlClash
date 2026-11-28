@@ -144,9 +144,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get ru => 'Tiếng Nga';
 
   @override
-  String get vi => 'Tiếng Việt';
-
-  @override
   String get zhCN => 'Tiếng Trung giản thể';
 
   @override
@@ -190,6 +187,15 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get autoCheckUpdate => 'Tự động kiểm tra cập nhật';
+
+  @override
+  String get updateChannel => 'Kênh cập nhật';
+
+  @override
+  String get updateChannelStable => 'Ổn định';
+
+  @override
+  String get updateChannelPre => 'Thử nghiệm';
 
   @override
   String get checkCertificate => 'Xác minh chứng chỉ TLS';
@@ -507,7 +513,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get externalControllerDesc =>
-      'Bộ điều khiển ngoài cho phép điều khiển nhân qua cổng 9090.';
+      'Bộ điều khiển ngoài lắng nghe trên cổng 9090.';
 
   @override
   String get externalControllerSecret => 'Khóa bộ điều khiển ngoài';
@@ -523,9 +529,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get startupAndBackground => 'Khởi động và chạy nền';
-
-  @override
-  String get requestsAndUpdates => 'Yêu cầu và cập nhật';
 
   @override
   String get logsAndDiagnostics => 'Nhật ký và chẩn đoán';
@@ -562,6 +565,245 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get liveConnections => 'Kết nối thời gian thực';
+
+  @override
+  String get speed => 'Tốc độ';
+
+  @override
+  String get closeActiveConnections => 'Đóng toàn bộ kết nối đang hoạt động';
+
+  @override
+  String closeActiveConnectionsTip(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count kết nối đang hoạt động sẽ đóng.',
+      one: '1 kết nối đang hoạt động sẽ đóng.',
+    );
+    return '$_temp0 Các ứng dụng dùng kết nối này sẽ tự kết nối lại, nhưng tải xuống và cuộc gọi đang diễn ra có thể bị gián đoạn.';
+  }
+
+  @override
+  String get connectionsAll => 'Tất cả';
+
+  @override
+  String get connectionsActive => 'Đang hoạt động';
+
+  @override
+  String get connectionsFailed => 'Thất bại';
+
+  @override
+  String get connectionsDecrypted => 'Đã giải mã';
+
+  @override
+  String get connectionRuleGlobal => 'Chế độ toàn cục';
+
+  @override
+  String get connectionRuleNone => 'Không có quy tắc';
+
+  @override
+  String get failureRefused => 'Bị từ chối';
+
+  @override
+  String get failureUnreachable => 'Không thể truy cập';
+
+  @override
+  String get failureDns => 'Lỗi DNS';
+
+  @override
+  String get dnsNoSuchDomain => 'Không có tên miền này';
+
+  @override
+  String get dnsServerFailure => 'Máy chủ DNS nguồn gặp lỗi';
+
+  @override
+  String get dnsRefused => 'Bị máy chủ DNS nguồn từ chối';
+
+  @override
+  String get dnsTimedOut => 'Truy vấn quá thời gian chờ';
+
+  @override
+  String get dnsBlockedByRule => 'Bị chặn bởi quy tắc';
+
+  @override
+  String get failureHandshake => 'Bắt tay thất bại';
+
+  @override
+  String get failureOther => 'Lỗi khác';
+
+  @override
+  String get connectionClosed => 'Đã đóng';
+
+  @override
+  String get timeline => 'Dòng thời gian';
+
+  @override
+  String get connectionInfo => 'Thông tin';
+
+  @override
+  String get decryption => 'Giải mã';
+
+  @override
+  String connectionRuleIndex(Object number) {
+    return '#$number';
+  }
+
+  @override
+  String get handshake => 'Bắt tay';
+
+  @override
+  String get now => 'Hiện tại';
+
+  @override
+  String get mitmCertificateRefused => 'Chứng chỉ bị từ chối';
+
+  @override
+  String get connectionEndLocal => 'Đóng cục bộ';
+
+  @override
+  String get connectionEndRemote => 'Đóng bởi máy chủ đích';
+
+  @override
+  String get connectionEndFinished => 'Hoàn tất';
+
+  @override
+  String get connectionEndReset => 'Bị đặt lại';
+
+  @override
+  String get connectionEndCore => 'Đóng bởi nhân';
+
+  @override
+  String get fakeIpMapping => 'Ánh xạ fake-ip';
+
+  @override
+  String get dnsFromHosts => 'Từ hosts';
+
+  @override
+  String get condition => 'Điều kiện';
+
+  @override
+  String get addCondition => 'Thêm điều kiện';
+
+  @override
+  String get conditionField => 'Trường';
+
+  @override
+  String get conditionContains => 'Chứa';
+
+  @override
+  String get conditionEquals => 'Bằng';
+
+  @override
+  String get conditionTip =>
+      'Các điều kiện trên cùng một trường khớp bất kỳ điều kiện nào; trên các trường khác nhau phải khớp tất cả. Ô tìm kiếm dùng cú pháp tương tự, ví dụ: host:github.com -app:chrome.';
+
+  @override
+  String get conditionNotContains => 'Không chứa';
+
+  @override
+  String get conditionNotEquals => 'Không bằng';
+
+  @override
+  String get editCondition => 'Chỉnh sửa điều kiện';
+
+  @override
+  String conditionValuesIn(String field) {
+    return '$field nằm trong danh sách';
+  }
+
+  @override
+  String conditionShows(String count) {
+    return 'Kết nối hiển thị: $count';
+  }
+
+  @override
+  String get conditionRows => 'Bất kỳ trong một hàng, khớp mọi hàng';
+
+  @override
+  String get clearAll => 'Xóa tất cả';
+
+  @override
+  String get conditionOr => 'hoặc';
+
+  @override
+  String get selectConnection => 'Chọn một kết nối';
+
+  @override
+  String get selectConnectionHint =>
+      'Dòng thời gian, yêu cầu HTTP và chi tiết kết nối sẽ hiển thị tại đây';
+
+  @override
+  String get selectDnsQuery => 'Chọn một truy vấn';
+
+  @override
+  String get selectDnsQueryHint =>
+      'Kết quả trả về, máy chủ nguồn và kết nối liên quan sẽ hiển thị tại đây';
+
+  @override
+  String get relatedConnections => 'Kết nối liên quan';
+
+  @override
+  String get upstream => 'Máy chủ nguồn';
+
+  @override
+  String get dnsQueryFields => 'Truy vấn';
+
+  @override
+  String dnsQueryAskedBy(String initiator) {
+    return 'Hỏi bởi $initiator';
+  }
+
+  @override
+  String get dnsConditionTip =>
+      'Các điều kiện trên cùng một trường khớp bất kỳ điều kiện nào; trên các trường khác nhau phải khớp tất cả.';
+
+  @override
+  String dnsConditionValuesIn(String field) {
+    return '$field nằm trong danh sách';
+  }
+
+  @override
+  String dnsConditionShows(String count) {
+    return 'Truy vấn hiển thị: $count';
+  }
+
+  @override
+  String get connectionPath => 'Đường dẫn';
+
+  @override
+  String get processPath => 'Đường dẫn tiến trình';
+
+  @override
+  String get proxyNode => 'Nút';
+
+  @override
+  String get closingTime => 'Đóng lúc';
+
+  @override
+  String processUid(int uid) {
+    return 'UID $uid';
+  }
+
+  @override
+  String get onlyThisApp => 'Chỉ ứng dụng này';
+
+  @override
+  String get onlyThisDomain => 'Chỉ tên miền này';
+
+  @override
+  String get hideThisHost => 'Ẩn máy chủ này';
+
+  @override
+  String get copySummary => 'Sao chép tóm tắt';
+
+  @override
+  String get copyDomain => 'Sao chép tên miền';
+
+  @override
+  String get copyAnswers => 'Sao chép câu trả lời';
+
+  @override
+  String get viewHttp => 'Xem HTTP';
 
   @override
   String get inbound => 'Đầu vào';
@@ -778,7 +1020,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get writeToSystemDesc =>
-      'Ghi vào hệ thống cũng sẽ đặt đồng hồ hệ thống; Android bỏ qua tùy chọn này.';
+      'Ghi vào hệ thống không có tác dụng trên Android.';
 
   @override
   String get sniffer => 'Sniffer';
@@ -788,10 +1030,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get forceDnsMapping => 'Buộc ánh xạ DNS';
-
-  @override
-  String get forceDnsMappingDesc =>
-      'Buộc ánh xạ DNS cũng sẽ sniff các kết nối có tên miền lấy từ ánh xạ DNS.';
 
   @override
   String get parsePureIp => 'Phân giải IP thuần';
@@ -826,7 +1064,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get dnsOverrideDesc =>
-      'Các mục thêm tại đây sẽ ghi đè DNS của mọi hồ sơ URL và tệp; mục nào không thêm sẽ giữ cài đặt riêng của hồ sơ. Hồ sơ tùy chỉnh thiết lập DNS ngay trong nội dung của nó.';
+      'Các mục được thêm sẽ thay thế DNS của hồ sơ URL và tệp.';
 
   @override
   String get settingEntries => 'mục cài đặt';
@@ -858,7 +1096,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get respectRulesDesc =>
-      'Tuân theo quy tắc sẽ định tuyến các kết nối DNS theo quy tắc và cần có Proxy Server Nameserver.';
+      'Tuân theo quy tắc cần có Proxy Server Nameserver.';
 
   @override
   String get dnsMode => 'Chế độ DNS';
@@ -1099,9 +1337,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get filter => 'Lọc';
-
-  @override
-  String get groupBy => 'Nhóm theo';
 
   @override
   String get hideTimeoutProxies => 'Ẩn proxy hết thời gian chờ';
@@ -2375,9 +2610,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pickFromAlbum => 'Chọn từ album';
 
   @override
-  String get closeConnections => 'Đóng kết nối';
-
-  @override
   String get scrollToSelected => 'Cuộn tới mục đã chọn';
 
   @override
@@ -2397,6 +2629,24 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get noSearchResults => 'Không có kết quả phù hợp';
+
+  @override
+  String get noActiveConnections => 'Không có kết nối đang hoạt động';
+
+  @override
+  String get noFailedConnections => 'Không có kết nối thất bại';
+
+  @override
+  String get noFailedDnsQueries => 'Không có truy vấn DNS thất bại';
+
+  @override
+  String get noCachedDnsQueries => 'Không có truy vấn DNS trả về từ bộ nhớ đệm';
+
+  @override
+  String get noFailedHttpRequests => 'Không có yêu cầu HTTP thất bại';
+
+  @override
+  String get noRewrittenHttpRequests => 'Không có yêu cầu HTTP được viết lại';
 
   @override
   String get showPassword => 'Hiện mật khẩu';
@@ -2764,7 +3014,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get strictRouteDesc =>
-      'Định tuyến nghiêm ngặt ngăn lưu lượng như DNS bỏ qua TUN, và khi tắt IPv6 sẽ chặn các kết nối IPv6 của thiết bị này.';
+      'Khi tắt IPv6, định tuyến nghiêm ngặt cũng sẽ chặn các kết nối IPv6 của thiết bị này.';
 
   @override
   String get initFailed => 'Khởi động thất bại';
@@ -2796,7 +3046,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get disableIcmpForwardingDesc =>
-      'Khi tắt chuyển tiếp ICMP, TUN sẽ tự trả lời ping nên ping không còn hiển thị độ trễ thực.';
+      'Khi tắt chuyển tiếp ICMP, ping sẽ không còn hiển thị độ trễ thực.';
 
   @override
   String get excludeInterface => 'Giao diện mạng loại trừ';
@@ -2806,7 +3056,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get includeInterfaceDesc =>
-      'Chỉ lưu lượng đi vào qua các giao diện mạng được bao gồm mới đi qua TUN, và danh sách giao diện loại trừ sẽ không còn hiệu lực.';
+      'Khi đã đặt, danh sách giao diện loại trừ sẽ không còn hiệu lực.';
 
   @override
   String get includeUid => 'ID người dùng bao gồm';
@@ -2833,15 +3083,15 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tunOverrideDesc =>
-      'Các mục thêm tại đây sẽ ghi đè cài đặt TUN của mọi hồ sơ; mục nào không thêm sẽ giữ cài đặt riêng của hồ sơ. Các mục do hồ sơ tùy chỉnh tự thêm sẽ được ưu tiên.';
+      'Các mục được thêm sẽ ghi đè mọi hồ sơ; các mục riêng của hồ sơ tùy chỉnh được ưu tiên.';
 
   @override
   String get generalOverrideDesc =>
-      'Các mục thêm tại đây sẽ ghi đè cài đặt của mọi hồ sơ; mục nào không thêm sẽ giữ cài đặt riêng của hồ sơ, hoặc dùng mặc định của nhân nếu hồ sơ không có.';
+      'Các mục được thêm sẽ thay thế cài đặt riêng của mọi hồ sơ.';
 
   @override
   String get profileTunSettingsDesc =>
-      'Chỉ áp dụng cho hồ sơ này và được ưu tiên hơn các mục ghi đè TUN trong cài đặt mạng.';
+      'Chỉ dành cho hồ sơ này; ưu tiên hơn các mục ghi đè TUN trong cài đặt mạng.';
 
   @override
   String settingsCount(num count) {
@@ -3243,27 +3493,44 @@ class AppLocalizationsVi extends AppLocalizations {
   String get httpCapture => 'Bắt gói HTTP';
 
   @override
-  String get httpCaptureDesc =>
-      'Ghi lại các yêu cầu gửi tới những máy chủ có trong mục Tên máy chủ để xem trong chi tiết kết nối. Các bản ghi chỉ được lưu trong bộ nhớ.';
-
-  @override
   String get httpCaptureNoHosts =>
-      'Chưa có máy chủ nào trong danh sách nên sẽ không ghi lại nội dung gì. Hãy thêm máy chủ vào Tên máy chủ trên trang MITM hoặc từ chi tiết kết nối.';
+      'Sẽ không có gì được ghi lại cho đến khi thêm máy chủ vào Tên máy chủ.';
 
   @override
   String get httpCaptureLimit => 'Số bản ghi tối đa';
 
   @override
-  String httpCaptureLimitDesc(Object memory, Object body) {
-    return 'Khi đạt giới hạn này hoặc chiếm hết $memory bộ nhớ, các bản ghi cũ nhất sẽ bị xóa trước. Mỗi phần thân chỉ giữ lại $body đầu tiên.';
-  }
+  String get httpCaptureMemoryOnly => 'Chỉ lưu trong bộ nhớ';
 
   @override
   String get httpRequests => 'Yêu cầu HTTP';
 
   @override
+  String httpRequestCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count yêu cầu HTTP',
+      one: '1 yêu cầu HTTP',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String latestHttpRequest(String request) {
+    return 'Mới nhất: $request';
+  }
+
+  @override
   String get httpRequestsMissing =>
       'Các yêu cầu được gửi trước khi bật bắt gói hoặc đã bị xóa sẽ không xuất hiện trong danh sách.';
+
+  @override
+  String get noHttpRequests => 'Chưa có yêu cầu nào';
+
+  @override
+  String get noHttpRequestsHint =>
+      'Kết nối này đã được giải mã, các yêu cầu HTTP trên đó sẽ hiển thị tại đây';
 
   @override
   String get httpRequestCleared => 'Bản ghi của yêu cầu này đã bị xóa';
@@ -3281,7 +3548,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get originalUrl => 'URL gốc';
 
   @override
-  String get timeToFirstByte => 'Thời gian nhận byte đầu tiên';
+  String get httpTiming => 'Thời gian';
+
+  @override
+  String get httpWaiting => 'Đang chờ';
+
+  @override
+  String get httpReceiving => 'Đang nhận';
 
   @override
   String get requestBody => 'Phần thân yêu cầu';
@@ -3416,7 +3689,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get mitmAndroidRootDesc =>
-      'Khi chưa root, chỉ giải mã được các ứng dụng tin cậy chứng chỉ người dùng (chủ yếu là trình duyệt). Khi đã root, mọi ứng dụng đều có thể được giải mã.';
+      'Khi không có root, chỉ các ứng dụng tin cậy chứng chỉ người dùng mới được giải mã.';
 
   @override
   String get mitmCertificateLinuxTip =>
@@ -3580,12 +3853,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get mitmIgnoredLines => 'Các dòng bị bỏ qua';
 
   @override
-  String get mitmModuleRulesDesc =>
-      'Quy tắc định tuyến sẽ đứng trước các quy tắc riêng của hồ sơ.';
+  String get mitmModuleRulesDesc => 'Khớp trước các quy tắc của hồ sơ.';
 
   @override
   String get mitmRequestRulesDesc =>
-      'Các quy tắc URL-REGEX và USER-AGENT của mô-đun đã được chuyển thành viết lại URL, kiểm tra theo từng yêu cầu: áp dụng cho mọi yêu cầu HTTP thuần, còn với HTTPS chỉ áp dụng cho các máy chủ trong danh sách tên máy chủ MITM.';
+      'Các quy tắc URL-REGEX và USER-AGENT chạy như viết lại URL, với HTTPS chỉ áp dụng cho máy chủ trong danh sách.';
 
   @override
   String mitmModuleSystemTip(Object system) {
@@ -3607,7 +3879,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get mitmNetworkRisk =>
-      'Khi cấu hình được tạo, mô-đun sẽ thay đổi các cài đặt mạng bên dưới, ưu tiên hơn các thiết lập tương ứng của bạn trong FlClash. Tắt hoặc xóa mô-đun sẽ hoàn tác việc này.';
+      'Khi đang bật, mô-đun sẽ ghi đè các cài đặt mạng này.';
 
   @override
   String mitmSkipVerifyRisk(Object hosts) {
@@ -3621,7 +3893,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get mitmClientSourceTunTip =>
-      'Khi bật TUN, ứng dụng trên thiết bị này đi từ địa chỉ của TUN; nếu danh sách không chứa địa chỉ này, lưu lượng của chúng sẽ không được giải mã.';
+      'Khi bật TUN, hãy thêm địa chỉ của TUN để giải mã ứng dụng trên thiết bị này.';
 
   @override
   String get mitmNetworkChanges => 'Cài đặt mạng';
@@ -3955,6 +4227,63 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get vpnServiceStartFailed => 'Không thể khởi động dịch vụ VPN.';
+
+  @override
+  String get requestPath => 'Đường dẫn';
+
+  @override
+  String get statusCode => 'Mã trạng thái';
+
+  @override
+  String get contentKind => 'Loại';
+
+  @override
+  String get httpRewritten => 'Đã viết lại';
+
+  @override
+  String get httpAnswerReject => 'Bị từ chối';
+
+  @override
+  String get httpAnswerRedirect => 'Đã chuyển hướng';
+
+  @override
+  String get httpAnswerScript => 'Phản hồi từ tập lệnh';
+
+  @override
+  String get httpBodyText => 'Văn bản';
+
+  @override
+  String get httpBodyImage => 'Hình ảnh';
+
+  @override
+  String get regexReplace => 'Thay thế bằng Regex';
+
+  @override
+  String get owningConnection => 'Kết nối';
+
+  @override
+  String get selectHttpRequest => 'Chọn một yêu cầu';
+
+  @override
+  String get selectHttpRequestHint =>
+      'Yêu cầu, phản hồi và thời gian của nó sẽ hiển thị tại đây';
+
+  @override
+  String httpConditionShows(String count) {
+    return 'Yêu cầu hiển thị: $count';
+  }
+
+  @override
+  String httpConditionValuesIn(String field) {
+    return '$field nằm trong danh sách';
+  }
+
+  @override
+  String get httpConditionTip =>
+      'Các điều kiện trên cùng một trường khớp bất kỳ điều kiện nào; trên các trường khác nhau phải khớp tất cả.';
+
+  @override
+  String get vi => 'Tiếng Việt';
 
   @override
   String get updateVerifying => 'Đang xác minh bản cập nhật';

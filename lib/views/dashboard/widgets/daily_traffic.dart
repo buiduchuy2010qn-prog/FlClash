@@ -89,11 +89,11 @@ class _DailyTrafficCardState extends ConsumerState<DailyTrafficCard> {
             ],
           ),
           const SizedBox(height: 10),
-          DashboardConnectedGroup(
+          ConnectedButtonGroup(
             children: [
               for (final (index, item) in _TrafficWindow.values.indexed)
                 Expanded(
-                  child: DashboardConnectedButton(
+                  child: ConnectedButton(
                     selected: item == _window,
                     first: index == 0,
                     last: index == _TrafficWindow.values.length - 1,

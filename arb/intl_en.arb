@@ -44,7 +44,6 @@
   "ja": "Japanese",
   "ko": "Korean",
   "ru": "Russian",
-  "vi": "Vietnamese",
   "zhCN": "Simplified Chinese",
   "theme": "Theme",
   "extend": "Extend",
@@ -60,6 +59,9 @@
   "logcat": "Logcat",
   "logcatDesc": "Turning off Logcat hides the logs entry.",
   "autoCheckUpdate": "Auto check for updates",
+  "updateChannel": "Update channel",
+  "updateChannelStable": "Stable",
+  "updateChannelPre": "Prerelease",
   "checkCertificate": "Verify TLS certificates",
   "checkCertificateDesc": "With TLS verification off, subscriptions and backups are open to man-in-the-middle attacks.",
   "accessControl": "Access control",
@@ -156,13 +158,12 @@
   "search": "Search",
   "allowBypass": "Allow apps to bypass VPN",
   "externalController": "External controller",
-  "externalControllerDesc": "The external controller lets you control the core on port 9090.",
+  "externalControllerDesc": "The external controller listens on port 9090.",
   "externalControllerSecret": "External controller secret",
   "ipv6Desc": "IPv6 traffic is received only while IPv6 is on.",
   "app": "App",
   "general": "General",
   "startupAndBackground": "Startup and background",
-  "requestsAndUpdates": "Requests and updates",
   "logsAndDiagnostics": "Logs and diagnostics",
   "userAgent": "User-Agent",
   "unifiedDelay": "Unified delay",
@@ -175,6 +176,126 @@
   "infiniteTime": "Never expires",
   "connections": "Connections",
   "liveConnections": "Live connections",
+  "speed": "Speed",
+  "closeActiveConnections": "Close all active connections",
+  "closeActiveConnectionsTip": "{count, plural, =1{1 active connection will close.} other{{count} active connections will close.}} Apps using them reconnect on their own, though downloads and calls in progress may drop.",
+  "@closeActiveConnectionsTip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "connectionsAll": "All",
+  "connectionsActive": "Active",
+  "connectionsFailed": "Failed",
+  "connectionsDecrypted": "Decrypted",
+  "connectionRuleGlobal": "Global mode",
+  "connectionRuleNone": "No rule",
+  "failureRefused": "Refused",
+  "failureUnreachable": "Unreachable",
+  "failureDns": "DNS failed",
+  "dnsNoSuchDomain": "No such domain",
+  "dnsServerFailure": "The upstream failed",
+  "dnsRefused": "Refused by the upstream",
+  "dnsTimedOut": "Query timed out",
+  "dnsBlockedByRule": "Blocked by a rule",
+  "failureHandshake": "Handshake failed",
+  "failureOther": "Other error",
+  "connectionClosed": "Closed",
+  "timeline": "Timeline",
+  "connectionInfo": "Info",
+  "decryption": "Decryption",
+  "connectionRuleIndex": "#{number}",
+  "handshake": "Handshake",
+  "now": "Now",
+  "mitmCertificateRefused": "Certificate refused",
+  "connectionEndLocal": "Closed locally",
+  "connectionEndRemote": "Closed by the remote",
+  "connectionEndFinished": "Finished",
+  "connectionEndReset": "Reset",
+  "connectionEndCore": "Closed by the Core",
+  "fakeIpMapping": "fake-ip mapping",
+  "dnsFromHosts": "From hosts",
+  "condition": "Condition",
+  "addCondition": "Add condition",
+  "conditionField": "Field",
+  "conditionContains": "Contains",
+  "conditionEquals": "Equals",
+  "conditionTip": "Conditions on one field match any of them, on different fields all. Search takes the same form, as in host:github.com -app:chrome.",
+  "conditionNotContains": "Excludes",
+  "conditionNotEquals": "Not equal",
+  "editCondition": "Edit condition",
+  "conditionValuesIn": "{field} in the list",
+  "@conditionValuesIn": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "conditionShows": "Connections shown: {count}",
+  "@conditionShows": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "conditionRows": "Any in a row, every row",
+  "clearAll": "Clear all",
+  "conditionOr": "or",
+  "selectConnection": "Select a connection",
+  "selectConnectionHint": "Its timeline, HTTP requests and connection details appear here",
+  "selectDnsQuery": "Select a query",
+  "selectDnsQueryHint": "Its answers, upstream and related connections appear here",
+  "relatedConnections": "Related connections",
+  "upstream": "Upstream",
+  "dnsQueryFields": "Query",
+  "dnsQueryAskedBy": "Asked by {initiator}",
+  "@dnsQueryAskedBy": {
+    "placeholders": {
+      "initiator": {
+        "type": "String"
+      }
+    }
+  },
+  "dnsConditionTip": "Conditions on one field match any of them, on different fields all.",
+  "dnsConditionValuesIn": "{field} in the list",
+  "@dnsConditionValuesIn": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "dnsConditionShows": "Queries shown: {count}",
+  "@dnsConditionShows": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "connectionPath": "Path",
+  "processPath": "Process path",
+  "proxyNode": "Node",
+  "closingTime": "Closed at",
+  "processUid": "UID {uid}",
+  "@processUid": {
+    "placeholders": {
+      "uid": {
+        "type": "int"
+      }
+    }
+  },
+  "onlyThisApp": "Only this app",
+  "onlyThisDomain": "Only this domain",
+  "hideThisHost": "Hide this host",
+  "copySummary": "Copy summary",
+  "copyDomain": "Copy domain",
+  "copyAnswers": "Copy answers",
+  "viewHttp": "View HTTP",
   "inbound": "Inbound",
   "intranetIP": "Intranet IP",
   "view": "View",
@@ -245,11 +366,10 @@
   "ntpInterval": "Sync interval (minutes)",
   "dialerProxy": "Dialer proxy",
   "writeToSystem": "Write to system",
-  "writeToSystemDesc": "Write to system also sets the system clock; Android ignores it.",
+  "writeToSystemDesc": "Write to system has no effect on Android.",
   "sniffer": "Sniffer",
   "overrideDestination": "Override destination",
   "forceDnsMapping": "Force DNS mapping",
-  "forceDnsMappingDesc": "Force DNS mapping also sniffs connections whose domain came from a DNS mapping.",
   "parsePureIp": "Parse pure IP",
   "forceDomain": "Force domains",
   "forceDomainDesc": "Force domains are sniffed too; other connections that already have a domain are left alone.",
@@ -260,7 +380,7 @@
   "ports": "Ports",
   "overrideEntries": "Override entries",
   "addOverrideEntry": "Add override entry",
-  "dnsOverrideDesc": "Entries added here replace the DNS of every URL and file profile; anything not added keeps the profile's own setting. Custom profiles set their DNS in their content.",
+  "dnsOverrideDesc": "Added entries replace the DNS of URL and file profiles.",
   "settingEntries": "settings",
   "addSettingEntry": "Add setting",
   "profileSettingsDesc": "Applies to this profile only; anything not added uses its default.",
@@ -270,7 +390,7 @@
   "status": "Status",
   "statusDesc": "With DNS off, the system DNS is used.",
   "respectRules": "Respect rules",
-  "respectRulesDesc": "Respect rules routes DNS connections by the rules and needs a Proxy Server Nameserver.",
+  "respectRulesDesc": "Respect rules needs a Proxy Server Nameserver.",
   "dnsMode": "DNS mode",
   "fakeipRange": "Fake-IP range",
   "fakeipFilter": "Fake-IP filter",
@@ -344,7 +464,6 @@
   "iconStylePlain": "Plain",
   "iconStyleHidden": "Hidden",
   "filter": "Filter",
-  "groupBy": "Group by",
   "hideTimeoutProxies": "Hide timed-out proxies",
   "stackMode": "Stack mode",
   "network": "Network",
@@ -455,15 +574,40 @@
   "invalidLinkTip": "Not a subscription link or a proxy share link",
   "numberTip": "{label} must be a number",
   "numberRangeTip": "{label} must be between {min} and {max}",
+  "@numberRangeTip": {
+    "placeholders": {
+      "label": {},
+      "min": {},
+      "max": {}
+    }
+  },
   "interval": "Interval",
   "existsTip": "{label} already exists",
   "maxLengthTip": "{label} must be at most {max} characters",
+  "@maxLengthTip": {
+    "placeholders": {
+      "label": {},
+      "max": {}
+    }
+  },
   "singleImport": "Single import",
   "batchImport": "Batch import",
   "batchUrlInputTip": "One URL per line",
   "batchLinkInputTip": "One link per line",
   "batchPreviewTip": "{count} to add, {skipped} skipped as existing",
+  "@batchPreviewTip": {
+    "placeholders": {
+      "count": {},
+      "skipped": {}
+    }
+  },
   "lineIssueTip": "Line {line}: {message}",
+  "@lineIssueTip": {
+    "placeholders": {
+      "line": {},
+      "message": {}
+    }
+  },
   "singleValueTip": "{label} must be a single item",
   "deleteTip": "Are you sure you want to delete this {label}?",
   "deleteMultipTip": "Are you sure you want to delete the selected {label}?",
@@ -683,8 +827,26 @@
   "geoUpdated": "{name} updated",
   "secondsCount": "{count, plural, =1{1 second} other{{count} seconds}}",
   "proxiesCount": "{count, plural, =1{1 proxy} other{{label} proxies}}",
+  "@proxiesCount": {
+    "placeholders": {
+      "count": {},
+      "label": {}
+    }
+  },
   "rulesCount": "{count, plural, =1{1 rule} other{{label} rules}}",
+  "@rulesCount": {
+    "placeholders": {
+      "count": {},
+      "label": {}
+    }
+  },
   "proxyGroupsCount": "{count, plural, =1{1 proxy group} other{{label} proxy groups}}",
+  "@proxyGroupsCount": {
+    "placeholders": {
+      "count": {},
+      "label": {}
+    }
+  },
   "changelogBreaking": "Breaking changes",
   "changelogFeatures": "New features",
   "changelogFixes": "Bug fixes",
@@ -700,7 +862,6 @@
   "exitFullScreen": "Exit full screen",
   "torch": "Flashlight",
   "pickFromAlbum": "Choose from album",
-  "closeConnections": "Close connections",
   "scrollToSelected": "Scroll to selected",
   "showMore": "Expand",
   "showLess": "Collapse",
@@ -708,6 +869,12 @@
   "nextMatch": "Next match",
   "clearSearch": "Clear search",
   "noSearchResults": "No matching results",
+  "noActiveConnections": "No active connections",
+  "noFailedConnections": "No failed connections",
+  "noFailedDnsQueries": "No failed DNS queries",
+  "noCachedDnsQueries": "No DNS queries answered from cache",
+  "noFailedHttpRequests": "No failed HTTP requests",
+  "noRewrittenHttpRequests": "No rewritten HTTP requests",
   "showPassword": "Show password",
   "hidePassword": "Hide password",
   "authorize": "Authorize",
@@ -765,6 +932,12 @@
   "shareLinksInvalid": "No proxy could be read from the links",
   "shareLinkUnreadable": "No proxy could be read from {link}",
   "proxiesProfileLabel": "{name} and others ({count} proxies)",
+  "@proxiesProfileLabel": {
+    "placeholders": {
+      "name": {},
+      "count": {}
+    }
+  },
   "singleShareLinkOnly": "Enter one link here; edit several from the quick edit of the list",
   "username": "Username",
   "emptyFallback": "Empty fallback",
@@ -783,14 +956,38 @@
   "customIssueGroupLoop": "Proxy groups reference each other in a loop: {path}",
   "customIssueInvalidEmptyFallback": "The empty fallback must be a proxy, but {name} does not exist or is a proxy group",
   "customIssueInvalidFilter": "{name} is not a valid regex: {message}",
+  "@customIssueInvalidFilter": {
+    "placeholders": {
+      "name": {},
+      "message": {}
+    }
+  },
   "customIssueMissingDialer": "The dialer proxy {name} does not exist",
   "customIssueDialerLoop": "{proxy} dials through {target}, which leads back to {proxy}, so the dial loops",
+  "@customIssueDialerLoop": {
+    "placeholders": {
+      "proxy": {},
+      "target": {}
+    }
+  },
   "dialerProxyLoopStopped": "Dialing through {name} leads back to the proxy that uses it, so the connection was stopped",
   "customIssuesSummary": "{count} items have problems, and applying this profile may fail",
   "providerInUse": "{label} is still used by {profiles}, which will not work properly once it is deleted. Are you sure you want to delete it?",
+  "@providerInUse": {
+    "placeholders": {
+      "label": {},
+      "profiles": {}
+    }
+  },
   "proxyGroupInUse": "{label} is still named by rules, proxy groups, dialer proxies, DNS or NTP in this profile, which stop working once it is deleted. Are you sure you want to delete it?",
   "proxiesRemovedTip": "These proxies will be deleted: {removed}. A line whose name changed counts as a new proxy, and custom profiles naming the deleted ones will flag them as missing. Apply anyway?",
   "proxiesReplacedTip": "These proxies will be deleted: {removed}. These will be added: {added}. A line whose name changed counts as a new proxy, and custom profiles naming the deleted ones will flag them as missing. Apply anyway?",
+  "@proxiesReplacedTip": {
+    "placeholders": {
+      "removed": {},
+      "added": {}
+    }
+  },
   "fontSize": "Size",
   "large": "Large",
   "extraLarge": "Extra large",
@@ -813,7 +1010,7 @@
   "keepAliveIdle": "TCP keep-alive idle",
   "disableKeepAlive": "Disable TCP keep-alive",
   "routingMark": "Routing mark",
-  "strictRouteDesc": "Strict route keeps traffic such as DNS from bypassing TUN, and with IPv6 off it blocks this device's IPv6 connections.",
+  "strictRouteDesc": "With IPv6 off, strict route also blocks this device’s IPv6 connections.",
   "initFailed": "Startup failed",
   "initFailedTip": "FlClash ran into an error while starting and can't continue. Copy the details to report the problem. If it keeps happening, clearing the data usually lets the app start again.",
   "errorDetails": "Error details",
@@ -822,10 +1019,10 @@
   "clearDataFailed": "Couldn't clear the data: {detail}",
   "bypassPrivateRoute": "Bypass private addresses",
   "disableIcmpForwarding": "Disable ICMP forwarding",
-  "disableIcmpForwardingDesc": "With ICMP forwarding disabled, TUN answers ping itself, so ping no longer shows the real latency.",
+  "disableIcmpForwardingDesc": "With ICMP forwarding disabled, ping no longer shows the real latency.",
   "excludeInterface": "Excluded interfaces",
   "includeInterface": "Included interfaces",
-  "includeInterfaceDesc": "Only traffic arriving on included interfaces goes through TUN, and excluded interfaces no longer apply.",
+  "includeInterfaceDesc": "Once set, excluded interfaces no longer apply.",
   "includeUid": "Included user IDs",
   "excludeUid": "Excluded user IDs",
   "excludeSrcPort": "Excluded source ports",
@@ -833,9 +1030,9 @@
   "udpTimeout": "UDP timeout",
   "udpTimeoutDesc": "The UDP timeout is in seconds and works only with the gvisor, system and mixed stacks.",
   "dnsHijackDesc": "Without this entry, TUN hijacks every DNS query to port 53 (any:53).",
-  "tunOverrideDesc": "Entries added here replace the TUN settings of every profile; anything not added keeps the profile's own setting. Entries a custom profile adds itself take precedence.",
-  "generalOverrideDesc": "Entries added here replace the setting of every profile; anything not added keeps the profile's own setting, or the core default when the profile has none.",
-  "profileTunSettingsDesc": "Applies to this profile only and takes precedence over the TUN override entries in the network settings.",
+  "tunOverrideDesc": "Added entries override every profile; a custom profile’s own entries win.",
+  "generalOverrideDesc": "Added entries replace every profile’s own setting.",
+  "profileTunSettingsDesc": "For this profile only; wins over the TUN overrides in network settings.",
   "settingsCount": "{count, plural, =1{1 setting} other{{count} settings}}",
   "sectionsInEffect": "{count} in effect",
   "itemsCount": "{count, plural, =1{1 item} other{{count} items}}",
@@ -845,6 +1042,12 @@
   "ipVersion": "IP version",
   "addFilters": "Add filters",
   "failedItem": "{label}: {message}",
+  "@failedItem": {
+    "placeholders": {
+      "label": {},
+      "message": {}
+    }
+  },
   "failedCount": "{count} items failed. Tap to view",
   "importConfigInvalid": "This file is not a config that can be imported",
   "importConfigReplaceTip": "Importing replaces the proxy groups, rules and settings this profile has now",
@@ -912,6 +1115,12 @@
   "usedShort": "used",
   "profileUpdatedAt": "Updated {time}",
   "profileExpiresIn": "Expires {date}, {days, plural, =1{1 day} other{{days} days}} left",
+  "@profileExpiresIn": {
+    "placeholders": {
+      "date": {},
+      "days": {}
+    }
+  },
   "profileDaysLeft": "{days, plural, =1{1 day left} other{{days} days left}}",
   "target": "Target",
   "outboundExit": "Exit",
@@ -929,6 +1138,12 @@
   "done": "Done",
   "dashboardAddableSection": "Available to add",
   "customImportDroppedSubRules": "{count, plural, =1{1 SUB-RULE rule was dropped, since custom profiles do not support sub-rules} other{{label} SUB-RULE rules were dropped, since custom profiles do not support sub-rules}}",
+  "@customImportDroppedSubRules": {
+    "placeholders": {
+      "count": {},
+      "label": {}
+    }
+  },
   "autoInclude": "Auto-include",
   "allReferencedProxies": "All referenced proxies",
   "allReferencedProxyProviders": "All referenced proxy providers",
@@ -943,18 +1158,37 @@
   "mitm": "MITM",
   "httpsDecryption": "HTTPS decryption",
   "httpCapture": "HTTP capture",
-  "httpCaptureDesc": "Records requests to the hosts listed under Hostname, to view in connection details. Records stay in memory only.",
-  "httpCaptureNoHosts": "No host is listed, so nothing is recorded. Add hosts under Hostname on the MITM page, or from the details of a connection.",
+  "httpCaptureNoHosts": "Nothing is recorded until hosts are added under Hostname.",
   "httpCaptureLimit": "Maximum records",
-  "httpCaptureLimitDesc": "The oldest records go first once this many are kept or they fill {memory} of memory. Each body keeps its first {body}.",
+  "httpCaptureMemoryOnly": "Kept in memory only",
   "httpRequests": "HTTP requests",
+  "httpRequestCount": "{count, plural, =1{1 HTTP request} other{{count} HTTP requests}}",
+  "@httpRequestCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "latestHttpRequest": "Latest {request}",
+  "@latestHttpRequest": {
+    "placeholders": {
+      "request": {
+        "type": "String"
+      }
+    }
+  },
   "httpRequestsMissing": "Requests made before capture was on, or since cleared, are not listed.",
+  "noHttpRequests": "No requests yet",
+  "noHttpRequestsHint": "This connection is decrypted, and the HTTP requests on it will appear here",
   "httpRequestCleared": "This request is no longer kept",
   "httpCaptureOff": "Capture is off",
   "inProgress": "In progress",
   "method": "Method",
   "originalUrl": "Original URL",
-  "timeToFirstByte": "Time to first byte",
+  "httpTiming": "Timing",
+  "httpWaiting": "Waiting",
+  "httpReceiving": "Receiving",
   "requestBody": "Request body",
   "response": "Response",
   "responseBody": "Response body",
@@ -995,7 +1229,7 @@
   "mitmTrustNotInstalled": "Not installed",
   "mitmTrustChecking": "Checking…",
   "mitmCertificateAndroidReadyTip": "Only apps that trust user certificates, mostly browsers, are decrypted.",
-  "mitmAndroidRootDesc": "Without root, only apps that trust user certificates, mostly browsers, can be decrypted. With root, every app can.",
+  "mitmAndroidRootDesc": "Without root, only apps that trust user certificates are decrypted.",
   "mitmCertificateLinuxTip": "Flatpak browsers need the exported certificate imported by hand.",
   "mitmCertutilMissing": "Chrome and Firefox keep their own certificate stores, which need certutil: {command}",
   "mitmMissingStores": "Not yet in: {stores}",
@@ -1039,16 +1273,16 @@
   "arguments": "Arguments",
   "mitmRoutingRules": "Routing rules",
   "mitmIgnoredLines": "Ignored lines",
-  "mitmModuleRulesDesc": "Routing rules go in front of the profile’s own.",
-  "mitmRequestRulesDesc": "The module’s URL-REGEX and USER-AGENT rules became URL rewrites, judged request by request: on every plain HTTP request, and on HTTPS only for hosts in the MITM hostname list.",
+  "mitmModuleRulesDesc": "Matched before the profile’s rules.",
+  "mitmRequestRulesDesc": "URL-REGEX and USER-AGENT rules run as URL rewrites, on HTTPS only for listed hosts.",
   "mitmModuleSystemTip": "Written for {system}; some lines may not match apps on this device.",
   "mitmModuleRequirementTip": "The module requires {requirement}, which this device does not meet; it may not work as intended.",
   "mitmExitModules": "From modules: {modules}",
   "mitmModuleRiskTitle": "Turn on this module?",
-  "mitmNetworkRisk": "When the config is generated, it changes the network settings below, ahead of what you set for the same ones in FlClash. Turning the module off or deleting it undoes this.",
+  "mitmNetworkRisk": "While on, it overrides these network settings.",
   "mitmSkipVerifyRisk": "Turning it on stops checking the certificates of these hosts' servers, so a server posing as one of them goes unnoticed: {hosts}",
   "mitmClientSourceRisk": "It decrypts only for these clients: {addresses}. With TUN on, this device's apps reach FlClash from the TUN's address, so they may be left out.",
-  "mitmClientSourceTunTip": "With TUN on, this device's apps come from the TUN's address; a list that leaves it out leaves their traffic undecrypted.",
+  "mitmClientSourceTunTip": "With TUN on, include its address to decrypt this device’s apps.",
   "mitmNetworkChanges": "Network settings",
   "mitmChangeReplace": "Replaced with {values}",
   "mitmChangeInsert": "Adds {values} first",
@@ -1096,6 +1330,12 @@
   "http2": "HTTP/2",
   "decryptUntrusted": "Decrypt without local trust",
   "invalidOfCount": "{invalid} of {total} invalid",
+  "@invalidOfCount": {
+    "placeholders": {
+      "invalid": {},
+      "total": {}
+    }
+  },
   "batchLineInputTip": "One item per line",
   "downloadingUpdate": "Downloading update",
   "updateFailed": "Update failed",
@@ -1130,9 +1370,21 @@
   "coreStoppedDesc": "The app lost its connection to the core",
   "coreStoppedWithReason": "The app lost its connection to the core: {reason}",
   "mixedPortReset": "The mixed port cannot be {value}, so it was set back to {port}",
+  "@mixedPortReset": {
+    "placeholders": {
+      "value": {},
+      "port": {}
+    }
+  },
   "restartCore": "Restart core",
   "installUpdate": "Install update",
   "liveStatusPosition": "{index} of {count}",
+  "@liveStatusPosition": {
+    "placeholders": {
+      "index": {},
+      "count": {}
+    }
+  },
   "coreStarting": "Starting core",
   "coreStartingDesc": "Connecting to the core",
   "coreRunning": "Core running",
@@ -1140,18 +1392,67 @@
   "forceRestartCore": "Force restart",
   "vpnPermissionNotGranted": "VPN permission was not granted, so the VPN did not start. An always-on VPN set for another app also blocks it.",
   "vpnServiceStartFailed": "The VPN service could not start.",
+  "requestPath": "Path",
+  "statusCode": "Status code",
+  "contentKind": "Type",
+  "httpRewritten": "Rewritten",
+  "httpAnswerReject": "Rejected",
+  "httpAnswerRedirect": "Redirected",
+  "httpAnswerScript": "Script response",
+  "httpBodyText": "Text",
+  "httpBodyImage": "Image",
+  "regexReplace": "Regex replace",
+  "owningConnection": "Connection",
+  "selectHttpRequest": "Select a request",
+  "selectHttpRequestHint": "Its request, response and timing appear here",
+  "httpConditionShows": "Requests shown: {count}",
+  "@httpConditionShows": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "httpConditionValuesIn": "{field} in the list",
+  "@httpConditionValuesIn": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "httpConditionTip": "Conditions on one field match any of them, on different fields all.",
+  "vi": "Vietnamese",
   "updateVerifying": "Verifying update",
   "updateVerifyingDesc": "Checking SHA-256 signature for integrity...",
   "updateInstalling": "Installing update",
   "updateInstallingDesc": "Confirm the system prompt to finish updating. The APK will be deleted automatically.",
   "updateReadyAutoCleanDesc": "Verified and ready. The APK will be deleted automatically after updating.",
   "updateCleanedTip": "Updated to v{version} and deleted installer APK ({size}).",
+  "@updateCleanedTip": {
+    "placeholders": {
+      "version": {},
+      "size": {}
+    }
+  },
   "updateDeleteFile": "Delete APK",
   "updateInstallNow": "Install now",
   "selectFastestProxy": "Select fastest node",
   "autoFailover": "Auto-switch on drop",
   "fastestProxySelectedTip": "Switched to fastest node {proxy} ({delay})",
+  "@fastestProxySelectedTip": {
+    "placeholders": {
+      "proxy": {},
+      "delay": {}
+    }
+  },
   "autoFailoverSwitchedTip": "Auto-switched to {proxy} ({delay})",
+  "@autoFailoverSwitchedTip": {
+    "placeholders": {
+      "proxy": {},
+      "delay": {}
+    }
+  },
   "noAvailableProxyTip": "No reachable node found",
   "autoVpnSectionTitle": "Auto-VPN & Boot",
   "autoVpnOnCellular": "Auto-connect on cellular (4G/5G)",
@@ -1270,187 +1571,6 @@
   "portalInvalidUrl": "Please enter a valid http/https website URL",
   "portalInvalidEmail": "Please enter a valid email address",
   "planName": "Plan Name",
-  "subExpiringHoursWarning": "Plan expires in ~{hours}h. Renew soon to avoid interruption.",
-  "subAlertNotificationTitle": "{profile} · Plan Alert",
-  "securityAlertTitle": "{profile} · Security Risk Detected",
-  "securityAlertBody": "Safety score {score}/100 ({count} critical issue(s)). Review and harden now.",
-  "securityAuditTitle": "VPN Security Scanner",
-  "securityAuditSubtitle": "Scan profile for data-leak, MITM, hosts hijack & unencrypted nodes",
-  "securityAuditSummary": "{score}/100 · {level} — Tap for details & 1-tap harden",
-  "securityLevelSafe": "Safe",
-  "securityLevelCaution": "Caution",
-  "securityLevelDanger": "Dangerous",
-  "securityRescan": "Rescan profile",
-  "securityScannedCounts": "Scanned entries",
-  "securityScannedCountsValue": "{proxies} nodes · {rules} rules",
-  "securityAutoHarden": "Protect & Harden Now",
-  "securityAutoHardenDesc": "Lock LAN/controller, enforce DoH DNS, enable Privacy Max & banking bypass",
-  "securityAutoHardenApplied": "Runtime security hardening applied to active configuration",
-  "securityFindingsTitle": "Security Findings",
-  "securityNoRisksTitle": "No dangerous behaviors found",
-  "securityNoRisksDesc": "No MITM injection, host hijacking, exposed controller, or plaintext proxy threats were found in this profile.",
-  "securityFindingMitmTitle": "HTTPS Traffic Inspection (MITM) Enabled",
-  "securityFindingMitmDesc": "Profile enables TLS decryption or untrusted cert capture, which can read passwords & tokens.",
-  "securityFindingControllerTitle": "External Controller Exposed Without Protection",
-  "securityFindingControllerDesc": "Control API binds outside localhost or has no secret, letting LAN/remote peers control routes.",
-  "securityFindingHostsTitle": "Sensitive Banking / Account Domains Hijacked in Hosts",
-  "securityFindingHostsDesc": "Static hosts mapping redirects sensitive services to custom IPs.",
-  "securityFindingPlaintextTitle": "Unencrypted / Weak-Cipher Proxy Nodes",
-  "securityFindingPlaintextDesc": "{count} node(s) send traffic in plaintext or weak cipher without TLS.",
-  "securityFindingSkipVerifyTitle": "TLS Certificate Verification Disabled",
-  "securityFindingSkipVerifyDesc": "{count} node(s) skip TLS certificate checks, risking man-in-the-middle impersonation.",
-  "securityFindingHttpSubTitle": "Subscription Link Uses Unencrypted HTTP",
-  "securityFindingHttpSubDesc": "Subscription URL fetches configs over plain HTTP, allowing network tampering in transit.",
-  "securityFindingHttpProviderTitle": "Remote Rule/Proxy Providers Use Plain HTTP",
-  "securityFindingHttpProviderDesc": "{count} external provider(s) download rules or nodes over unencrypted HTTP.",
-  "securityFindingAllowLanTitle": "LAN Sharing Enabled by Profile",
-  "securityFindingAllowLanDesc": "Profile sets allow-lan: true, exposing local proxy ports to other devices on the same Wi-Fi.",
-  "securityFindingLanRouteTitle": "Private Local Network Traffic Routed to Proxy",
-  "securityFindingLanRouteDesc": "{count} rule(s) forward private LAN or router IPs out through remote proxy nodes.",
-  "securityFindingPlainDnsTitle": "Custom Unencrypted Plain DNS Resolvers",
-  "securityFindingPlainDnsDesc": "Custom DNS lacks DoH/DoT encryption, allowing third parties to log DNS lookups.",
-  "speedBoostPreset": "Max Network Speed Boost",
-  "speedBoostPresetDesc": "Mixed kernel TCP stack, MTU 9000, direct System Proxy & high-BDP QUIC windows (single-device safe)",
-  "speedBoostAppliedTip": "Max Network Speed Boost (Mixed + MTU 9000) applied",
-  "expiryAlertsToggle": "Expiry & Security Notifications",
-  "expiryAlertsToggleDesc": "Warn via notification bar when plan expires soon, exceeds devices, or shows risks",
-  "homeWidgetAddTitle": "Add Home Screen Widget",
-  "homeWidgetAddDesc": "Live speed, 1-tap toggle, devices, expiry & security shield on your launcher",
-  "homeWidgetPinRequested": "Confirm adding the FlClash widget on your home screen",
-  "homeWidgetPinFallback": "Long press your home screen, choose Widgets, and drag FlClash onto the screen",
-  "@numberRangeTip": {
-    "placeholders": {
-      "label": {},
-      "min": {},
-      "max": {}
-    }
-  },
-  "@maxLengthTip": {
-    "placeholders": {
-      "label": {},
-      "max": {}
-    }
-  },
-  "@batchPreviewTip": {
-    "placeholders": {
-      "count": {},
-      "skipped": {}
-    }
-  },
-  "@lineIssueTip": {
-    "placeholders": {
-      "line": {},
-      "message": {}
-    }
-  },
-  "@proxiesCount": {
-    "placeholders": {
-      "count": {},
-      "label": {}
-    }
-  },
-  "@rulesCount": {
-    "placeholders": {
-      "count": {},
-      "label": {}
-    }
-  },
-  "@proxyGroupsCount": {
-    "placeholders": {
-      "count": {},
-      "label": {}
-    }
-  },
-  "@proxiesProfileLabel": {
-    "placeholders": {
-      "name": {},
-      "count": {}
-    }
-  },
-  "@customIssueInvalidFilter": {
-    "placeholders": {
-      "name": {},
-      "message": {}
-    }
-  },
-  "@customIssueDialerLoop": {
-    "placeholders": {
-      "proxy": {},
-      "target": {}
-    }
-  },
-  "@providerInUse": {
-    "placeholders": {
-      "label": {},
-      "profiles": {}
-    }
-  },
-  "@proxiesReplacedTip": {
-    "placeholders": {
-      "removed": {},
-      "added": {}
-    }
-  },
-  "@failedItem": {
-    "placeholders": {
-      "label": {},
-      "message": {}
-    }
-  },
-  "@profileExpiresIn": {
-    "placeholders": {
-      "date": {},
-      "days": {}
-    }
-  },
-  "@customImportDroppedSubRules": {
-    "placeholders": {
-      "count": {},
-      "label": {}
-    }
-  },
-  "@httpCaptureLimitDesc": {
-    "placeholders": {
-      "memory": {},
-      "body": {}
-    }
-  },
-  "@invalidOfCount": {
-    "placeholders": {
-      "invalid": {},
-      "total": {}
-    }
-  },
-  "@mixedPortReset": {
-    "placeholders": {
-      "value": {},
-      "port": {}
-    }
-  },
-  "@liveStatusPosition": {
-    "placeholders": {
-      "index": {},
-      "count": {}
-    }
-  },
-  "@updateCleanedTip": {
-    "placeholders": {
-      "version": {},
-      "size": {}
-    }
-  },
-  "@fastestProxySelectedTip": {
-    "placeholders": {
-      "proxy": {},
-      "delay": {}
-    }
-  },
-  "@autoFailoverSwitchedTip": {
-    "placeholders": {
-      "proxy": {},
-      "delay": {}
-    }
-  },
   "@hotspotCopiedTip": {
     "placeholders": {
       "address": {}
@@ -1531,6 +1651,54 @@
       "email": {}
     }
   },
+  "subExpiringHoursWarning": "Plan expires in ~{hours}h. Renew soon to avoid interruption.",
+  "subAlertNotificationTitle": "{profile} · Plan Alert",
+  "securityAlertTitle": "{profile} · Security Risk Detected",
+  "securityAlertBody": "Safety score {score}/100 ({count} critical issue(s)). Review and harden now.",
+  "securityAuditTitle": "VPN Security Scanner",
+  "securityAuditSubtitle": "Scan profile for data-leak, MITM, hosts hijack & unencrypted nodes",
+  "securityAuditSummary": "{score}/100 · {level} — Tap for details & 1-tap harden",
+  "securityLevelSafe": "Safe",
+  "securityLevelCaution": "Caution",
+  "securityLevelDanger": "Dangerous",
+  "securityRescan": "Rescan profile",
+  "securityScannedCounts": "Scanned entries",
+  "securityScannedCountsValue": "{proxies} nodes · {rules} rules",
+  "securityAutoHarden": "Protect & Harden Now",
+  "securityAutoHardenDesc": "Lock LAN/controller, enforce DoH DNS, enable Privacy Max & banking bypass",
+  "securityAutoHardenApplied": "Runtime security hardening applied to active configuration",
+  "securityFindingsTitle": "Security Findings",
+  "securityNoRisksTitle": "No dangerous behaviors found",
+  "securityNoRisksDesc": "No MITM injection, host hijacking, exposed controller, or plaintext proxy threats were found in this profile.",
+  "securityFindingMitmTitle": "HTTPS Traffic Inspection (MITM) Enabled",
+  "securityFindingMitmDesc": "Profile enables TLS decryption or untrusted cert capture, which can read passwords & tokens.",
+  "securityFindingControllerTitle": "External Controller Exposed Without Protection",
+  "securityFindingControllerDesc": "Control API binds outside localhost or has no secret, letting LAN/remote peers control routes.",
+  "securityFindingHostsTitle": "Sensitive Banking / Account Domains Hijacked in Hosts",
+  "securityFindingHostsDesc": "Static hosts mapping redirects sensitive services to custom IPs.",
+  "securityFindingPlaintextTitle": "Unencrypted / Weak-Cipher Proxy Nodes",
+  "securityFindingPlaintextDesc": "{count} node(s) send traffic in plaintext or weak cipher without TLS.",
+  "securityFindingSkipVerifyTitle": "TLS Certificate Verification Disabled",
+  "securityFindingSkipVerifyDesc": "{count} node(s) skip TLS certificate checks, risking man-in-the-middle impersonation.",
+  "securityFindingHttpSubTitle": "Subscription Link Uses Unencrypted HTTP",
+  "securityFindingHttpSubDesc": "Subscription URL fetches configs over plain HTTP, allowing network tampering in transit.",
+  "securityFindingHttpProviderTitle": "Remote Rule/Proxy Providers Use Plain HTTP",
+  "securityFindingHttpProviderDesc": "{count} external provider(s) download rules or nodes over unencrypted HTTP.",
+  "securityFindingAllowLanTitle": "LAN Sharing Enabled by Profile",
+  "securityFindingAllowLanDesc": "Profile sets allow-lan: true, exposing local proxy ports to other devices on the same Wi-Fi.",
+  "securityFindingLanRouteTitle": "Private Local Network Traffic Routed to Proxy",
+  "securityFindingLanRouteDesc": "{count} rule(s) forward private LAN or router IPs out through remote proxy nodes.",
+  "securityFindingPlainDnsTitle": "Custom Unencrypted Plain DNS Resolvers",
+  "securityFindingPlainDnsDesc": "Custom DNS lacks DoH/DoT encryption, allowing third parties to log DNS lookups.",
+  "speedBoostPreset": "Max Network Speed Boost",
+  "speedBoostPresetDesc": "Mixed kernel TCP stack, MTU 9000, direct System Proxy & high-BDP QUIC windows (single-device safe)",
+  "speedBoostAppliedTip": "Max Network Speed Boost (Mixed + MTU 9000) applied",
+  "expiryAlertsToggle": "Expiry & Security Notifications",
+  "expiryAlertsToggleDesc": "Warn via notification bar when plan expires soon, exceeds devices, or shows risks",
+  "homeWidgetAddTitle": "Add Home Screen Widget",
+  "homeWidgetAddDesc": "Live speed, 1-tap toggle, devices, expiry & security shield on your launcher",
+  "homeWidgetPinRequested": "Confirm adding the FlClash widget on your home screen",
+  "homeWidgetPinFallback": "Long press your home screen, choose Widgets, and drag FlClash onto the screen",
   "@subExpiringHoursWarning": {
     "placeholders": {
       "hours": {}

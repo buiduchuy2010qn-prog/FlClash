@@ -6,8 +6,8 @@ import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
-import 'package:fl_clash/ui/ui.dart';
 import 'package:fl_clash/views/disclaimer.dart';
+import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -30,8 +30,9 @@ class AboutView extends ConsumerWidget {
   Future<void> _checkUpdate(BuildContext context, WidgetRef ref) async {
     if (ref.read(loadingProvider(LoadingTag.checkUpdate))) return;
     final commonAction = ref.read(commonActionProvider.notifier);
+    final channel = ref.read(appSettingProvider).updateChannel;
     final result = await globalState.loadingRun(
-      () async => (release: await request.checkForUpdate()),
+      () async => (release: await request.checkForUpdate(channel)),
       title: context.appLocalizations.checkUpdate,
       tag: LoadingTag.checkUpdate,
     );
@@ -48,7 +49,7 @@ class AboutView extends ConsumerWidget {
     required String label,
   }) {
     return ListItem(
-      leading: _LinkBadge(glyph: glyph),
+      leading: _GlyphBadge(glyph: glyph),
       title: Text(title),
       subtitle: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
       trailing: const GlyphIcon(AppGlyphs.openExternal),
@@ -64,11 +65,12 @@ class AboutView extends ConsumerWidget {
     final isLoading = ref.watch(loadingProvider(LoadingTag.checkUpdate));
     final updateState = ref.watch(updateDownloadStateProvider);
     final commonAction = ref.read(commonActionProvider.notifier);
+    final badgeRowHeight = _GlyphBadge.rowHeightOf(context);
     return Scaffold(
       isLoading: isLoading,
       title: appLocalizations.about,
       body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(
+        padding: context.listInsets.page().copyWith(
           top: context.contentTopPadding,
           bottom: 32 + context.bottomInset,
         ),
@@ -98,10 +100,39 @@ class AboutView extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           generateSection(
+            title: appLocalizations.update,
+            items: [
+              ConfigToggleItem(
+                leading: const _GlyphBadge(glyph: AppGlyphs.autoCheckUpdate),
+                minHeight: badgeRowHeight,
+                title: (l) => l.autoCheckUpdate,
+                selector: appSettingProvider.select(
+                  (state) => state.autoCheckUpdate,
+                ),
+                onChanged: (ref, value) => ref
+                    .read(appSettingProvider.notifier)
+                    .update((state) => state.copyWith(autoCheckUpdate: value)),
+              ),
+              ConfigOptionsItem<UpdateChannel>(
+                leading: const _GlyphBadge(glyph: AppGlyphs.updateChannel),
+                minHeight: badgeRowHeight,
+                title: (l) => l.updateChannel,
+                options: UpdateChannel.values,
+                textBuilder: (channel) => channel.label,
+                selector: appSettingProvider.select(
+                  (state) => state.updateChannel,
+                ),
+                onChanged: (ref, value) => ref
+                    .read(appSettingProvider.notifier)
+                    .update((state) => state.copyWith(updateChannel: value)),
+              ),
+            ],
+          ),
+          generateSection(
             title: appLocalizations.more,
             items: [
               ListItem.open(
-                leading: const _LinkBadge(glyph: AppGlyphs.gavel),
+                leading: const _GlyphBadge(glyph: AppGlyphs.gavel),
                 title: Text(appLocalizations.disclaimerLicenseTitle),
                 subtitle: const Text('GNU GPL-3.0'),
                 widget: const DisclaimerView(),
@@ -178,7 +209,7 @@ class _AboutHero extends StatelessWidget {
     final colorScheme = context.colorScheme;
     final appLocalizations = context.appLocalizations;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+      padding: context.listInsets.page(top: infoSectionSpacing),
       child: Column(
         children: [
           _DeveloperModeDetector(
@@ -210,7 +241,7 @@ class _AboutHero extends StatelessWidget {
             alignment: WrapAlignment.center,
             children: [
               _Pill(
-                label: 'v${globalState.packageInfo.version}',
+                label: installedVersionLabel(globalState.packageInfo.version),
                 color: colorScheme.primary,
                 foregroundColor: colorScheme.onPrimary,
               ),
@@ -594,10 +625,15 @@ class _Pill extends StatelessWidget {
   }
 }
 
-class _LinkBadge extends StatelessWidget {
+class _GlyphBadge extends StatelessWidget {
   final Glyph glyph;
 
-  const _LinkBadge({required this.glyph});
+  const _GlyphBadge({required this.glyph});
+
+  /// A row with a subtitle stands this tall around the badge, so a row
+  /// without one takes the height too to keep the same margins.
+  static double rowHeightOf(BuildContext context) =>
+      MeasureScope.of(context).listTwoLineRowHeight(ListTextScope.of(context));
 
   @override
   Widget build(BuildContext context) {

@@ -173,6 +173,7 @@ func applyConfig(params *SetupParams) error {
 	installResilientProxyHostResolver()
 	adapter.UnifiedDelay.Store(cfg.General.UnifiedDelay)
 	dialer.SetTcpConcurrent(cfg.General.TCPConcurrent)
+	currentRuleTable.observe()
 	patchSelectGroup(params.SelectedMap)
 	updateListeners(cfg)
 	// After the listeners: a probe sent while the TUN is rebuilt carries the

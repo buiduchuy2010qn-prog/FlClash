@@ -83,7 +83,7 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
         ServiceController.setTelemetryPaused(false)
         val savedAutoFailover = GlobalState.application
             .getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
-            .getBoolean("flutter.smart_auto_failover", true)
+            .getBoolean("flutter.smart_auto_failover_v2", false)
         ServiceController.setAutoFailover(savedAutoFailover)
         ServiceController.setEventListener(::sendEvent)
             .onSuccess { result.success("") }

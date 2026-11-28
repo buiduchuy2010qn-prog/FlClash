@@ -13,22 +13,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 Future<void> showPortalConnectSheet(BuildContext context, Profile profile) {
   return showFormSheet<void>(
     context: context,
-    builder: (_) => PlanPortalConnectSheet(profile: profile),
+    builder: (_) => _PlanPortalConnectSheet(profile: profile),
   );
 }
 
-class PlanPortalConnectSheet extends ConsumerStatefulWidget {
-  const PlanPortalConnectSheet({super.key, required this.profile});
+class _PlanPortalConnectSheet extends ConsumerStatefulWidget {
+  const _PlanPortalConnectSheet({required this.profile});
 
   final Profile profile;
 
   @override
-  ConsumerState<PlanPortalConnectSheet> createState() =>
+  ConsumerState<_PlanPortalConnectSheet> createState() =>
       _PlanPortalConnectSheetState();
 }
 
 class _PlanPortalConnectSheetState
-    extends ConsumerState<PlanPortalConnectSheet> {
+    extends ConsumerState<_PlanPortalConnectSheet> {
   late final TextEditingController _originController;
   late final TextEditingController _emailController;
   late final TextEditingController _passwordController;

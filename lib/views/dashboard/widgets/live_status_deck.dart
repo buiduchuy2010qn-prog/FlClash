@@ -697,7 +697,7 @@ String _progressText(UpdateDownloading download) {
   return '$size · ${download.speedBytesPerSec.traffic.show}/s';
 }
 
-String _readyTip(AppLocalizations appLocalizations) => system.isWindows
+String _readyTip(AppLocalizations appLocalizations) => system.isDesktop
     ? '${appLocalizations.updateReadyTip}\n${appLocalizations.updateRestartTip}'
     : appLocalizations.updateReadyTip;
 
@@ -1429,7 +1429,7 @@ class _ReadyHero extends StatelessWidget {
           glyphColor: colorScheme.onSuccess,
           chips: [
             _HeroChip(
-              globalState.packageInfo.version,
+              installedVersionName(globalState.packageInfo.version),
               color: colorScheme.onSurfaceVariant,
             ),
             GlyphIcon(

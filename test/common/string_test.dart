@@ -48,6 +48,7 @@ void main() {
     test('a link whose scheme mihomo converts', () {
       expect('vmess://eyJhZGQiOiIxLjIuMy40In0='.isShareLink, isTrue);
       expect('Hy2://pass@example.com:443#HK'.isShareLink, isTrue);
+      expect('wireguard://key@example.com:51820'.isShareLink, isTrue);
     });
 
     test('a subscription url', () {
@@ -63,7 +64,7 @@ void main() {
     });
 
     test('an unknown scheme', () {
-      expect('wireguard://key@example.com:51820'.isShareLink, isFalse);
+      expect('gopher://user@example.com:70'.isShareLink, isFalse);
     });
   });
 

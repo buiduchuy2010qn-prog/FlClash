@@ -23,7 +23,7 @@ permissions:
   contents: write
 
 env:
-  FLUTTER_VERSION: '3.50.0'
+  FLUTTER_VERSION: '3.50.1'
   GO_VERSION: '1.27.1'
   NDK_VERSION: r28c
 
@@ -353,6 +353,13 @@ jobs:
           flutter pub get
           flutter gen-l10n
 
+      # See .agents/flutter-upgrade.md before bumping FLUTTER_VERSION.
+      - name: Disable Impeller on Intel macOS
+        if: matrix.platform == 'macos' && matrix.arch == 'amd64'
+        run: plutil -replace FLTEnableImpeller -bool NO macos/Runner/Info.plist
+
+      # The core embeds this bundle and FlClashHttpOverrides.trustCoreRoots loads it for Dart.
+      # Pinned by hash, so a new bundle from https://curl.se/docs/caextract.html is a reviewed bump.
       - name: Fetch CA certificates
         shell: bash
         env:

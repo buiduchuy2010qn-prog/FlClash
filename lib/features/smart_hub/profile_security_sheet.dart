@@ -14,21 +14,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 Future<void> showProfileSecuritySheet(BuildContext context, Profile profile) {
   return showNestedSheet<void>(
     context,
-    builder: (_) => ProfileSecuritySheet(profile: profile),
+    builder: (_) => _ProfileSecuritySheet(profile: profile),
   );
 }
 
-class ProfileSecuritySheet extends ConsumerStatefulWidget {
-  const ProfileSecuritySheet({super.key, required this.profile});
+class _ProfileSecuritySheet extends ConsumerStatefulWidget {
+  const _ProfileSecuritySheet({required this.profile});
 
   final Profile profile;
 
   @override
-  ConsumerState<ProfileSecuritySheet> createState() =>
+  ConsumerState<_ProfileSecuritySheet> createState() =>
       _ProfileSecuritySheetState();
 }
 
-class _ProfileSecuritySheetState extends ConsumerState<ProfileSecuritySheet> {
+class _ProfileSecuritySheetState extends ConsumerState<_ProfileSecuritySheet> {
   bool _scanning = false;
   bool _hardening = false;
 
