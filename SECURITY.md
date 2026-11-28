@@ -3,7 +3,8 @@
 ## Scope & Supported Versions
 This repository provides an independent, GNU GPL-3.0-licensed fork of FlClash maintained for Vietnamese localization, mobile stability, push notification/widget reliability, and battery/thermal efficiency.
 
-- Latest supported release line: `v0.9.22+`
+- Latest supported release line: `v0.9.23+`
+- Built-in VPN profile security scanner (`lib/common/profile_security_audit.dart`) and runtime auto-hardening protect against untrusted MITM interception, exposed control APIs, sensitive host overrides, unencrypted proxies, and DNS leaks.
 - Only general-purpose open-source client code is distributed here; no external proxy servers, subscriptions, or user credentials are bundled.
 
 ## Reporting a Vulnerability

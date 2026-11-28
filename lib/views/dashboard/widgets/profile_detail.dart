@@ -162,6 +162,11 @@ class _ProfileDetailSheetState extends ConsumerState<ProfileDetailSheet>
               .read(profilesActionProvider.notifier)
               .refreshPortalStatus(profile),
         );
+        if (!ref.read(profileSecurityProvider).containsKey(profile.id)) {
+          unawaited(
+            ref.read(profileSecurityProvider.notifier).scanProfile(profile),
+          );
+        }
       }
     });
   }
@@ -197,6 +202,9 @@ class _ProfileDetailSheetState extends ConsumerState<ProfileDetailSheet>
       portalAccountsProvider.select((s) => s[profile.id]),
     );
     final forecast = ref.watch(currentQuotaForecastProvider);
+    final securityReport = ref.watch(
+      profileSecurityProvider.select((s) => s[profile.id]),
+    );
     final colorScheme = context.colorScheme;
     final hasSubDetails =
         (subscriptionInfo != null && subscriptionInfo.total > 0) ||
@@ -320,6 +328,41 @@ class _ProfileDetailSheetState extends ConsumerState<ProfileDetailSheet>
                             trailing: const GlyphIcon(AppGlyphs.chevronForward),
                             onTap: () => unawaited(
                               showPortalConnectSheet(context, profile),
+                            ),
+                          ),
+                          ListItem(
+                            leading: GlyphIcon(
+                              securityReport?.isDangerous == true
+                                  ? AppGlyphs.warning
+                                  : AppGlyphs.verified,
+                              color: switch (securityReport?.level) {
+                                ProfileRiskLevel.danger => colorScheme.error,
+                                ProfileRiskLevel.caution => colorScheme.warning,
+                                ProfileRiskLevel.safe => colorScheme.success,
+                                null => null,
+                              },
+                            ),
+                            title: Text(appLocalizations.securityAuditTitle),
+                            subtitle: Text(
+                              securityReport == null
+                                  ? appLocalizations.securityAuditSubtitle
+                                  : appLocalizations.securityAuditSummary(
+                                      securityReport.score,
+                                      switch (securityReport.level) {
+                                        ProfileRiskLevel.danger =>
+                                          appLocalizations.securityLevelDanger,
+                                        ProfileRiskLevel.caution =>
+                                          appLocalizations.securityLevelCaution,
+                                        ProfileRiskLevel.safe =>
+                                          appLocalizations.securityLevelSafe,
+                                      },
+                                    ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            trailing: const GlyphIcon(AppGlyphs.chevronForward),
+                            onTap: () => unawaited(
+                              showProfileSecuritySheet(context, profile),
                             ),
                           ),
                           if (deviceMeta?.portalUrl case final portalUrl?)

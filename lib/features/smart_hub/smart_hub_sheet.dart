@@ -2,10 +2,13 @@ import 'dart:async';
 
 import 'package:collection/collection.dart';
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/common/service_probe.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/features/ip_quality/leak_check_sheet.dart';
 import 'package:fl_clash/features/smart_hub/portal_connect_sheet.dart';
+import 'package:fl_clash/features/smart_hub/profile_security_sheet.dart';
 import 'package:fl_clash/models/models.dart';
+import 'package:fl_clash/plugins/app.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/views/dashboard/widgets/profile_detail.dart';
@@ -26,6 +29,15 @@ class SmartHubSheet extends ConsumerStatefulWidget {
 
 class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
   static const _builtinNames = {'DIRECT', 'REJECT', 'REJECT-DROP', 'PASS'};
+  static const _selfHealSlowThresholdMs = 700;
+  static const _multiWebTargets = [
+    ServiceTarget.google,
+    ServiceTarget.youtube,
+    ServiceTarget.tiktok,
+    ServiceTarget.chatgpt,
+    ServiceTarget.github,
+    ServiceTarget.discord,
+  ];
 
   bool _footprintLoading = false;
   SessionFootprint? _footprint;
@@ -33,6 +45,8 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
   int _healStep = 0;
   String? _healSummary;
   bool _healSuccess = true;
+  bool _checkingWebs = false;
+  Map<ServiceTarget, ServiceCheck>? _webResults;
 
   @override
   void initState() {
@@ -48,6 +62,12 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
             .read(profilesActionProvider.notifier)
             .refreshPortalStatus(profile, force: manual),
       );
+      if (manual ||
+          !ref.read(profileSecurityProvider).containsKey(profile.id)) {
+        unawaited(
+          ref.read(profileSecurityProvider.notifier).scanProfile(profile),
+        );
+      }
     }
     if (ref.read(coreStatusProvider) != CoreStatus.connected) {
       if (mounted) {
@@ -131,10 +151,16 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
         activeDelay = _readActiveDelayMs();
       }
 
-      if ((activeDelay == null || activeDelay <= 0) &&
+      if ((leaf == null ||
+              activeDelay == null ||
+              activeDelay <= 0 ||
+              activeDelay >= _selfHealSlowThresholdMs) &&
           ref.read(isStartProvider)) {
         setState(() => _healStep = 3);
-        await proxiesAction.selectFastestActiveGroup(automatic: true);
+        await proxiesAction.selectFastestActiveGroup(
+          automatic: true,
+          manualHeal: true,
+        );
         if (!mounted) return;
         activeDelay = _readActiveDelayMs();
       }
@@ -196,19 +222,35 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
     if (system.isAndroid) {
       ref
           .read(vpnSettingProvider.notifier)
-          .update((state) => state.copyWith(ipv6: false));
-      ref
-          .read(patchClashConfigProvider.notifier)
           .update(
             (state) => state.copyWith(
               ipv6: false,
-              generalOverrideKeys: {
-                ...state.generalOverrideKeys,
-                GeneralOverrideKey.ipv6,
-              },
+              dnsHijacking: true,
+              allowBypass: false,
             ),
           );
     }
+    ref.read(patchClashConfigProvider.notifier).update((state) {
+      return state.copyWith(
+        ipv6: false,
+        generalOverrideKeys: {
+          ...state.generalOverrideKeys,
+          GeneralOverrideKey.ipv6,
+        },
+        tunOverride: system.isDesktop
+            ? state.tunOverride.copyWith(strictRoute: true)
+            : state.tunOverride,
+        tunOverrideKeys: system.isDesktop
+            ? {...state.tunOverrideKeys, TunOverrideKey.strictRoute}
+            : state.tunOverrideKeys,
+      );
+    });
+    if (system.isDesktop) {
+      ref
+          .read(networkSettingProvider.notifier)
+          .update((state) => state.copyWith(appendSystemDns: false));
+    }
+    await ref.read(setupActionProvider.notifier).applyPresetAndSyncTunnel();
     if (ref.read(coreStatusProvider) == CoreStatus.connected) {
       await ref.read(coreActionProvider.notifier).closeConnections();
       await _refreshFootprint();
@@ -225,7 +267,7 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
     ref
         .read(appSettingProvider.notifier)
         .update((state) => state.copyWith(hideIp: enable));
-    if (system.isAndroid) {
+    if (system.isAndroid || system.isWindows) {
       ref.read(privacyScreenShieldProvider.notifier).value = enable;
     }
     if (enable) {
@@ -238,12 +280,129 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
     final notifier = ref.read(optimize4gPresetProvider.notifier);
     if (enable) {
       await notifier.enablePreset();
-      dialogs.showBanner(l.optimize4gAppliedTip);
     } else {
       await notifier.disablePresetAndRestore();
     }
     if (!mounted) return;
-    ref.read(setupActionProvider.notifier).applyProfileDebounce(force: true);
+    await ref.read(setupActionProvider.notifier).applyPresetAndSyncTunnel();
+    if (!mounted) return;
+    if (enable) {
+      dialogs.showBanner(l.optimize4gAppliedTip);
+    }
+  }
+
+  Future<void> _toggleSpeedBoost(bool enable) async {
+    final l = context.appLocalizations;
+    final notifier = ref.read(speedBoostPresetProvider.notifier);
+    if (enable) {
+      await notifier.enablePreset();
+    } else {
+      await notifier.disablePresetAndRestore();
+    }
+    if (!mounted) return;
+    await ref.read(setupActionProvider.notifier).applyPresetAndSyncTunnel();
+    if (!mounted) return;
+    if (enable) {
+      dialogs.showBanner(l.speedBoostAppliedTip, level: BannerLevel.success);
+    }
+  }
+
+  Future<void> _runMultiWebCheck() async {
+    if (_checkingWebs) return;
+    final l = context.appLocalizations;
+    if (!ref.read(isStartProvider)) {
+      dialogs.showBanner(l.smartHealStartVpnFirst, level: BannerLevel.warning);
+      return;
+    }
+    setState(() => _checkingWebs = true);
+    try {
+      final results = await checkServices(
+        ref.read(coreHandlerProvider),
+        targets: _multiWebTargets,
+        timeout: const Duration(seconds: 5),
+      );
+      if (!mounted) return;
+      setState(() {
+        _webResults = results;
+        _checkingWebs = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _checkingWebs = false);
+      dialogs.showBanner(l.serviceFailed, level: BannerLevel.warning);
+    }
+  }
+
+  String _probeStatusLabel(BuildContext context, ServiceProbeStatus status) {
+    final l = context.appLocalizations;
+    return switch (status) {
+      ServiceProbeStatus.available => l.serviceAvailable,
+      ServiceProbeStatus.restricted => l.serviceRestricted,
+      ServiceProbeStatus.unavailable => l.serviceUnavailable,
+      ServiceProbeStatus.disallowedIsp => l.serviceDisallowedIsp,
+      ServiceProbeStatus.blocked => l.serviceBlocked,
+      ServiceProbeStatus.unsupportedRegion => l.serviceUnsupportedRegion,
+      ServiceProbeStatus.originalsOnly => l.serviceOriginalsOnly,
+      ServiceProbeStatus.comingSoon => l.serviceComingSoon,
+      ServiceProbeStatus.timeout => l.timeout,
+      ServiceProbeStatus.failed => l.serviceFailed,
+    };
+  }
+
+  String _multiWebSummaryText(BuildContext context) {
+    final l = context.appLocalizations;
+    final results = _webResults;
+    if (results == null || results.isEmpty) {
+      return l.smartMultiWebDesc;
+    }
+    var okCount = 0;
+    var delaySum = 0;
+    var delayCount = 0;
+    final perSite = <String>[];
+    for (final target in _multiWebTargets) {
+      final item = results[target];
+      if (item == null) continue;
+      final reachableYoutube =
+          target == ServiceTarget.youtube &&
+          item.status == ServiceProbeStatus.unsupportedRegion &&
+          (item.delay ?? 0) > 0;
+      if (item.status == ServiceProbeStatus.available || reachableYoutube) {
+        okCount++;
+        final regionTag = (item.region != null && item.region!.isNotEmpty)
+            ? ' (${item.region})'
+            : '';
+        if (item.delay != null && item.delay! > 0) {
+          delaySum += item.delay!;
+          delayCount++;
+          perSite.add('${target.label} ${item.delay}ms$regionTag');
+        } else {
+          perSite.add('${target.label} OK$regionTag');
+        }
+      } else {
+        final issue = _probeStatusLabel(context, item.status);
+        final delayPrefix = (item.delay != null && item.delay! > 0)
+            ? '${item.delay}ms · '
+            : '';
+        perSite.add('${target.label} ($delayPrefix$issue)');
+      }
+    }
+    final avgMs = delayCount > 0 ? (delaySum ~/ delayCount) : 0;
+    final headline = l.smartMultiWebSummary(
+      okCount,
+      _multiWebTargets.length,
+      avgMs,
+    );
+    return perSite.isEmpty ? headline : '$headline\n${perSite.join(' · ')}';
+  }
+
+  Future<void> _pinHomeWidget() async {
+    final l = context.appLocalizations;
+    final requested = await app?.pinHomeWidget() ?? false;
+    if (!mounted) return;
+    dialogs.showBanner(
+      requested ? l.homeWidgetPinRequested : l.homeWidgetPinFallback,
+      level: requested ? BannerLevel.success : BannerLevel.info,
+    );
   }
 
   String _healStepLabel(BuildContext context, int step) {
@@ -303,19 +462,25 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
     final hideIp = ref.watch(
       appSettingProvider.select((state) => state.hideIp),
     );
-    final screenShield = system.isAndroid
+    final supportsScreenShield = system.isAndroid || system.isWindows;
+    final screenShield = supportsScreenShield
         ? ref.watch(privacyScreenShieldProvider)
         : false;
-    final privacyMaxEnabled = hideIp && (!system.isAndroid || screenShield);
+    final privacyMaxEnabled = hideIp && (!supportsScreenShield || screenShield);
     final optimize4gEnabled = ref.watch(optimize4gPresetProvider);
+    final speedBoostEnabled = ref.watch(speedBoostPresetProvider);
+    final expiryAlertsEnabled = ref.watch(expiryAlertsEnabledProvider);
+    final dailyTrafficEnabled = ref.watch(dailyTrafficEnabledProvider);
+    final dailyLedger = ref.watch(dailyTrafficProvider);
+    final securityReport = profile == null
+        ? null
+        : ref.watch(profileSecurityProvider.select((s) => s[profile.id]));
     final autoFailover = ref.watch(autoFailoverProvider);
     final closeConnections = ref.watch(
       appSettingProvider.select((state) => state.closeConnections),
     );
     final singleDeviceGuarded =
-        !autoFailover &&
-        closeConnections &&
-        (!system.isAndroid || !ipv6Enabled);
+        !autoFailover && closeConnections && !ipv6Enabled;
 
     final healthColor = switch (health.grade) {
       HealthGrade.excellent => colors.success,
@@ -417,6 +582,23 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
                 ),
                 trailing: const GlyphIcon(AppGlyphs.chevronForward),
                 onTap: _healing ? null : () => unawaited(_runSelfHeal()),
+              ),
+              ListItem(
+                leading: _checkingWebs
+                    ? const ActivityIndicator(size: 18)
+                    : const GlyphIcon(AppGlyphs.radar),
+                title: Text(
+                  _checkingWebs ? l.smartMultiWebRunning : l.smartMultiWebTitle,
+                ),
+                subtitle: Text(
+                  _multiWebSummaryText(context),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: const GlyphIcon(AppGlyphs.chevronForward),
+                onTap: _checkingWebs
+                    ? null
+                    : () => unawaited(_runMultiWebCheck()),
               ),
             ],
           ),
@@ -528,6 +710,55 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
                 value: optimize4gEnabled,
                 onChanged: (value) => unawaited(_toggleOptimize4g(value)),
               ),
+              ListItem.toggle(
+                leading: const GlyphIcon(AppGlyphs.speed),
+                title: Text(l.speedBoostPreset),
+                subtitle: Text(l.speedBoostPresetDesc),
+                value: speedBoostEnabled,
+                onChanged: (value) => unawaited(_toggleSpeedBoost(value)),
+              ),
+              ListItem.toggle(
+                leading: const GlyphIcon(AppGlyphs.info),
+                title: Text(l.expiryAlertsToggle),
+                subtitle: Text(l.expiryAlertsToggleDesc),
+                value: expiryAlertsEnabled,
+                onChanged: (value) {
+                  ref.read(expiryAlertsEnabledProvider.notifier).value = value;
+                },
+              ),
+              if (profile != null)
+                ListItem(
+                  leading: GlyphIcon(
+                    securityReport?.isDangerous == true
+                        ? AppGlyphs.warning
+                        : AppGlyphs.verified,
+                    color: switch (securityReport?.level) {
+                      ProfileRiskLevel.danger => colors.error,
+                      ProfileRiskLevel.caution => colors.warning,
+                      ProfileRiskLevel.safe => colors.success,
+                      null => null,
+                    },
+                  ),
+                  title: Text(l.securityAuditTitle),
+                  subtitle: Text(
+                    securityReport == null
+                        ? l.securityAuditSubtitle
+                        : l.securityAuditSummary(
+                            securityReport.score,
+                            switch (securityReport.level) {
+                              ProfileRiskLevel.danger => l.securityLevelDanger,
+                              ProfileRiskLevel.caution =>
+                                l.securityLevelCaution,
+                              ProfileRiskLevel.safe => l.securityLevelSafe,
+                            },
+                          ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  trailing: const GlyphIcon(AppGlyphs.chevronForward),
+                  onTap: () =>
+                      unawaited(showProfileSecuritySheet(context, profile)),
+                ),
               ListItem(
                 leading: const GlyphIcon(AppGlyphs.radar),
                 title: Text(l.leakCheckTitle),
@@ -535,8 +766,40 @@ class _SmartHubSheetState extends ConsumerState<SmartHubSheet> {
                 trailing: const GlyphIcon(AppGlyphs.chevronForward),
                 onTap: () => unawaited(showLeakCheckSheet(context)),
               ),
+              if (system.isAndroid)
+                ListItem(
+                  leading: const GlyphIcon(AppGlyphs.customize),
+                  title: Text(l.homeWidgetAddTitle),
+                  subtitle: Text(l.homeWidgetAddDesc),
+                  trailing: const GlyphIcon(AppGlyphs.chevronForward),
+                  onTap: () => unawaited(_pinHomeWidget()),
+                ),
             ],
           ),
+          if (dailyTrafficEnabled)
+            generateSection(
+              title: l.dailyTraffic,
+              items: [
+                for (final (label, stats) in [
+                  (
+                    l.dailyTrafficToday,
+                    (
+                      up: dailyLedger.today().up,
+                      down: dailyLedger.today().down,
+                      total: dailyLedger.today().total,
+                    ),
+                  ),
+                  (l.dailyTraffic7Days, dailyLedger.sumDays(7)),
+                  (l.dailyTraffic30Days, dailyLedger.sumDays(30)),
+                ])
+                  DetailRow(
+                    title: label,
+                    value: Text(
+                      '${stats.total.traffic.show} (↓ ${stats.down.traffic.show} · ↑ ${stats.up.traffic.show})',
+                    ),
+                  ),
+              ],
+            ),
           if (forecast != null)
             generateSection(
               title: l.quotaForecast,

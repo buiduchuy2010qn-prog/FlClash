@@ -11,10 +11,12 @@ import (
 	"net/netip"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
 
+	"github.com/metacubex/mihomo/common/utils"
 	"github.com/metacubex/mihomo/component/age"
 	"github.com/metacubex/mihomo/config"
 	"go.yaml.in/yaml/v3"
@@ -127,10 +129,45 @@ func isExplicitBool(node *yaml.Node, want bool) bool {
 	return strings.EqualFold(strings.TrimSpace(resolved.Value), target)
 }
 
+const (
+	maxTemplateBrutalCapBps = 300 * 1000 * 1000 / 8
+	quicInitStreamRecvWin   = 8 * 1024 * 1024
+	quicMaxStreamRecvWin    = 16 * 1024 * 1024
+	quicInitConnRecvWin     = 24 * 1024 * 1024
+	quicMaxConnRecvWin      = 48 * 1024 * 1024
+)
+
+func ensureIntDefaults(item *yaml.Node, defaults []struct {
+	key string
+	val int
+}) {
+	for _, entry := range defaults {
+		if mappingValue(item, entry.key) == nil {
+			setMappingValue(item, entry.key, intNode(entry.val))
+		}
+	}
+}
+
 func optimizeProxyNodes(root *yaml.Node) {
 	proxiesNode := resolveAlias(mappingValue(root, "proxies"))
 	if proxiesNode == nil || proxiesNode.Kind != yaml.SequenceNode {
 		return
+	}
+	hy2Windows := []struct {
+		key string
+		val int
+	}{
+		{"initial-stream-receive-window", quicInitStreamRecvWin},
+		{"max-stream-receive-window", quicMaxStreamRecvWin},
+		{"initial-connection-receive-window", quicInitConnRecvWin},
+		{"max-connection-receive-window", quicMaxConnRecvWin},
+	}
+	tuicWindows := []struct {
+		key string
+		val int
+	}{
+		{"recv-window-conn", quicMaxStreamRecvWin},
+		{"recv-window", quicMaxConnRecvWin},
 	}
 	for _, node := range proxiesNode.Content {
 		item := resolveAlias(node)
@@ -141,17 +178,34 @@ func optimizeProxyNodes(root *yaml.Node) {
 		if typeNode == nil || typeNode.Kind != yaml.ScalarNode {
 			continue
 		}
-		switch strings.ToLower(strings.TrimSpace(typeNode.Value)) {
-		case "vless", "vmess", "trojan":
+		proxyType := strings.ToLower(strings.TrimSpace(typeNode.Value))
+		switch proxyType {
+		case "vless", "vmess", "trojan", "ss":
 			if mappingValue(item, "udp") == nil {
 				setMappingValue(item, "udp", boolNode(true))
 			}
-			if isExplicitBool(mappingValue(item, "tls"), true) {
+			if (proxyType == "vless" || proxyType == "vmess") &&
+				mappingValue(item, "packet-encoding") == nil &&
+				!isExplicitBool(mappingValue(item, "udp"), false) {
+				setMappingValue(item, "packet-encoding", strNode("xudp"))
+			}
+			if proxyType != "ss" && isExplicitBool(mappingValue(item, "tls"), true) {
 				fpNode := resolveAlias(mappingValue(item, "client-fingerprint"))
 				if fpNode == nil || fpNode.Kind != yaml.ScalarNode || strings.TrimSpace(fpNode.Value) == "" {
 					setMappingValue(item, "client-fingerprint", strNode("chrome"))
 				}
 			}
+		case "hysteria2":
+			upBps := utils.StringToBps(scalarString(item, "up"))
+			downBps := utils.StringToBps(scalarString(item, "down"))
+			if (upBps > 0 && upBps <= maxTemplateBrutalCapBps) ||
+				(downBps > 0 && downBps <= maxTemplateBrutalCapBps) {
+				deleteMappingKey(item, "up")
+				deleteMappingKey(item, "down")
+			}
+			ensureIntDefaults(item, hy2Windows)
+		case "tuic":
+			ensureIntDefaults(item, tuicWindows)
 		}
 		server := scalarString(item, "server")
 		isIPv6Addr := false
@@ -295,6 +349,8 @@ var androidDoTHosts = []struct {
 var androidFakeIPBypass = []string{
 	"+.lan",
 	"+.local",
+	"localhost",
+	"+.localhost",
 	"1dot1dot1dot1.cloudflare-dns.com",
 	"one.one.one.one",
 	"dns.cloudflare.com",
@@ -311,7 +367,14 @@ var androidFakeIPBypass = []string{
 	"connectivitycheck.android.com",
 	"www.gstatic.com",
 	"captive.apple.com",
+	"+.captive.apple.com",
 	"connectivitycheck.platform.hicloud.com",
+	"msftconnecttest.com",
+	"+.msftconnecttest.com",
+	"msftncsi.com",
+	"+.msftncsi.com",
+	"connect.rom.miui.com",
+	"lens.l.google.com",
 	"clients1.google.com",
 	"clients3.google.com",
 	"android.clients.google.com",
@@ -332,6 +395,12 @@ var androidFakeIPBypass = []string{
 	"time.*.com",
 	"time.android.com",
 	"time.google.com",
+	"stun.*.*",
+	"stun.*.*.*",
+	"+.stun.*.*",
+	"+.stun.*.*.*",
+	"+.stun.*.*.*.*",
+	"+.turn.*.*",
 }
 
 var androidTCPDNSResolvers = []string{
@@ -372,9 +441,14 @@ func optimizeConfigDocument(document, profile *yaml.Node) {
 	} else if mappingValue(defaultsSource, "tcp-concurrent") == nil {
 		setMappingValue(root, "tcp-concurrent", boolNode(false))
 	}
+	sanitizeUntrustedHosts(root)
 	optimizeProxyNodes(root)
 	optimizeProxyProviders(root)
 	optimizeProxyGroups(root)
+	if isWindowsHostRuntime() {
+		ensureAndroidHosts(root)
+		ensureAndroidProfilePersistence(root)
+	}
 	if !isAndroidRuntime {
 		return
 	}
@@ -424,6 +498,132 @@ func ensureSequenceStrings(parent *yaml.Node, key string, additions ...string) {
 		existing.Content = append(existing.Content, strNode(entry))
 		seen[entry] = struct{}{}
 	}
+}
+
+var dummyProxyNamePattern = regexp.MustCompile(`(?i)(剩余流量|套餐到期|距离下次重置|官网|群组|频道|traffic\s*[:：]|expire\s*[:：]|dung\s*lượng\s*[:：]|hạn\s*dùng\s*[:：])`)
+
+var sensitiveHostKeywords = []string{
+	"vietcombank",
+	"techcombank",
+	"mbbank",
+	"bidv",
+	"vpbank",
+	"acb",
+	"tpbank",
+	"vib",
+	"sacombank",
+	"agribank",
+	"momo",
+	"zalopay",
+	"vnpay",
+	"vneid",
+	"dichvucong",
+	"gov.vn",
+	"paypal",
+	"binance",
+	"okx",
+	"coinbase",
+	"google.com",
+	"accounts.google",
+	"icloud.com",
+	"appleid.apple.com",
+	"apple.com",
+	"microsoft.com",
+	"live.com",
+	"facebook.com",
+	"telegram.org",
+	"zalo.me",
+	"github.com",
+}
+
+func isDummyInfoProxyName(name string) bool {
+	trimmed := strings.TrimSpace(name)
+	return trimmed != "" && dummyProxyNamePattern.MatchString(trimmed)
+}
+
+func isDummyInfoProxyMapping(m *yaml.Node) bool {
+	if isDummyInfoProxyName(scalarString(m, "name")) {
+		return true
+	}
+	server := strings.ToLower(scalarString(m, "server"))
+	switch server {
+	case "127.0.0.1", "0.0.0.0", "::", "::1", "localhost", "example.com":
+		return true
+	}
+	if port, ok := scalarInt(m, "port"); ok && port <= 1 {
+		return true
+	}
+	return false
+}
+
+func isSensitiveHostDomain(domain string) bool {
+	lower := strings.ToLower(strings.TrimSpace(domain))
+	if lower == "" || lower == "localhost" || strings.HasSuffix(lower, ".local") || strings.HasSuffix(lower, ".lan") {
+		return false
+	}
+	for _, entry := range androidDoTHosts {
+		if lower == entry.host {
+			return false
+		}
+	}
+	for _, kw := range sensitiveHostKeywords {
+		if strings.Contains(lower, kw) {
+			return true
+		}
+	}
+	return false
+}
+
+func isSafeLoopbackHostValue(val *yaml.Node) bool {
+	resolved := resolveAlias(val)
+	if resolved == nil {
+		return false
+	}
+	isSafeScalar := func(s string) bool {
+		switch strings.ToLower(strings.TrimSpace(s)) {
+		case "127.0.0.1", "::1", "0.0.0.0", "localhost":
+			return true
+		default:
+			return false
+		}
+	}
+	switch resolved.Kind {
+	case yaml.ScalarNode:
+		return isSafeScalar(resolved.Value)
+	case yaml.SequenceNode:
+		if len(resolved.Content) == 0 {
+			return false
+		}
+		for _, item := range resolved.Content {
+			r := resolveAlias(item)
+			if r == nil || r.Kind != yaml.ScalarNode || !isSafeScalar(r.Value) {
+				return false
+			}
+		}
+		return true
+	default:
+		return false
+	}
+}
+
+func sanitizeUntrustedHosts(root *yaml.Node) {
+	hostsNode := resolveAlias(mappingValue(root, "hosts"))
+	if hostsNode == nil || hostsNode.Kind != yaml.MappingNode || len(hostsNode.Content) == 0 {
+		return
+	}
+	kept := make([]*yaml.Node, 0, len(hostsNode.Content))
+	for i := 0; i+1 < len(hostsNode.Content); i += 2 {
+		keyNode, valNode := hostsNode.Content[i], hostsNode.Content[i+1]
+		domain := ""
+		if resolvedKey := resolveAlias(keyNode); resolvedKey != nil && resolvedKey.Kind == yaml.ScalarNode {
+			domain = resolvedKey.Value
+		}
+		if isSensitiveHostDomain(domain) && !isSafeLoopbackHostValue(valNode) {
+			continue
+		}
+		kept = append(kept, keyNode, valNode)
+	}
+	hostsNode.Content = kept
 }
 
 func ensureAndroidHosts(root *yaml.Node) {
@@ -597,11 +797,15 @@ func optimizeProxyGroups(root *yaml.Node) {
 	}
 
 	leafSet := make(map[string]bool)
+	dummyLeafSet := make(map[string]bool)
 	if proxiesNode := resolveAlias(mappingValue(root, "proxies")); proxiesNode != nil && proxiesNode.Kind == yaml.SequenceNode {
 		for _, item := range proxiesNode.Content {
 			if m := resolveAlias(item); m != nil && m.Kind == yaml.MappingNode {
 				if name := scalarString(m, "name"); name != "" {
 					leafSet[name] = true
+					if isDummyInfoProxyMapping(m) {
+						dummyLeafSet[name] = true
+					}
 				}
 			}
 		}
@@ -653,7 +857,8 @@ func optimizeProxyGroups(root *yaml.Node) {
 	if primarySeq == nil || primarySeq.Kind != yaml.SequenceNode {
 		return
 	}
-	var keptLeaves []*yaml.Node
+	var realLeaves []*yaml.Node
+	var infoLeaves []*yaml.Node
 	var keptBuiltins []*yaml.Node
 	for _, entry := range primarySeq.Content {
 		r := resolveAlias(entry)
@@ -662,11 +867,16 @@ func optimizeProxyGroups(root *yaml.Node) {
 		}
 		val := strings.TrimSpace(r.Value)
 		if leafSet[val] {
-			keptLeaves = append(keptLeaves, strNode(val))
+			if dummyLeafSet[val] {
+				infoLeaves = append(infoLeaves, strNode(val))
+			} else {
+				realLeaves = append(realLeaves, strNode(val))
+			}
 		} else if isBuiltinProxyTarget(val) {
 			keptBuiltins = append(keptBuiltins, strNode(val))
 		}
 	}
+	keptLeaves := append(realLeaves, infoLeaves...)
 	filteredPrimary := append(keptLeaves, keptBuiltins...)
 	if len(filteredPrimary) == 0 {
 		return

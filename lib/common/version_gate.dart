@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
 
 import 'package:dio/dio.dart';
 
@@ -37,14 +38,30 @@ class VersionGatePolicy {
   static VersionGatePolicy? fromJson(
     Map<dynamic, dynamic>? raw, {
     DateTime? fallbackFetchedAt,
+    String? platform,
   }) {
     if (raw == null) return null;
-    final minCode = (raw['minVersionCode'] as num?)?.toInt();
-    if (minCode == null || minCode < 0) return null;
     final fetchedMs = (raw['fetchedAtMs'] as num?)?.toInt();
     final fetchedAt = fetchedMs != null
         ? DateTime.fromMillisecondsSinceEpoch(fetchedMs)
         : (fallbackFetchedAt ?? DateTime.now());
+    final scoped = platform != null ? raw[platform] : null;
+    if (scoped is Map) {
+      return fromJson(scoped, fallbackFetchedAt: fetchedAt);
+    }
+    if (platform != null &&
+        platform != 'android' &&
+        (raw['android'] is Map || raw['windows'] is Map)) {
+      return VersionGatePolicy(
+        minVersionCode: 0,
+        latestVersion: '',
+        downloadUrl: '',
+        message: '',
+        fetchedAt: fetchedAt,
+      );
+    }
+    final minCode = (raw['minVersionCode'] as num?)?.toInt();
+    if (minCode == null || minCode < 0) return null;
     return VersionGatePolicy(
       minVersionCode: minCode,
       latestVersion: (raw['latestVersion'] as String?)?.trim() ?? '',
@@ -111,6 +128,7 @@ class VersionGateEvaluator {
     Dio? client,
     String url = versionGateManifestUrl,
     DateTime? now,
+    String? platform,
   }) async {
     final dio =
         client ??
@@ -130,6 +148,7 @@ class VersionGateEvaluator {
       return VersionGatePolicy.fromJson(
         decoded,
         fallbackFetchedAt: now ?? DateTime.now(),
+        platform: platform ?? Platform.operatingSystem,
       );
     } catch (_) {
       return null;

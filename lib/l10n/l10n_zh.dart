@@ -4467,4 +4467,185 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get planName => '套餐名称';
+
+  @override
+  String subExpiringHoursWarning(Object hours) {
+    return '套餐将在约 $hours 小时后到期，请及时续费以免断网。';
+  }
+
+  @override
+  String subAlertNotificationTitle(Object profile) {
+    return '$profile · 套餐提醒';
+  }
+
+  @override
+  String securityAlertTitle(Object profile) {
+    return '$profile · 检测到安全风险';
+  }
+
+  @override
+  String securityAlertBody(Object score, Object count) {
+    return '安全评分 $score/100（$count 项严重风险）。请立即查看并加固。';
+  }
+
+  @override
+  String get securityAuditTitle => 'VPN 订阅安全检测';
+
+  @override
+  String get securityAuditSubtitle => '检测中间人监听、Hosts 劫持、明文节点与局域网泄露风险';
+
+  @override
+  String securityAuditSummary(Object score, Object level) {
+    return '$score/100 · $level — 点击查看详情并一键加固';
+  }
+
+  @override
+  String get securityLevelSafe => '安全';
+
+  @override
+  String get securityLevelCaution => '需注意';
+
+  @override
+  String get securityLevelDanger => '危险';
+
+  @override
+  String get securityRescan => '重新扫描配置';
+
+  @override
+  String get securityScannedCounts => '已扫描项';
+
+  @override
+  String securityScannedCountsValue(Object proxies, Object rules) {
+    return '$proxies 个节点 · $rules 条规则';
+  }
+
+  @override
+  String get securityAutoHarden => '立即开启一键加固';
+
+  @override
+  String get securityAutoHardenDesc => '关闭局域网与控制端口、强制 DoH DNS、开启最高隐私与关键应用直连';
+
+  @override
+  String get securityAutoHardenApplied => '已对当前运行配置应用安全加固';
+
+  @override
+  String get securityFindingsTitle => '安全扫描详情';
+
+  @override
+  String get securityNoRisksTitle => '未发现危险行为';
+
+  @override
+  String get securityNoRisksDesc => '此配置未发现 MITM 解密、敏感域名劫持、控制端口暴露或明文代理风险。';
+
+  @override
+  String get securityFindingMitmTitle => '配置启用了 HTTPS 解密监听 (MITM)';
+
+  @override
+  String get securityFindingMitmDesc => '配置尝试开启 TLS 解密或抓包，可能读取账号密码与会话令牌。';
+
+  @override
+  String get securityFindingControllerTitle => '外部控制接口暴露且缺少密钥保护';
+
+  @override
+  String get securityFindingControllerDesc =>
+      '控制 API 绑定在非本机地址或未设置密码，外部设备可篡改路由规则。';
+
+  @override
+  String get securityFindingHostsTitle => 'Hosts 中存在敏感银行或账号域名劫持';
+
+  @override
+  String get securityFindingHostsDesc => '静态 hosts 映射将银行或社交账号域名指向可疑 IP 地址。';
+
+  @override
+  String get securityFindingPlaintextTitle => '存在明文或弱加密代理节点';
+
+  @override
+  String securityFindingPlaintextDesc(Object count) {
+    return '发现 $count 个节点未启用 TLS 或使用弱加密算法，易被中间节点窃听。';
+  }
+
+  @override
+  String get securityFindingSkipVerifyTitle => '节点关闭了 TLS 证书校验';
+
+  @override
+  String securityFindingSkipVerifyDesc(Object count) {
+    return '$count 个节点设置了 skip-cert-verify，可能遭受中间人伪造证书攻击。';
+  }
+
+  @override
+  String get securityFindingHttpSubTitle => '订阅链接使用未加密的 HTTP';
+
+  @override
+  String get securityFindingHttpSubDesc => '订阅地址未采用 HTTPS，传输过程中可能被劫持或篡改配置。';
+
+  @override
+  String get securityFindingHttpProviderTitle => '远程规则或代理集使用明文 HTTP';
+
+  @override
+  String securityFindingHttpProviderDesc(Object count) {
+    return '$count 个外部资源通过未加密 HTTP 下载。';
+  }
+
+  @override
+  String get securityFindingAllowLanTitle => '配置默认开启了局域网共享 (allow-lan)';
+
+  @override
+  String get securityFindingAllowLanDesc => 'allow-lan 开启后会向同局域网设备开放本地代理端口。';
+
+  @override
+  String get securityFindingLanRouteTitle => '内网/局域网流量被规则转发至代理服务器';
+
+  @override
+  String securityFindingLanRouteDesc(Object count) {
+    return '有 $count 条规则将内网 IP 段指向代理，可能导致本地服务信息泄露。';
+  }
+
+  @override
+  String get securityFindingPlainDnsTitle => '配置使用未加密的自定义 DNS 服务器';
+
+  @override
+  String get securityFindingPlainDnsDesc => '自定义 DNS 未使用 DoH/DoT 加密，域名请求可能被记录。';
+
+  @override
+  String get speedBoostPreset => '极致网络加速';
+
+  @override
+  String get speedBoostPresetDesc =>
+      '开启 Mixed 内核 TCP 栈、MTU 9000、直连系统代理与大窗口 QUIC 优化（保持单设备安全）';
+
+  @override
+  String get speedBoostAppliedTip => '已启用极致网络加速 (Mixed 内核 + MTU 9000)';
+
+  @override
+  String get expiryAlertsToggle => '套餐到期与安全通知';
+
+  @override
+  String get expiryAlertsToggleDesc => '当套餐临近到期、设备超限或检测到风险时在通知栏提醒';
+
+  @override
+  String get homeWidgetAddTitle => '添加桌面小组件';
+
+  @override
+  String get homeWidgetAddDesc => '在桌面直接查看网速、设备数、到期时间与安全状态并一键开关';
+
+  @override
+  String get homeWidgetPinRequested => '请在桌面弹窗中确认添加 FlClash 小组件';
+
+  @override
+  String get homeWidgetPinFallback => '请长按桌面空白处 → 选择微件/小组件 → 将 FlClash 拖到桌面';
+
+  @override
+  String get smartMultiWebTitle => '多网站连通与延迟检测';
+
+  @override
+  String get smartMultiWebRunning => '正在检测多个网站...';
+
+  @override
+  String get smartMultiWebDesc =>
+      '同时测试 Google、YouTube、TikTok、ChatGPT、GitHub 与 Discord';
+
+  @override
+  String smartMultiWebSummary(Object ok, Object total, Object avgMs) {
+    return '$ok/$total 个网站畅通 · 平均 ${avgMs}ms';
+  }
 }

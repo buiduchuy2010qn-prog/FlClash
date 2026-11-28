@@ -13,6 +13,7 @@ import 'package:fl_clash/common/preferences.dart';
 import 'package:fl_clash/common/release_asset.dart';
 import 'package:fl_clash/common/request.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/state.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -438,6 +439,151 @@ void main() {
       'v0.9.4-pre.2+2',
       'v0.9.4-pre.1',
     ]);
+  });
+
+  group('latestPlatformRelease and checkForUpdate', () {
+    const windowsSetup = (
+      os: ReleaseOs.windows,
+      arch: ReleaseArch.amd64,
+      form: ReleaseForm.setup,
+      extension: 'exe',
+    );
+    const androidArm64 = (
+      os: ReleaseOs.android,
+      arch: ReleaseArch.arm64,
+      form: null,
+      extension: 'apk',
+    );
+
+    final releasesPayload = json.encode([
+      {
+        'tag_name': 'v0.9.26',
+        'draft': false,
+        'prerelease': false,
+        'assets': [
+          {'name': 'FlClash-0.9.26-android-arm64.apk'},
+          {'name': 'FlClash-0.9.26-SHA256SUMS'},
+        ],
+      },
+      {
+        'tag_name': 'v0.9.10',
+        'draft': false,
+        'prerelease': false,
+        'assets': [
+          {'name': 'FlClash-0.9.10-android-arm64.apk'},
+          {'name': 'FlClash-0.9.10-windows-amd64-setup.exe'},
+          {'name': 'FlClash-0.9.10-windows-amd64-portable.zip'},
+          {'name': 'FlClash-0.9.10-SHA256SUMS'},
+        ],
+      },
+    ]);
+
+    test(
+      'selects the latest matching platform release and ignores APK-only builds on Windows',
+      () async {
+        final savedAsset = resolveSelfUpdateAsset;
+        final savedOs = resolveCurrentReleaseOs;
+        addTearDown(() {
+          resolveSelfUpdateAsset = savedAsset;
+          resolveCurrentReleaseOs = savedOs;
+        });
+
+        final req = Request()
+          ..dio.httpClientAdapter = _CaptureAdapter((options) {
+            if (options.uri.path == '/repos/$repository/releases') {
+              return ResponseBody.fromString(
+                releasesPayload,
+                200,
+                headers: {
+                  Headers.contentTypeHeader: [Headers.jsonContentType],
+                },
+              );
+            }
+            return ResponseBody.fromString('{}', 404);
+          });
+
+        resolveSelfUpdateAsset = () => windowsSetup;
+        resolveCurrentReleaseOs = () => ReleaseOs.windows;
+
+        globalState.packageInfo = PackageInfo(
+          appName: appName,
+          packageName: packageName,
+          version: '0.9.10',
+          buildNumber: '1',
+        );
+        expect(await req.checkForUpdate(), isNull);
+
+        globalState.packageInfo = PackageInfo(
+          appName: appName,
+          packageName: packageName,
+          version: '0.9.9',
+          buildNumber: '1',
+        );
+        final windowsUpdate = await req.checkForUpdate();
+        expect(windowsUpdate?['tag_name'], 'v0.9.10');
+
+        resolveSelfUpdateAsset = () => null;
+        final portableWindows = await req.latestPlatformRelease(
+          os: ReleaseOs.windows,
+        );
+        expect(portableWindows?['tag_name'], 'v0.9.10');
+
+        resolveSelfUpdateAsset = () => androidArm64;
+        resolveCurrentReleaseOs = () => ReleaseOs.android;
+        final androidUpdate = await req.checkForUpdate();
+        expect(androidUpdate?['tag_name'], 'v0.9.26');
+      },
+    );
+
+    test(
+      'verifies SHA256SUMS when API rate-limit triggers redirect fallback',
+      () async {
+        final savedAsset = resolveSelfUpdateAsset;
+        final savedOs = resolveCurrentReleaseOs;
+        addTearDown(() {
+          resolveSelfUpdateAsset = savedAsset;
+          resolveCurrentReleaseOs = savedOs;
+        });
+
+        const sumsBody =
+            'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  FlClash-0.9.26-android-arm64.apk\n';
+
+        final req = Request()
+          ..dio.httpClientAdapter = _CaptureAdapter((options) {
+            if (options.uri.host == 'api.github.com') {
+              return ResponseBody.fromString('{}', 403);
+            }
+            return ResponseBody.fromString(
+              '',
+              302,
+              headers: {
+                HttpHeaders.locationHeader: [
+                  'https://github.com/$repository/releases/tag/v0.9.26',
+                ],
+              },
+            );
+          })
+          ..releaseDio.httpClientAdapter = _CaptureAdapter((options) {
+            if (options.uri.path ==
+                '/$repository/releases/download/v0.9.26/FlClash-0.9.26-SHA256SUMS') {
+              return ResponseBody.fromString(sumsBody, 200);
+            }
+            return ResponseBody.fromString('', 404);
+          });
+
+        resolveSelfUpdateAsset = () => windowsSetup;
+        resolveCurrentReleaseOs = () => ReleaseOs.windows;
+        expect(await req.latestPlatformRelease(), isNull);
+
+        resolveSelfUpdateAsset = () => null;
+        expect(await req.latestPlatformRelease(os: ReleaseOs.windows), isNull);
+
+        resolveSelfUpdateAsset = () => androidArm64;
+        resolveCurrentReleaseOs = () => ReleaseOs.android;
+        final androidFallback = await req.latestPlatformRelease();
+        expect(androidFallback?['tag_name'], 'v0.9.26');
+      },
+    );
   });
 
   group('downloadVerifiedRelease', () {

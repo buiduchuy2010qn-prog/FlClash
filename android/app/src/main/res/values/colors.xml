@@ -1,4 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="shortcut_background">#6666FB</color>
+    <color name="widget_surface">#F8FAFE</color>
+    <color name="widget_surface_stroke">#DCE3F0</color>
+    <color name="widget_chip_surface">#EDF2FA</color>
+    <color name="widget_text_primary">#0F172A</color>
+    <color name="widget_text_secondary">#5B6577</color>
+    <color name="widget_accent">#2563EB</color>
+    <color name="widget_connected">#059669</color>
+    <color name="widget_caution">#D97706</color>
+    <color name="widget_danger">#DC2626</color>
+    <color name="widget_shield_safe_bg">#DFF7ED</color>
+    <color name="widget_shield_caution_bg">#FEF3C7</color>
+    <color name="widget_shield_danger_bg">#FEE2E2</color>
+    <color name="widget_speed_bg">#DBEAFE</color>
+    <color name="widget_btn_on_bg">#059669</color>
+    <color name="widget_btn_off_bg">#2563EB</color>
+    <color name="widget_btn_secondary_bg">#E2E8F0</color>
+    <color name="widget_btn_text">#FFFFFF</color>
 </resources>

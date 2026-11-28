@@ -4744,4 +4744,208 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get planName => 'Tên gói cước';
+
+  @override
+  String subExpiringHoursWarning(Object hours) {
+    return 'Gói VPN chỉ còn khoảng $hours giờ là hết hạn. Hãy gia hạn sớm.';
+  }
+
+  @override
+  String subAlertNotificationTitle(Object profile) {
+    return '$profile · Cảnh báo gói VPN';
+  }
+
+  @override
+  String securityAlertTitle(Object profile) {
+    return '$profile · Phát hiện rủi ro bảo mật';
+  }
+
+  @override
+  String securityAlertBody(Object score, Object count) {
+    return 'Điểm an toàn $score/100 ($count nguy cơ nghiêm trọng). Bấm để kiểm tra & bảo vệ.';
+  }
+
+  @override
+  String get securityAuditTitle => 'Kiểm tra an toàn gói VPN';
+
+  @override
+  String get securityAuditSubtitle =>
+      'Quét phát hiện MITM, giả mạo DNS/hosts, rò dữ liệu & node không mã hóa';
+
+  @override
+  String securityAuditSummary(Object score, Object level) {
+    return '$score/100 · $level — Chạm để xem chi tiết & bảo vệ';
+  }
+
+  @override
+  String get securityLevelSafe => 'An toàn';
+
+  @override
+  String get securityLevelCaution => 'Cần lưu ý';
+
+  @override
+  String get securityLevelDanger => 'Nguy hiểm';
+
+  @override
+  String get securityRescan => 'Quét lại gói';
+
+  @override
+  String get securityScannedCounts => 'Đã kiểm tra';
+
+  @override
+  String securityScannedCountsValue(Object proxies, Object rules) {
+    return '$proxies máy chủ · $rules quy tắc';
+  }
+
+  @override
+  String get securityAutoHarden => 'Bảo vệ & Khắc phục ngay';
+
+  @override
+  String get securityAutoHardenDesc =>
+      'Khóa LAN/cổng điều khiển, ép DNS DoH mã hóa, bật bảo mật tối đa & né app ngân hàng';
+
+  @override
+  String get securityAutoHardenApplied =>
+      'Đã áp dụng lớp bảo vệ & khắc phục an toàn cho cấu hình hiện tại';
+
+  @override
+  String get securityFindingsTitle => 'Chi tiết phân tích bảo mật';
+
+  @override
+  String get securityNoRisksTitle => 'Không phát hiện hành vi nguy hiểm';
+
+  @override
+  String get securityNoRisksDesc =>
+      'Không thấy dấu hiệu nghe lén MITM, sửa file hosts, mở cổng điều khiển hay lộ lưu lượng thô.';
+
+  @override
+  String get securityFindingMitmTitle => 'Bật giải mã lưu lượng HTTPS (MITM)';
+
+  @override
+  String get securityFindingMitmDesc =>
+      'Gói cấu hình bật giải mã TLS hoặc bắt gói tin, có nguy cơ đọc trộm mật khẩu và cookie.';
+
+  @override
+  String get securityFindingControllerTitle =>
+      'Cổng điều khiển bị mở ra ngoài không an toàn';
+
+  @override
+  String get securityFindingControllerDesc =>
+      'API điều khiển không khóa 127.0.0.1 hoặc thiếu secret, cho phép máy khác can thiệp.';
+
+  @override
+  String get securityFindingHostsTitle =>
+      'Giả mạo tên miền ngân hàng / tài khoản trong Hosts';
+
+  @override
+  String get securityFindingHostsDesc =>
+      'Gói tự gán IP lạ cho tên miền ngân hàng/ví điện tử/tài khoản, nguy cơ giả mạo trang đăng nhập.';
+
+  @override
+  String get securityFindingPlaintextTitle =>
+      'Có máy chủ không mã hóa hoặc mã hóa yếu';
+
+  @override
+  String securityFindingPlaintextDesc(Object count) {
+    return '$count máy chủ truyền dữ liệu không bật TLS hoặc dùng mã hóa yếu dễ bị nghe lén.';
+  }
+
+  @override
+  String get securityFindingSkipVerifyTitle =>
+      'Tắt xác minh chứng chỉ TLS (skip-cert-verify)';
+
+  @override
+  String securityFindingSkipVerifyDesc(Object count) {
+    return '$count máy chủ bỏ qua kiểm tra chứng chỉ SSL, dễ bị giả mạo máy chủ trung gian.';
+  }
+
+  @override
+  String get securityFindingHttpSubTitle =>
+      'Link đăng ký dùng HTTP không mã hóa';
+
+  @override
+  String get securityFindingHttpSubDesc =>
+      'Link gói tải cấu hình qua HTTP thường, dễ bị bên trung gian xem hoặc sửa gói tải về.';
+
+  @override
+  String get securityFindingHttpProviderTitle =>
+      'Nguồn quy tắc/proxy phụ dùng HTTP không mã hóa';
+
+  @override
+  String securityFindingHttpProviderDesc(Object count) {
+    return '$count nguồn dữ liệu ngoài tải qua HTTP không mã hóa.';
+  }
+
+  @override
+  String get securityFindingAllowLanTitle =>
+      'Gói tự bật chia sẻ cổng qua mạng LAN';
+
+  @override
+  String get securityFindingAllowLanDesc =>
+      'Cấu hình mở cổng proxy cho máy khác chung Wi-Fi truy cập vào được.';
+
+  @override
+  String get securityFindingLanRouteTitle =>
+      'Lưu lượng mạng nội bộ (LAN) bị đẩy qua máy chủ VPN';
+
+  @override
+  String securityFindingLanRouteDesc(Object count) {
+    return '$count quy tắc ép truy cập IP nội bộ/router đi qua máy chủ ngoài thay vì DIRECT.';
+  }
+
+  @override
+  String get securityFindingPlainDnsTitle =>
+      'Dùng máy chủ DNS tùy chỉnh không mã hóa';
+
+  @override
+  String get securityFindingPlainDnsDesc =>
+      'DNS không dùng DoH/DoT mã hóa, tên miền truy cập có thể bị theo dõi.';
+
+  @override
+  String get speedBoostPreset => 'Tăng tốc mạng tối đa';
+
+  @override
+  String get speedBoostPresetDesc =>
+      'Luồng Mixed Kernel TCP, MTU 9000, System Proxy trực tiếp & mở rộng cửa sổ QUIC (vẫn an toàn 1 thiết bị)';
+
+  @override
+  String get speedBoostAppliedTip =>
+      'Đã bật Tăng tốc mạng tối đa (Mixed Kernel + MTU 9000)';
+
+  @override
+  String get expiryAlertsToggle => 'Thông báo sắp hết hạn & bảo mật';
+
+  @override
+  String get expiryAlertsToggleDesc =>
+      'Báo qua thanh thông báo khi gói sắp hết hạn, vượt thiết bị hoặc phát hiện rủi ro';
+
+  @override
+  String get homeWidgetAddTitle => 'Thêm Widget màn hình chính';
+
+  @override
+  String get homeWidgetAddDesc =>
+      'Xem tốc độ, bật/tắt 1 chạm, thiết bị, hạn dùng & khiên bảo mật ngay ngoài màn hình';
+
+  @override
+  String get homeWidgetPinRequested =>
+      'Hãy xác nhận thêm widget FlClash trên màn hình chính của bạn';
+
+  @override
+  String get homeWidgetPinFallback =>
+      'Nhấn giữ màn hình chính → chọn Tiện ích (Widgets) → kéo FlClash ra màn hình';
+
+  @override
+  String get smartMultiWebTitle => 'Kiểm tra đa trang web & ping';
+
+  @override
+  String get smartMultiWebRunning => 'Đang đo tốc độ nhiều trang web...';
+
+  @override
+  String get smartMultiWebDesc =>
+      'Kiểm tra đồng thời Google, YouTube, TikTok, ChatGPT, GitHub & Discord';
+
+  @override
+  String smartMultiWebSummary(Object ok, Object total, Object avgMs) {
+    return '$ok/$total trang web mượt · Ping TB ${avgMs}ms';
+  }
 }

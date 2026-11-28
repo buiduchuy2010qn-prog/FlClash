@@ -1,6 +1,18 @@
 {
   "minVersionCode": 0,
-  "latestVersion": "0.9.22",
+  "latestVersion": "0.9.28",
   "downloadUrl": "",
-  "message": ""
+  "message": "",
+  "android": {
+    "minVersionCode": 0,
+    "latestVersion": "0.9.28",
+    "downloadUrl": "",
+    "message": ""
+  },
+  "windows": {
+    "minVersionCode": 0,
+    "latestVersion": "0.9.28",
+    "downloadUrl": "",
+    "message": ""
+  }
 }

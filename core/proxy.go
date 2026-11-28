@@ -210,6 +210,65 @@ func handleChangeProxy(params *ChangeProxyParams) *ChangeProxyResult {
 	return &ChangeProxyResult{Changed: changed}
 }
 
+func defaultGlobalGroupTarget(proxies map[string]constant.Proxy, nameList []string) string {
+	for _, name := range nameList {
+		if name == "" || name == globalProxyName {
+			continue
+		}
+		p := proxies[name]
+		if p == nil || p.Type() != constant.Selector {
+			continue
+		}
+		pg, ok := adapterAs[outboundgroup.ProxyGroup](p)
+		if !ok || pg.Hidden() {
+			continue
+		}
+		return name
+	}
+	for _, name := range nameList {
+		if name == "" || name == globalProxyName || isSmartFailoverBuiltinName(name) || isDummyInfoProxyName(name) {
+			continue
+		}
+		p := proxies[name]
+		if p == nil || isProxyGroupType(p.Type()) {
+			continue
+		}
+		return name
+	}
+	return ""
+}
+
+func ensureGlobalSelectorTargetLocked(selectedMap map[string]string) {
+	if selectedMap != nil {
+		if picked := selectedMap[globalProxyName]; picked != "" && picked != "DIRECT" && picked != "COMPATIBLE" {
+			return
+		}
+	}
+	proxies := tunnel.AllProxies()
+	globalProxy := proxies[globalProxyName]
+	if globalProxy == nil || !isBuiltInGlobal(globalProxy) {
+		return
+	}
+	selector, ok := adapterAs[pickableGroup](globalProxy)
+	if !ok {
+		return
+	}
+	current := selector.Now()
+	if current != "" && current != "DIRECT" && current != "COMPATIBLE" {
+		return
+	}
+	target := defaultGlobalGroupTarget(proxies, config.GetProxyNameList())
+	if target != "" {
+		selector.ForceSet(target)
+	}
+}
+
+func ensureGlobalSelectorTarget(selectedMap map[string]string) {
+	selectMu.Lock()
+	defer selectMu.Unlock()
+	ensureGlobalSelectorTargetLocked(selectedMap)
+}
+
 func patchSelectGroup(mapping map[string]string) {
 	selectMu.Lock()
 	defer selectMu.Unlock()
@@ -219,6 +278,7 @@ func patchSelectGroup(mapping map[string]string) {
 			selector.ForceSet(selected)
 		}
 	}
+	ensureGlobalSelectorTargetLocked(mapping)
 }
 
 // Tailscale and EasyTier register a DNS client under the proxy name when built

@@ -4799,4 +4799,208 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get planName => 'Nombre del plan';
+
+  @override
+  String subExpiringHoursWarning(Object hours) {
+    return 'El plan vence en aprox. $hours h. Renuévalo pronto.';
+  }
+
+  @override
+  String subAlertNotificationTitle(Object profile) {
+    return '$profile · Alerta del plan';
+  }
+
+  @override
+  String securityAlertTitle(Object profile) {
+    return '$profile · Riesgo de seguridad detectado';
+  }
+
+  @override
+  String securityAlertBody(Object score, Object count) {
+    return 'Puntuación $score/100 ($count riesgo(s) crítico(s)). Revisa y protege.';
+  }
+
+  @override
+  String get securityAuditTitle => 'Escáner de seguridad VPN';
+
+  @override
+  String get securityAuditSubtitle =>
+      'Detecta MITM, secuestro de hosts, nodos sin cifrar y fugas';
+
+  @override
+  String securityAuditSummary(Object score, Object level) {
+    return '$score/100 · $level — Toca para ver detalles y proteger';
+  }
+
+  @override
+  String get securityLevelSafe => 'Seguro';
+
+  @override
+  String get securityLevelCaution => 'Precaución';
+
+  @override
+  String get securityLevelDanger => 'Peligroso';
+
+  @override
+  String get securityRescan => 'Volver a escanear';
+
+  @override
+  String get securityScannedCounts => 'Elementos analizados';
+
+  @override
+  String securityScannedCountsValue(Object proxies, Object rules) {
+    return '$proxies nodos · $rules reglas';
+  }
+
+  @override
+  String get securityAutoHarden => 'Proteger y reforzar ahora';
+
+  @override
+  String get securityAutoHardenDesc =>
+      'Bloquear LAN/controlador, forzar DoH DNS y activar privacidad máxima';
+
+  @override
+  String get securityAutoHardenApplied =>
+      'Protección de seguridad aplicada a la configuración activa';
+
+  @override
+  String get securityFindingsTitle => 'Resultados del análisis';
+
+  @override
+  String get securityNoRisksTitle => 'No se encontraron riesgos peligrosos';
+
+  @override
+  String get securityNoRisksDesc =>
+      'No se halló MITM, secuestro de hosts, controlador expuesto ni proxies sin cifrar.';
+
+  @override
+  String get securityFindingMitmTitle => 'Inspección HTTPS (MITM) habilitada';
+
+  @override
+  String get securityFindingMitmDesc =>
+      'El perfil activa descifrado TLS que puede leer contraseñas y tokens.';
+
+  @override
+  String get securityFindingControllerTitle =>
+      'Controlador externo expuesto sin protección';
+
+  @override
+  String get securityFindingControllerDesc =>
+      'La API de control se expone fuera de localhost o sin secreto.';
+
+  @override
+  String get securityFindingHostsTitle =>
+      'Dominios bancarios o de cuentas secuestrados en Hosts';
+
+  @override
+  String get securityFindingHostsDesc =>
+      'Las reglas hosts redirigen servicios sensibles a IPs personalizadas.';
+
+  @override
+  String get securityFindingPlaintextTitle =>
+      'Nodos sin cifrado o con cifrado débil';
+
+  @override
+  String securityFindingPlaintextDesc(Object count) {
+    return '$count nodo(s) envían tráfico sin cifrar o sin TLS.';
+  }
+
+  @override
+  String get securityFindingSkipVerifyTitle =>
+      'Verificación de certificado TLS desactivada';
+
+  @override
+  String securityFindingSkipVerifyDesc(Object count) {
+    return '$count nodo(s) omiten la verificación TLS (riesgo MITM).';
+  }
+
+  @override
+  String get securityFindingHttpSubTitle =>
+      'El enlace de suscripción usa HTTP sin cifrar';
+
+  @override
+  String get securityFindingHttpSubDesc =>
+      'La suscripción usa HTTP plano, exponiendo a manipulación en tránsito.';
+
+  @override
+  String get securityFindingHttpProviderTitle =>
+      'Proveedores remotos usan HTTP sin cifrar';
+
+  @override
+  String securityFindingHttpProviderDesc(Object count) {
+    return '$count proveedor(es) descargan mediante HTTP sin cifrar.';
+  }
+
+  @override
+  String get securityFindingAllowLanTitle =>
+      'Compartir por LAN habilitado en el perfil';
+
+  @override
+  String get securityFindingAllowLanDesc =>
+      'Los puertos proxy locales quedan expuestos en la misma red Wi-Fi.';
+
+  @override
+  String get securityFindingLanRouteTitle =>
+      'Tráfico de red local privada enrutado al proxy';
+
+  @override
+  String securityFindingLanRouteDesc(Object count) {
+    return '$count regla(s) envían IPs privadas locales a través del proxy.';
+  }
+
+  @override
+  String get securityFindingPlainDnsTitle =>
+      'Servidores DNS personalizados sin cifrar';
+
+  @override
+  String get securityFindingPlainDnsDesc =>
+      'Este DNS sin DoH/DoT permite registrar las consultas de dominio.';
+
+  @override
+  String get speedBoostPreset => 'Máxima aceleración de red';
+
+  @override
+  String get speedBoostPresetDesc =>
+      'Pila Mixed TCP del kernel, MTU 9000, proxy del sistema directo y ventanas QUIC ampliadas (seguro para 1 dispositivo)';
+
+  @override
+  String get speedBoostAppliedTip =>
+      'Máxima aceleración de red (Mixed + MTU 9000) aplicada';
+
+  @override
+  String get expiryAlertsToggle => 'Notificaciones de vencimiento y seguridad';
+
+  @override
+  String get expiryAlertsToggleDesc =>
+      'Avisar por notificación si vence pronto, excede dispositivos o hay riesgos';
+
+  @override
+  String get homeWidgetAddTitle => 'Añadir widget de inicio';
+
+  @override
+  String get homeWidgetAddDesc =>
+      'Velocidad, interruptor rápido, dispositivos, vencimiento y escudo en inicio';
+
+  @override
+  String get homeWidgetPinRequested =>
+      'Confirma añadir el widget de FlClash a tu pantalla de inicio';
+
+  @override
+  String get homeWidgetPinFallback =>
+      'Mantén pulsado el inicio → Widgets → arrastra FlClash';
+
+  @override
+  String get smartMultiWebTitle => 'Prueba multi-web y ping';
+
+  @override
+  String get smartMultiWebRunning => 'Comprobando varios sitios...';
+
+  @override
+  String get smartMultiWebDesc =>
+      'Prueba simultánea de Google, YouTube, TikTok, ChatGPT, GitHub y Discord';
+
+  @override
+  String smartMultiWebSummary(Object ok, Object total, Object avgMs) {
+    return '$ok/$total sitios activos · media ${avgMs}ms';
+  }
 }

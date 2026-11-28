@@ -4803,4 +4803,207 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get planName => 'Nom du forfait';
+
+  @override
+  String subExpiringHoursWarning(Object hours) {
+    return 'Le forfait expire dans environ $hours h. Renouvelez bientôt.';
+  }
+
+  @override
+  String subAlertNotificationTitle(Object profile) {
+    return '$profile · Alerte forfait';
+  }
+
+  @override
+  String securityAlertTitle(Object profile) {
+    return '$profile · Risque de sécurité détecté';
+  }
+
+  @override
+  String securityAlertBody(Object score, Object count) {
+    return 'Score $score/100 ($count risque(s) critique(s)). Vérifiez et protégez.';
+  }
+
+  @override
+  String get securityAuditTitle => 'Analyse de sécurité VPN';
+
+  @override
+  String get securityAuditSubtitle =>
+      'Détection MITM, détournement hosts, nœuds en clair et fuites';
+
+  @override
+  String securityAuditSummary(Object score, Object level) {
+    return '$score/100 · $level — Touchez pour détails et protection';
+  }
+
+  @override
+  String get securityLevelSafe => 'Sûr';
+
+  @override
+  String get securityLevelCaution => 'Prudence';
+
+  @override
+  String get securityLevelDanger => 'Dangereux';
+
+  @override
+  String get securityRescan => 'Réanalyser le profil';
+
+  @override
+  String get securityScannedCounts => 'Éléments analysés';
+
+  @override
+  String securityScannedCountsValue(Object proxies, Object rules) {
+    return '$proxies nœuds · $rules règles';
+  }
+
+  @override
+  String get securityAutoHarden => 'Protéger et renforcer';
+
+  @override
+  String get securityAutoHardenDesc =>
+      'Verrouiller LAN/contrôleur, forcer DoH DNS et activer la confidentialité max';
+
+  @override
+  String get securityAutoHardenApplied =>
+      'Renforcement de sécurité appliqué à la configuration active';
+
+  @override
+  String get securityFindingsTitle => 'Résultats de l\'analyse';
+
+  @override
+  String get securityNoRisksTitle => 'Aucun comportement dangereux détecté';
+
+  @override
+  String get securityNoRisksDesc =>
+      'Aucune menace MITM, détournement hosts, contrôleur exposé ou proxy en clair.';
+
+  @override
+  String get securityFindingMitmTitle => 'Inspection HTTPS (MITM) activée';
+
+  @override
+  String get securityFindingMitmDesc =>
+      'Le profil active le déchiffrement TLS pouvant lire mots de passe et jetons.';
+
+  @override
+  String get securityFindingControllerTitle =>
+      'Contrôleur externe exposé sans protection';
+
+  @override
+  String get securityFindingControllerDesc =>
+      'L\'API de contrôle est exposée hors localhost ou sans secret.';
+
+  @override
+  String get securityFindingHostsTitle =>
+      'Domaines bancaires ou de comptes détournés dans Hosts';
+
+  @override
+  String get securityFindingHostsDesc =>
+      'Le fichier hosts redirige des services sensibles vers des IP tierces.';
+
+  @override
+  String get securityFindingPlaintextTitle =>
+      'Nœuds sans chiffrement ou à chiffrement faible';
+
+  @override
+  String securityFindingPlaintextDesc(Object count) {
+    return '$count nœud(s) envoient du trafic en clair ou sans TLS.';
+  }
+
+  @override
+  String get securityFindingSkipVerifyTitle =>
+      'Vérification de certificat TLS désactivée';
+
+  @override
+  String securityFindingSkipVerifyDesc(Object count) {
+    return '$count nœud(s) ignorent la vérification TLS (risque MITM).';
+  }
+
+  @override
+  String get securityFindingHttpSubTitle =>
+      'Le lien d\'abonnement utilise HTTP non chiffré';
+
+  @override
+  String get securityFindingHttpSubDesc =>
+      'L\'abonnement est téléchargé en HTTP clair, exposant à des altérations.';
+
+  @override
+  String get securityFindingHttpProviderTitle =>
+      'Fournisseurs distants en HTTP non chiffré';
+
+  @override
+  String securityFindingHttpProviderDesc(Object count) {
+    return '$count fournisseur(s) téléchargent via HTTP non chiffré.';
+  }
+
+  @override
+  String get securityFindingAllowLanTitle => 'Partage LAN activé par le profil';
+
+  @override
+  String get securityFindingAllowLanDesc =>
+      'Les ports proxy locaux sont accessibles aux autres appareils du Wi-Fi.';
+
+  @override
+  String get securityFindingLanRouteTitle =>
+      'Trafic réseau local privé envoyé via le proxy';
+
+  @override
+  String securityFindingLanRouteDesc(Object count) {
+    return '$count règle(s) envoient des adresses LAN privées vers le proxy.';
+  }
+
+  @override
+  String get securityFindingPlainDnsTitle =>
+      'Serveurs DNS personnalisés non chiffrés';
+
+  @override
+  String get securityFindingPlainDnsDesc =>
+      'Ce DNS sans DoH/DoT permet de journaliser les requêtes de domaines.';
+
+  @override
+  String get speedBoostPreset => 'Accélération réseau maximale';
+
+  @override
+  String get speedBoostPresetDesc =>
+      'Pile Mixed TCP noyau, MTU 9000, proxy système direct et fenêtres QUIC élargies (sécurité appareil unique préservée)';
+
+  @override
+  String get speedBoostAppliedTip =>
+      'Accélération réseau maximale (Mixed + MTU 9000) activée';
+
+  @override
+  String get expiryAlertsToggle => 'Alertes d\'expiration et sécurité';
+
+  @override
+  String get expiryAlertsToggleDesc =>
+      'Alerter dans les notifications avant expiration, dépassement ou risque';
+
+  @override
+  String get homeWidgetAddTitle => 'Ajouter le widget d\'accueil';
+
+  @override
+  String get homeWidgetAddDesc =>
+      'Débit, bouton rapide, appareils, expiration et sécurité sur l\'écran d\'accueil';
+
+  @override
+  String get homeWidgetPinRequested =>
+      'Confirmez l\'ajout du widget FlClash sur l\'écran d\'accueil';
+
+  @override
+  String get homeWidgetPinFallback =>
+      'Appui long sur l\'écran d\'accueil → Widgets → glissez FlClash';
+
+  @override
+  String get smartMultiWebTitle => 'Test multi-sites et ping';
+
+  @override
+  String get smartMultiWebRunning => 'Test de plusieurs sites en cours...';
+
+  @override
+  String get smartMultiWebDesc =>
+      'Tester simultanément Google, YouTube, TikTok, ChatGPT, GitHub et Discord';
+
+  @override
+  String smartMultiWebSummary(Object ok, Object total, Object avgMs) {
+    return '$ok/$total sites accessibles · moy. ${avgMs}ms';
+  }
 }

@@ -370,6 +370,72 @@ class App extends AppIconSource {
       return false;
     }
   }
+
+  Future<bool> showAlertNotification({
+    required int id,
+    required String title,
+    required String body,
+  }) async {
+    if (!Platform.isAndroid) return false;
+    try {
+      return await methodChannel.invokeMethod<bool>('showAlertNotification', {
+            'id': id,
+            'title': title,
+            'body': body,
+          }) ??
+          false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> updateHomeWidget({
+    required String profileName,
+    required String activeNode,
+    required int? activeDelayMs,
+    required int? onlineDevices,
+    required int? deviceLimit,
+    required int? expireEpochSec,
+    required String securityLevel,
+    required int securityScore,
+    required bool speedBoost,
+    required bool expiryAlertsEnabled,
+  }) async {
+    if (!Platform.isAndroid) return;
+    try {
+      await methodChannel.invokeMethod<bool>('updateHomeWidget', {
+        'profileName': profileName,
+        'activeNode': activeNode,
+        'activeDelayMs': activeDelayMs,
+        'onlineDevices': onlineDevices,
+        'deviceLimit': deviceLimit,
+        'expireEpochSec': expireEpochSec,
+        'securityLevel': securityLevel,
+        'securityScore': securityScore,
+        'speedBoost': speedBoost,
+        'expiryAlertsEnabled': expiryAlertsEnabled,
+      });
+    } catch (_) {}
+  }
+
+  Future<bool> pinHomeWidget() async {
+    if (!Platform.isAndroid) return false;
+    try {
+      return await methodChannel.invokeMethod<bool>('pinHomeWidget') ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> canPinHomeWidget() async {
+    if (!Platform.isAndroid) return false;
+    try {
+      return await methodChannel.invokeMethod<bool>('canPinHomeWidget') ??
+          false;
+    } catch (_) {
+      return false;
+    }
+  }
 }
 
 List<Package> _parsePackages(String raw) {

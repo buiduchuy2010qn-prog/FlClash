@@ -461,6 +461,7 @@ enum FunctionTag {
   dialerLoopNotifier,
   reloadPackages,
   networkChange,
+  syncHomeWidget,
 }
 
 enum DashboardWidget {

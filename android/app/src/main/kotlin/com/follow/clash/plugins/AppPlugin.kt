@@ -46,12 +46,15 @@ import com.follow.clash.common.Components
 import com.follow.clash.common.GlobalState
 import com.follow.clash.common.PendingCallback
 import com.follow.clash.common.QuickAction
+import com.follow.clash.common.postAlertNotification
 import com.follow.clash.common.quickIntent
 import com.follow.clash.common.registerReceiverCompat
 import com.follow.clash.common.shortcutId
 import com.follow.clash.getPackageIconPath
 import com.follow.clash.packages.PackageResolver
 import com.follow.clash.showToast
+import com.follow.clash.widget.VpnWidgetController
+import com.follow.clash.widget.VpnWidgetSnapshot
 import com.google.gson.Gson
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
@@ -397,6 +400,46 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
 
             "getRootHotspotStatus" -> {
                 result.success(RootHotspotManager.isActive)
+            }
+
+            "showAlertNotification" -> {
+                val id = call.argument<Number>("id")?.toInt() ?: 2100
+                val title = call.argument<String>("title").orEmpty()
+                val body = call.argument<String>("body").orEmpty()
+                result.success(
+                    if (title.isNotEmpty() || body.isNotEmpty()) {
+                        GlobalState.application.postAlertNotification(id, title, body)
+                    } else {
+                        false
+                    },
+                )
+            }
+
+            "updateHomeWidget" -> {
+                VpnWidgetController.updateSnapshot(
+                    GlobalState.application,
+                    VpnWidgetSnapshot(
+                        profileName = call.argument<String>("profileName").orEmpty(),
+                        activeNode = call.argument<String>("activeNode").orEmpty(),
+                        activeDelayMs = call.argument<Number>("activeDelayMs")?.toInt(),
+                        onlineDevices = call.argument<Number>("onlineDevices")?.toInt(),
+                        deviceLimit = call.argument<Number>("deviceLimit")?.toInt(),
+                        expireEpochSec = call.argument<Number>("expireEpochSec")?.toLong(),
+                        securityLevel = call.argument<String>("securityLevel") ?: "safe",
+                        securityScore = call.argument<Number>("securityScore")?.toInt() ?: 100,
+                        speedBoost = call.argument<Boolean>("speedBoost") == true,
+                        expiryAlertsEnabled = call.argument<Boolean>("expiryAlertsEnabled") != false,
+                    ),
+                )
+                result.success(true)
+            }
+
+            "pinHomeWidget" -> {
+                result.success(VpnWidgetController.pinWidget(GlobalState.application))
+            }
+
+            "canPinHomeWidget" -> {
+                result.success(VpnWidgetController.canPinWidget(GlobalState.application))
             }
 
             else -> {

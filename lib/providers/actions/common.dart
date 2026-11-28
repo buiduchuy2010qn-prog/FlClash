@@ -235,7 +235,13 @@ class CommonAction extends _$CommonAction {
     }
     final channel = ref.read(appSettingProvider).updateChannel;
     final release = await globalState.loadingRun(
-      () => request.newestRelease(channel),
+      () => switch (channel) {
+        UpdateChannel.stable => request.latestPlatformRelease(
+          asset: asset,
+          os: currentReleaseOs,
+        ),
+        UpdateChannel.pre => request.newestOfAllReleases(),
+      },
       title: currentAppLocalizations.updateDownloadTest,
       tag: LoadingTag.checkUpdate,
     );

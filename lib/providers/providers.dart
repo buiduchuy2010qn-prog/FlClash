@@ -6,6 +6,7 @@ export 'daily_traffic.dart';
 export 'database.dart';
 export 'mobile_features.dart';
 export 'on_demand.dart';
+export 'profile_security.dart';
 export 'route_state.dart';
 export 'smart_proxy.dart';
 export 'state.dart';

@@ -200,3 +200,48 @@ func TestSelectFailoverCandidateSequentialEarlyExitsOnFirstFastNode(t *testing.T
 		t.Fatalf("expected quarantined node to be skipped when clean node responds, probed=%v", slowProbed)
 	}
 }
+
+func TestShouldSwitchForDegradedPing(t *testing.T) {
+	if shouldSwitchForDegradedPing(350, 90, false) {
+		t.Fatal("should not switch when current delay is healthy (<1200ms)")
+	}
+	if shouldSwitchForDegradedPing(1450, 900, false) {
+		t.Fatal("should not switch when best candidate is also slow (>=650ms)")
+	}
+	if shouldSwitchForDegradedPing(1300, 1050, false) {
+		t.Fatal("should not switch when improvement is below threshold")
+	}
+	if !shouldSwitchForDegradedPing(1400, 180, false) {
+		t.Fatal("expected switch when current ping is >=1200ms and fast node <650ms exists")
+	}
+	if !shouldSwitchForDegradedPing(0, 0, false) {
+		t.Fatal("expected switch on dead node")
+	}
+}
+
+func TestDegradedFailoverDoesNotStopInDeadZone(t *testing.T) {
+	now := time.Now()
+	probed := []string{}
+	best, delay := selectFailoverCandidateSequential(
+		t.Context(),
+		[]string{"active-slow", "med-slow", "fast-sg"},
+		"active-slow",
+		now,
+		func(_ context.Context, name string) int {
+			probed = append(probed, name)
+			if name == "med-slow" {
+				return 720
+			}
+			return 85
+		},
+	)
+	if len(probed) != 2 || probed[0] != "med-slow" || probed[1] != "fast-sg" {
+		t.Fatalf("probed = %v, want [med-slow fast-sg]", probed)
+	}
+	if best != "fast-sg" || delay != 85 {
+		t.Fatalf("best = (%q, %d), want (fast-sg, 85)", best, delay)
+	}
+	if !shouldSwitchForDegradedPing(1350, delay, false) {
+		t.Fatal("expected switch from 1350ms to 85ms")
+	}
+}

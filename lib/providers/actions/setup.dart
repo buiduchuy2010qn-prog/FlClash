@@ -447,11 +447,55 @@ class SetupAction extends _$SetupAction {
     );
   }
 
+  Future<void> applyPresetAndSyncTunnel() async {
+    await applyProfile(force: true, silence: true);
+    if (!system.isAndroid ||
+        !ref.read(isStartProvider) ||
+        ref.read(suspendProvider) ||
+        ref.read(safeModeProvider)) {
+      return;
+    }
+    final nextOptions = (await ref.read(vpnOptionsProvider.future)).effective;
+    final runningOptions = ref.read(runningVpnOptionsProvider)?.effective;
+    if (runningOptions != null && runningOptions != nextOptions) {
+      await restartVpn();
+    }
+  }
+
   void changeMode(Mode mode) {
     ref
         .read(patchClashConfigProvider.notifier)
         .update((state) => state.copyWith(mode: mode));
     if (mode == Mode.global) {
+      final selectedMap = ref.read(selectedMapProvider);
+      final currentGlobal = selectedMap[GroupName.GLOBAL.name] ?? '';
+      if (currentGlobal.isEmpty ||
+          currentGlobal == 'DIRECT' ||
+          currentGlobal == 'COMPATIBLE') {
+        final groups = ref.read(groupsProvider);
+        final primary = groups.firstWhereOrNull(
+          (g) =>
+              g.type == GroupType.Selector &&
+              g.hidden == false &&
+              g.name != GroupName.GLOBAL.name,
+        );
+        final target = primary?.name;
+        if (target != null && target.isNotEmpty) {
+          ref
+              .read(profilesActionProvider.notifier)
+              .updateCurrentSelectedMap(GroupName.GLOBAL.name, target);
+          if (ref.read(isStartProvider)) {
+            unawaited(
+              ref
+                  .read(proxiesActionProvider.notifier)
+                  .changeProxy(
+                    groupName: GroupName.GLOBAL.name,
+                    proxyName: target,
+                  ),
+            );
+          }
+        }
+      }
       ref
           .read(proxiesActionProvider.notifier)
           .updateCurrentGroupName(GroupName.GLOBAL.name);
@@ -586,10 +630,13 @@ class SetupAction extends _$SetupAction {
     final optimize4g = await ref
         .read(optimize4gPresetProvider.notifier)
         .ensureHydrated();
-    final effectivePatchConfig = optimize4g
+    final speedBoost = await ref
+        .read(speedBoostPresetProvider.notifier)
+        .ensureHydrated();
+    final effectivePatchConfig = (optimize4g || speedBoost)
         ? ref.read(patchClashConfigProvider)
         : patchConfig;
-    final effectiveOverrides = optimize4g
+    final effectiveOverrides = (optimize4g || speedBoost)
         ? setupState.overrides.copyWith(
             sniffer: setupState.overrides.sniffer.copyWith(enable: true),
             snifferOverrideKeys: {

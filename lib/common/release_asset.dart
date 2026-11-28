@@ -108,6 +108,16 @@ SelfUpdateAsset? selfUpdateAssetFor(Abi abi, {required bool replaceable}) {
   };
 }
 
+ReleaseOs? releaseOsForAbi(Abi abi) {
+  return switch (abi) {
+    Abi.androidArm64 || Abi.androidArm || Abi.androidX64 => ReleaseOs.android,
+    Abi.windowsX64 || Abi.windowsArm64 => ReleaseOs.windows,
+    Abi.macosArm64 || Abi.macosX64 => ReleaseOs.macos,
+    Abi.linuxX64 || Abi.linuxArm64 => ReleaseOs.linux,
+    _ => null,
+  };
+}
+
 String updateAssetName(String tag, SelfUpdateAsset asset) {
   return releaseAssetName(
     version: releaseVersionOfTag(tag),
@@ -137,4 +147,16 @@ String? releaseChecksum(String sums, String name) {
     }
   }
   return null;
+}
+
+List<String> releaseAssetNamesFromChecksums(String sums) {
+  final names = <String>[];
+  for (final line in const LineSplitter().convert(sums)) {
+    final match = _checksumLine.firstMatch(line.trim());
+    final name = match?[2];
+    if (name != null && name.isNotEmpty) {
+      names.add(name);
+    }
+  }
+  return names;
 }

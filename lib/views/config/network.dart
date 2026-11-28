@@ -648,7 +648,8 @@ class SecurityAndPrivacySection extends ConsumerWidget {
     final hideIp = ref.watch(
       appSettingProvider.select((state) => state.hideIp),
     );
-    final screenShield = system.isAndroid
+    final supportsScreenShield = system.isAndroid || system.isWindows;
+    final screenShield = supportsScreenShield
         ? ref.watch(privacyScreenShieldProvider)
         : false;
     return generateSection(
@@ -663,7 +664,7 @@ class SecurityAndPrivacySection extends ConsumerWidget {
                 .update((state) => state.copyWith(hideIp: value));
           },
         ),
-        if (system.isAndroid)
+        if (supportsScreenShield)
           ListItem.toggle(
             title: Text(l.privacyScreenShield),
             subtitle: Text(l.privacyScreenShieldDesc),
@@ -734,7 +735,7 @@ class HotspotShareSection extends ConsumerWidget {
     final rootShare = ref.watch(rootHotspotShareProvider);
     final host = (localIp != null && localIp.isNotEmpty)
         ? localIp
-        : '192.168.43.1';
+        : (system.isWindows ? '192.168.137.1' : '192.168.43.1');
     final proxyAddress = '$host:$mixedPort';
     final displayedProxyAddress = hideIp
         ? '$maskedSensitiveValue:$mixedPort'
@@ -762,13 +763,14 @@ class HotspotShareSection extends ConsumerWidget {
               dialogs.showBanner(l.hotspotCopiedTip(displayedProxyAddress));
             },
           ),
-        ListItem.toggle(
-          title: Text(l.hotspotRootShare),
-          subtitle: Text(l.hotspotRootShareDesc),
-          value: rootShare,
-          onChanged: (value) =>
-              unawaited(_toggleRootShare(context, ref, value)),
-        ),
+        if (system.isAndroid)
+          ListItem.toggle(
+            title: Text(l.hotspotRootShare),
+            subtitle: Text(l.hotspotRootShareDesc),
+            value: rootShare,
+            onChanged: (value) =>
+                unawaited(_toggleRootShare(context, ref, value)),
+          ),
       ],
       footer: l.hotspotSectionDesc,
     );
@@ -789,7 +791,7 @@ class NetworkListView extends StatelessWidget {
         if (system.isAndroid) const VpnSections(),
         const Optimize4gPresetSection(),
         const SecurityAndPrivacySection(),
-        if (system.isAndroid) const HotspotShareSection(),
+        if (system.isAndroid || system.isDesktop) const HotspotShareSection(),
         if (system.isDesktop) const SystemProxySection(),
         const NetworkOptionsSection(),
         TunSection(

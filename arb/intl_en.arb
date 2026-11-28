@@ -1650,5 +1650,117 @@
     "placeholders": {
       "email": {}
     }
+  },
+  "subExpiringHoursWarning": "Plan expires in ~{hours}h. Renew soon to avoid interruption.",
+  "subAlertNotificationTitle": "{profile} · Plan Alert",
+  "securityAlertTitle": "{profile} · Security Risk Detected",
+  "securityAlertBody": "Safety score {score}/100 ({count} critical issue(s)). Review and harden now.",
+  "securityAuditTitle": "VPN Security Scanner",
+  "securityAuditSubtitle": "Scan profile for data-leak, MITM, hosts hijack & unencrypted nodes",
+  "securityAuditSummary": "{score}/100 · {level} — Tap for details & 1-tap harden",
+  "securityLevelSafe": "Safe",
+  "securityLevelCaution": "Caution",
+  "securityLevelDanger": "Dangerous",
+  "securityRescan": "Rescan profile",
+  "securityScannedCounts": "Scanned entries",
+  "securityScannedCountsValue": "{proxies} nodes · {rules} rules",
+  "securityAutoHarden": "Protect & Harden Now",
+  "securityAutoHardenDesc": "Lock LAN/controller, enforce DoH DNS, enable Privacy Max & banking bypass",
+  "securityAutoHardenApplied": "Runtime security hardening applied to active configuration",
+  "securityFindingsTitle": "Security Findings",
+  "securityNoRisksTitle": "No dangerous behaviors found",
+  "securityNoRisksDesc": "No MITM injection, host hijacking, exposed controller, or plaintext proxy threats were found in this profile.",
+  "securityFindingMitmTitle": "HTTPS Traffic Inspection (MITM) Enabled",
+  "securityFindingMitmDesc": "Profile enables TLS decryption or untrusted cert capture, which can read passwords & tokens.",
+  "securityFindingControllerTitle": "External Controller Exposed Without Protection",
+  "securityFindingControllerDesc": "Control API binds outside localhost or has no secret, letting LAN/remote peers control routes.",
+  "securityFindingHostsTitle": "Sensitive Banking / Account Domains Hijacked in Hosts",
+  "securityFindingHostsDesc": "Static hosts mapping redirects sensitive services to custom IPs.",
+  "securityFindingPlaintextTitle": "Unencrypted / Weak-Cipher Proxy Nodes",
+  "securityFindingPlaintextDesc": "{count} node(s) send traffic in plaintext or weak cipher without TLS.",
+  "securityFindingSkipVerifyTitle": "TLS Certificate Verification Disabled",
+  "securityFindingSkipVerifyDesc": "{count} node(s) skip TLS certificate checks, risking man-in-the-middle impersonation.",
+  "securityFindingHttpSubTitle": "Subscription Link Uses Unencrypted HTTP",
+  "securityFindingHttpSubDesc": "Subscription URL fetches configs over plain HTTP, allowing network tampering in transit.",
+  "securityFindingHttpProviderTitle": "Remote Rule/Proxy Providers Use Plain HTTP",
+  "securityFindingHttpProviderDesc": "{count} external provider(s) download rules or nodes over unencrypted HTTP.",
+  "securityFindingAllowLanTitle": "LAN Sharing Enabled by Profile",
+  "securityFindingAllowLanDesc": "Profile sets allow-lan: true, exposing local proxy ports to other devices on the same Wi-Fi.",
+  "securityFindingLanRouteTitle": "Private Local Network Traffic Routed to Proxy",
+  "securityFindingLanRouteDesc": "{count} rule(s) forward private LAN or router IPs out through remote proxy nodes.",
+  "securityFindingPlainDnsTitle": "Custom Unencrypted Plain DNS Resolvers",
+  "securityFindingPlainDnsDesc": "Custom DNS lacks DoH/DoT encryption, allowing third parties to log DNS lookups.",
+  "speedBoostPreset": "Max Network Speed Boost",
+  "speedBoostPresetDesc": "Mixed kernel TCP stack, MTU 9000, direct System Proxy & high-BDP QUIC windows (single-device safe)",
+  "speedBoostAppliedTip": "Max Network Speed Boost (Mixed + MTU 9000) applied",
+  "expiryAlertsToggle": "Expiry & Security Notifications",
+  "expiryAlertsToggleDesc": "Warn via notification bar when plan expires soon, exceeds devices, or shows risks",
+  "homeWidgetAddTitle": "Add Home Screen Widget",
+  "homeWidgetAddDesc": "Live speed, 1-tap toggle, devices, expiry & security shield on your launcher",
+  "homeWidgetPinRequested": "Confirm adding the FlClash widget on your home screen",
+  "homeWidgetPinFallback": "Long press your home screen, choose Widgets, and drag FlClash onto the screen",
+  "@subExpiringHoursWarning": {
+    "placeholders": {
+      "hours": {}
+    }
+  },
+  "@subAlertNotificationTitle": {
+    "placeholders": {
+      "profile": {}
+    }
+  },
+  "@securityAlertTitle": {
+    "placeholders": {
+      "profile": {}
+    }
+  },
+  "@securityAlertBody": {
+    "placeholders": {
+      "score": {},
+      "count": {}
+    }
+  },
+  "@securityAuditSummary": {
+    "placeholders": {
+      "score": {},
+      "level": {}
+    }
+  },
+  "@securityScannedCountsValue": {
+    "placeholders": {
+      "proxies": {},
+      "rules": {}
+    }
+  },
+  "@securityFindingPlaintextDesc": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@securityFindingSkipVerifyDesc": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@securityFindingHttpProviderDesc": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@securityFindingLanRouteDesc": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "smartMultiWebTitle": "Multi-website & ping check",
+  "smartMultiWebRunning": "Checking multiple websites...",
+  "smartMultiWebDesc": "Test Google, YouTube, TikTok, ChatGPT, GitHub & Discord simultaneously",
+  "smartMultiWebSummary": "{ok}/{total} websites reachable · Avg {avgMs}ms",
+  "@smartMultiWebSummary": {
+    "placeholders": {
+      "ok": {},
+      "total": {},
+      "avgMs": {}
+    }
   }
 }

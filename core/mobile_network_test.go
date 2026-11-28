@@ -8,9 +8,15 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/metacubex/mihomo/adapter"
+	"github.com/metacubex/mihomo/adapter/outbound"
+	"github.com/metacubex/mihomo/adapter/outboundgroup"
+	"github.com/metacubex/mihomo/adapter/provider"
 	"github.com/metacubex/mihomo/component/resolver"
 	"github.com/metacubex/mihomo/config"
 	"github.com/metacubex/mihomo/constant"
+	cp "github.com/metacubex/mihomo/constant/provider"
+	"github.com/metacubex/mihomo/tunnel"
 	D "github.com/miekg/dns"
 	"go.yaml.in/yaml/v3"
 )
@@ -519,5 +525,292 @@ func TestSetTelemetryPausedClearsTrafficAndGatesTelemetry(t *testing.T) {
 	SetTelemetryPaused(false)
 	if isTelemetryPaused() {
 		t.Fatal("expected isTelemetryPaused() == false after SetTelemetryPaused(false)")
+	}
+}
+
+func TestOptimizeConfigSanitizesHijackedHostsAndPrioritizesRealNodes(t *testing.T) {
+	previousAndroid := isAndroidRuntime
+	isAndroidRuntime = true
+	t.Cleanup(func() { isAndroidRuntime = previousAndroid })
+
+	const input = `hosts:
+  ibanking.vietcombank.com.vn: 203.0.113.99
+  localhost: 127.0.0.1
+proxies:
+  - name: "Dung lượng: 95 GB"
+    type: vless
+    server: 127.0.0.1
+    port: 1
+    uuid: 11111111-1111-1111-1111-111111111111
+  - name: "Singapore-01"
+    type: vless
+    server: sg1.example.net
+    port: 443
+    uuid: 11111111-1111-1111-1111-111111111111
+    tls: true
+proxy-groups:
+  - name: MainProxy
+    type: select
+    proxies:
+      - "Dung lượng: 95 GB"
+      - "Singapore-01"
+dns:
+  enable: true
+  enhanced-mode: fake-ip
+`
+	var doc yaml.Node
+	if err := yaml.Unmarshal([]byte(input), &doc); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	optimizeConfigDocument(&doc, nil)
+
+	out, err := yaml.Marshal(&doc)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	var parsed struct {
+		Hosts       map[string]any `yaml:"hosts"`
+		ProxyGroups []struct {
+			Name    string   `yaml:"name"`
+			Proxies []string `yaml:"proxies"`
+		} `yaml:"proxy-groups"`
+		DNS struct {
+			FakeIPFilter []string `yaml:"fake-ip-filter"`
+		} `yaml:"dns"`
+	}
+	if err := yaml.Unmarshal(out, &parsed); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if _, leaked := parsed.Hosts["ibanking.vietcombank.com.vn"]; leaked {
+		t.Fatalf("expected hijacked sensitive host entry to be removed, got %#v", parsed.Hosts)
+	}
+	if _, ok := parsed.Hosts["localhost"]; !ok {
+		t.Fatalf("expected localhost host entry to remain, got %#v", parsed.Hosts)
+	}
+	if len(parsed.ProxyGroups) != 1 || parsed.ProxyGroups[0].Proxies[0] != "Singapore-01" {
+		t.Fatalf("expected real node before info banner node, got %+v", parsed.ProxyGroups)
+	}
+	if !slices.Contains(parsed.DNS.FakeIPFilter, "stun.*.*") ||
+		!slices.Contains(parsed.DNS.FakeIPFilter, "msftconnecttest.com") {
+		t.Fatalf("expected STUN and captive domains in fake-ip-filter: %v", parsed.DNS.FakeIPFilter)
+	}
+}
+
+func TestGlobalSelectorAutoBindsToPrimaryGroupInsteadOfDirect(t *testing.T) {
+	prevMode := tunnel.Mode()
+	prevNames := config.GetProxyNameList()
+	t.Cleanup(func() {
+		tunnel.SetMode(prevMode)
+		config.SetProxyNameList(prevNames)
+		tunnel.UpdateProxies(nil, nil)
+	})
+
+	direct := adapter.NewProxy(outbound.NewDirect())
+	compatible := adapter.NewProxy(outbound.NewCompatible())
+	nodeA := adapter.NewProxy(outbound.NewDirectWithOption(outbound.DirectOption{Name: "NodeA"}))
+	hcMain := provider.NewHealthCheck([]constant.Proxy{nodeA}, "", 5000, 0, true, nil)
+	pdMain, err := provider.NewCompatibleProvider("main-pd", []constant.Proxy{nodeA}, hcMain)
+	if err != nil {
+		t.Fatalf("NewCompatibleProvider(main-pd): %v", err)
+	}
+	mainSelect, err := outboundgroup.NewSelector(
+		outboundgroup.GroupCommonOption{Name: "MainSelect"},
+		outboundgroup.SelectorOption{},
+		compatible,
+		[]cp.ProxyProvider{pdMain},
+	)
+	if err != nil {
+		t.Fatalf("NewSelector(MainSelect): %v", err)
+	}
+	mainSelectProxy := adapter.NewProxy(mainSelect)
+	hcGlobal := provider.NewHealthCheck([]constant.Proxy{direct, nodeA, mainSelectProxy}, "", 5000, 0, true, nil)
+	pdGlobal, err := provider.NewCompatibleProvider(
+		provider.ReservedName,
+		[]constant.Proxy{direct, nodeA, mainSelectProxy},
+		hcGlobal,
+	)
+	if err != nil {
+		t.Fatalf("NewCompatibleProvider(ReservedName): %v", err)
+	}
+	globalGroup, err := outboundgroup.NewSelector(
+		outboundgroup.GroupCommonOption{Name: globalProxyName},
+		outboundgroup.SelectorOption{},
+		compatible,
+		[]cp.ProxyProvider{pdGlobal},
+	)
+	if err != nil {
+		t.Fatalf("NewSelector(GLOBAL): %v", err)
+	}
+
+	tunnel.UpdateProxies(
+		map[string]constant.Proxy{
+			"DIRECT":        direct,
+			"COMPATIBLE":    compatible,
+			"NodeA":         nodeA,
+			"MainSelect":    mainSelectProxy,
+			globalProxyName: adapter.NewProxy(globalGroup),
+		},
+		map[string]cp.ProxyProvider{
+			"main-pd":             pdMain,
+			provider.ReservedName: pdGlobal,
+		},
+	)
+	config.SetProxyNameList([]string{"DIRECT", "NodeA", "MainSelect"})
+	tunnel.SetMode(tunnel.Global)
+
+	patchSelectGroup(nil)
+	if got := globalGroup.Now(); got != "MainSelect" {
+		t.Fatalf("GLOBAL.Now() after auto-bind = %q, want %q", got, "MainSelect")
+	}
+
+	gName, _, currentPick, ok := findPrimarySelectorGroup()
+	if !ok || gName != "MainSelect" || currentPick != "NodeA" {
+		t.Fatalf("findPrimarySelectorGroup = (%q, %q, %t), want (%q, %q, true)", gName, currentPick, ok, "MainSelect", "NodeA")
+	}
+
+	patchSelectGroup(map[string]string{globalProxyName: "DIRECT"})
+	if got := globalGroup.Now(); got != "MainSelect" {
+		t.Fatalf("stale GLOBAL=DIRECT was not healed to MainSelect, got %q", got)
+	}
+
+	patchSelectGroup(map[string]string{globalProxyName: "NodeA"})
+	if got := globalGroup.Now(); got != "NodeA" {
+		t.Fatalf("explicit GLOBAL=NodeA was overridden, got %q", got)
+	}
+}
+
+func TestOptimizeProxyNodesUnlocksHysteria2CapAndHighBDPWindows(t *testing.T) {
+	previousAndroid := isAndroidRuntime
+	isAndroidRuntime = true
+	t.Cleanup(func() { isAndroidRuntime = previousAndroid })
+
+	const input = `proxies:
+  - name: Hy2-TemplateCap
+    type: hysteria2
+    server: hy2.example.net
+    port: 443
+    password: secret
+    up: 50 Mbps
+    down: 100 Mbps
+  - name: Hy2-HighExplicit
+    type: hysteria2
+    server: hy2fast.example.net
+    port: 443
+    password: secret
+    up: 500 Mbps
+    down: 1000 Mbps
+  - name: Vless-Main
+    type: vless
+    server: vless.example.net
+    port: 443
+    uuid: 11111111-1111-1111-1111-111111111111
+    tls: true
+  - name: Tuic-Main
+    type: tuic
+    server: tuic.example.net
+    port: 443
+`
+	var doc yaml.Node
+	if err := yaml.Unmarshal([]byte(input), &doc); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	optimizeConfigDocument(&doc, nil)
+
+	out, err := yaml.Marshal(&doc)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	var parsed struct {
+		Proxies []map[string]any `yaml:"proxies"`
+	}
+	if err := yaml.Unmarshal(out, &parsed); err != nil {
+		t.Fatalf("decode: %v\n%s", err, string(out))
+	}
+	if len(parsed.Proxies) != 4 {
+		t.Fatalf("proxies len = %d, want 4", len(parsed.Proxies))
+	}
+
+	hyCap := parsed.Proxies[0]
+	if _, hasUp := hyCap["up"]; hasUp {
+		t.Errorf("expected template up cap to be stripped, got %#v", hyCap)
+	}
+	if _, hasDown := hyCap["down"]; hasDown {
+		t.Errorf("expected template down cap to be stripped, got %#v", hyCap)
+	}
+	if hyCap["initial-stream-receive-window"] != quicInitStreamRecvWin ||
+		hyCap["max-stream-receive-window"] != quicMaxStreamRecvWin ||
+		hyCap["initial-connection-receive-window"] != quicInitConnRecvWin ||
+		hyCap["max-connection-receive-window"] != quicMaxConnRecvWin {
+		t.Errorf("unexpected hysteria2 QUIC windows: %#v", hyCap)
+	}
+
+	hyHigh := parsed.Proxies[1]
+	if hyHigh["up"] != "500 Mbps" || hyHigh["down"] != "1000 Mbps" {
+		t.Errorf("expected high explicit caps >300Mbps to stay, got up=%v down=%v", hyHigh["up"], hyHigh["down"])
+	}
+
+	vless := parsed.Proxies[2]
+	if vless["udp"] != true || vless["packet-encoding"] != "xudp" {
+		t.Errorf("expected udp=true and packet-encoding=xudp on vless, got %#v", vless)
+	}
+
+	tuic := parsed.Proxies[3]
+	if tuic["recv-window-conn"] != quicMaxStreamRecvWin || tuic["recv-window"] != quicMaxConnRecvWin {
+		t.Errorf("expected QUIC windows on tuic, got %#v", tuic)
+	}
+}
+
+func TestEnforceWindowsDualStackGuard(t *testing.T) {
+	prevWin := isWindowsPlatform
+	prevAndroid := isAndroidRuntime
+	isWindowsPlatform = true
+	isAndroidRuntime = false
+	t.Cleanup(func() {
+		isWindowsPlatform = prevWin
+		isAndroidRuntime = prevAndroid
+	})
+
+	raw := config.DefaultRawConfig()
+	raw.IPv6 = false
+	raw.Tun.StrictRoute = false
+	raw.Tun.RouteAddress = nil
+	raw.DNS.Enable = true
+	raw.DNS.NameServer = []string{"system://"}
+	raw.DNS.DefaultNameserver = []string{"system"}
+	raw.DNS.ProxyServerNameserver = []string{"system"}
+	raw.DNS.DirectNameServer = []string{"system://"}
+
+	enforceWindowsDualStackGuard(raw)
+
+	if !raw.Tun.StrictRoute {
+		t.Fatalf("expected StrictRoute=true when IPv6=false on Windows")
+	}
+	if !slices.Equal(raw.DNS.DefaultNameserver, []string{"1.1.1.1", "8.8.8.8", "223.5.5.5"}) {
+		t.Fatalf("DefaultNameserver = %v, want direct IPv4 bootstrap resolvers", raw.DNS.DefaultNameserver)
+	}
+	if !slices.Equal(raw.DNS.ProxyServerNameserver, []string{"1.1.1.1", "8.8.8.8", "223.5.5.5"}) {
+		t.Fatalf("ProxyServerNameserver = %v, want direct IPv4 bootstrap resolvers", raw.DNS.ProxyServerNameserver)
+	}
+	if !slices.Equal(raw.DNS.DirectNameServer, []string{"1.1.1.1", "8.8.8.8"}) {
+		t.Fatalf("DirectNameServer = %v, want direct IPv4 resolvers", raw.DNS.DirectNameServer)
+	}
+	if !slices.Equal(raw.DNS.NameServer, []string{"1.1.1.1", "8.8.8.8", "https://1.1.1.1/dns-query", "https://8.8.8.8/dns-query"}) {
+		t.Fatalf("NameServer = %v, want IPv4+DoH resolvers without system", raw.DNS.NameServer)
+	}
+	if _, ok := raw.Hosts["1dot1dot1dot1.cloudflare-dns.com"]; !ok {
+		t.Fatalf("expected DoH/DoT static hosts populated, got %#v", raw.Hosts)
+	}
+
+	rawV6 := config.DefaultRawConfig()
+	rawV6.IPv6 = true
+	rawV6.Tun.StrictRoute = false
+	rawV6.DNS.Enable = true
+	rawV6.DNS.DefaultNameserver = []string{"system"}
+	enforceWindowsDualStackGuard(rawV6)
+	if rawV6.Tun.StrictRoute {
+		t.Fatalf("expected StrictRoute to stay false when IPv6=true")
+	}
+	if !slices.Equal(rawV6.DNS.DefaultNameserver, []string{"system"}) {
+		t.Fatalf("expected DNS to stay untouched when StrictRoute=false, got %v", rawV6.DNS.DefaultNameserver)
 	}
 }

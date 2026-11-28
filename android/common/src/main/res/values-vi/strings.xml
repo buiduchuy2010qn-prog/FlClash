@@ -1,5 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="service_channel_name">Dịch vụ FlClash</string>
+    <string name="alert_channel_name">Cảnh báo gói &amp; bảo mật</string>
     <string name="notification_switch_fastest">Đổi mượt</string>
+    <string name="widget_description">Bật tắt VPN nhanh, xem tốc độ mạng, số thiết bị, ngày hết hạn và độ an toàn</string>
+    <string name="widget_status_connected">VPN Đang bật</string>
+    <string name="widget_status_connecting">Đang kết nối…</string>
+    <string name="widget_status_stopped">VPN Đang tắt</string>
+    <string name="widget_speed_idle">0 B/s · Chờ</string>
+    <string name="widget_devices_empty">Thiết bị: —</string>
+    <string name="widget_devices_ratio">%1$d/%2$d máy</string>
+    <string name="widget_devices_limit">Tối đa %1$d máy</string>
+    <string name="widget_expiry_empty">Không giới hạn</string>
+    <string name="widget_expiry_expired">Đã hết hạn!</string>
+    <string name="widget_expiry_hours">Còn %1$d giờ</string>
+    <string name="widget_expiry_days">Còn %1$d ngày</string>
+    <string name="widget_shield_safe">An toàn</string>
+    <string name="widget_shield_caution">Lưu ý</string>
+    <string name="widget_shield_danger">Nguy hiểm!</string>
+    <string name="widget_speed_boost">BBRv3</string>
+    <string name="widget_no_profile">Chưa chọn hồ sơ</string>
+    <string name="widget_no_node">Chưa chọn máy chủ</string>
+    <string name="widget_node_with_ping">%1$s · %2$dms</string>
+    <string name="widget_action_toggle">Bật/tắt VPN</string>
+    <string name="widget_action_fastest">Đổi node mượt</string>
+    <string name="widget_expiry_alert_title">%1$s · Cảnh báo gói VPN</string>
+    <string name="widget_expiry_alert_expired_body">Gói VPN của bạn đã hết hạn. Hãy gia hạn để tránh gián đoạn mạng.</string>
+    <string name="widget_expiry_alert_hours_body">Gói VPN chỉ còn khoảng %1$d giờ là hết hạn.</string>
+    <string name="widget_expiry_alert_days_body">Gói VPN chỉ còn %1$d ngày là hết hạn.</string>
 </resources>
